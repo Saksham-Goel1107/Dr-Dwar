@@ -1,8 +1,10 @@
+import { useRouter } from 'expo-router';
 import '../global.css'
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, Image, Dimensions, TouchableOpacity, StatusBar } from "react-native";
 import Carousel from "react-native-reanimated-carousel";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from '@clerk/clerk-expo';
 
 const { width, height } = Dimensions.get("window");
 
@@ -38,6 +40,14 @@ const data = [
 
 export default function OnboardingScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const router = useRouter();
+  const { isSignedIn } = useAuth();
+
+  useEffect(() => {
+    if (isSignedIn) {
+      router.replace('/(root)/home');
+    }
+  }, [isSignedIn,router]);
 
   return (
     <>
@@ -103,13 +113,13 @@ export default function OnboardingScreen() {
 
         {/* Bottom Actions */}
         <View className="px-6 pb-8">
-          <TouchableOpacity className={`${data[currentIndex].buttonColor} rounded-2xl py-4 shadow-xl ${data[currentIndex].buttonActive} transform active:scale-95`}>
+          <TouchableOpacity onPress={() => router.push('/(auth)/Sign-up')} className={`${data[currentIndex].buttonColor} rounded-2xl py-4 shadow-xl ${data[currentIndex].buttonActive} transform active:scale-95`}>
             <Text className="text-white text-center text-lg font-semibold tracking-wide">
               Start Your Health Journey
             </Text>
           </TouchableOpacity>
           
-          <TouchableOpacity className="mt-4 py-3">
+          <TouchableOpacity className="mt-4 py-3" onPress={() => router.push('/(auth)/Sign-in')}>
             <Text className="text-gray-600 text-center text-base font-medium">
               Already have an account? Sign In
             </Text>
