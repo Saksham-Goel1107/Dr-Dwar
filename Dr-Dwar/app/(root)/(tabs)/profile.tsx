@@ -9,14 +9,14 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <View className="flex-1 justify-center items-center px-6">
-        <Text className="text-2xl font-bold text-center mb-4" style={{ color: '#1e293b' }}>
+      <View className="flex-1 items-center justify-center px-6">
+        <Text className="mb-4 text-center text-2xl font-bold" style={{ color: '#1e293b' }}>
           Profile
         </Text>
-        <Text className="text-base text-center mb-8" style={{ color: '#64748b' }}>
+        <Text className="mb-8 text-center text-base" style={{ color: '#64748b' }}>
           Manage your account and preferences
         </Text>
-        
+
         <Button
           mode="contained"
           onPress={() => signOut()}
