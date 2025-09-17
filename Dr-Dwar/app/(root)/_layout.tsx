@@ -1,11 +1,15 @@
+import FloatingChatBot from '@/components/FloatingChatBot';
+import '@/global.css';
 import { Slot } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import '@/global.css';
 
 export default function RootLayout() {
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <Slot screenOptions={{ headerShown: false }} />
-    </SafeAreaView>
+    <>
+      <SafeAreaView style={{ flex: 1 }}>
+        <Slot screenOptions={{ headerShown: false }} />
+      </SafeAreaView>
+      <FloatingChatBot />
+    </>
   );
 }
