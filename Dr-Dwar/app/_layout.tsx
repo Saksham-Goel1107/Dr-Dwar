@@ -1,10 +1,11 @@
 import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
-import { Slot, useRouter, useSegments } from 'expo-router';
-import { PaperProvider } from 'react-native-paper';
-import { KeyboardAvoidingView, SafeAreaView, Platform } from 'react-native';
-import { useEffect } from 'react';
-import { tokenCache } from '@clerk/clerk-expo/token-cache';
 import { resourceCache } from '@clerk/clerk-expo/resource-cache';
+import { tokenCache } from '@clerk/clerk-expo/token-cache';
+import { Slot, useRouter, useSegments } from 'expo-router';
+import { useEffect } from 'react';
+import { KeyboardAvoidingView, Platform, SafeAreaView } from 'react-native';
+import { PaperProvider } from 'react-native-paper';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import '../global.css';
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
@@ -26,7 +27,7 @@ function InitialLayout() {
     const inTabsGroup = segments[0] === '(root)';
 
     if (isSignedIn && !inTabsGroup) {
-      router.replace('/(root)/home');
+      router.replace('/(root)/(tabs)/home');
     } else if (!isSignedIn && inTabsGroup) {
       router.replace('/(auth)/Sign-in');
     }
@@ -37,21 +38,23 @@ function InitialLayout() {
 
 export default function RootLayout() {
   return (
-    <ClerkProvider
-      publishableKey={publishableKey}
-      tokenCache={tokenCache}
-      __experimental_resourceCache={resourceCache}
-    >
-      <SafeAreaView style={{ flex: 1 }}>
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        >
-          <PaperProvider>
-            <InitialLayout />
-          </PaperProvider>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </ClerkProvider>
+    <ErrorBoundary>
+      <ClerkProvider
+        publishableKey={publishableKey}
+        tokenCache={tokenCache}
+        __experimental_resourceCache={resourceCache}
+      >
+        <SafeAreaView style={{ flex: 1 }}>
+          <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          >
+            <PaperProvider>
+              <InitialLayout />
+            </PaperProvider>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
+      </ClerkProvider>
+    </ErrorBoundary>
   );
 }

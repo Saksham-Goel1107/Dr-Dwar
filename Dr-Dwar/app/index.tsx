@@ -45,7 +45,7 @@ export default function OnboardingScreen() {
 
   useEffect(() => {
     if (isSignedIn) {
-      router.replace('/(root)/home');
+      router.replace('/(root)/(tabs)/home');
     }
   }, [isSignedIn, router]);
 
