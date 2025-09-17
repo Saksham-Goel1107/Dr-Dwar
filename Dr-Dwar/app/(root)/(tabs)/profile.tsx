@@ -1,6 +1,7 @@
 import { useClerk, useUser } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
 import * as LocalAuthentication from 'expo-local-authentication';
+import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import React, { useEffect, useState } from 'react';
@@ -8,6 +9,7 @@ import {
   Alert,
   Image,
   Linking,
+  Platform,
   ScrollView,
   Switch,
   Text,
@@ -122,11 +124,58 @@ export default function ProfileSettings() {
 
   const toggleNotifications = async (val: boolean) => {
     try {
+      if (val) {
+        // Request notification permissions
+        const { status: existingStatus } = await Notifications.getPermissionsAsync();
+        let finalStatus = existingStatus;
+
+        if (existingStatus !== 'granted') {
+          const { status } = await Notifications.requestPermissionsAsync();
+          finalStatus = status;
+        }
+
+        if (finalStatus !== 'granted') {
+          Alert.alert(
+            'Permission Required',
+            'Notification permissions are required to receive app notifications. Please enable them in your device settings.',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Settings',
+                onPress: () => {
+                  if (Platform.OS === 'ios') {
+                    Linking.openURL('app-settings:');
+                  } else {
+                    Linking.openSettings();
+                  }
+                },
+              },
+            ],
+          );
+          return;
+        }
+
+        // Send a test notification to verify permissions work
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: 'Notifications Enabled! 🎉',
+            body: 'Welcome to Dr-Dwar! You will now receive important health updates and reminders.',
+            sound: 'default',
+          },
+          trigger: null, // Show immediately
+        });
+
+        Alert.alert(
+          'Success',
+          'Notifications have been enabled! You should see a test notification.',
+        );
+      }
+
       await SecureStore.setItemAsync('NOTIFICATIONS', val.toString());
       setNotifications(val);
     } catch (error) {
-      console.error('Error saving notification setting:', error);
-      Alert.alert('Error', 'Failed to save notification setting.');
+      console.error('Error toggling notifications:', error);
+      Alert.alert('Error', 'Failed to update notification settings. Please try again.');
     }
   };
 
@@ -189,23 +238,25 @@ export default function ProfileSettings() {
           <View className="items-center">
             <View className="relative mb-3 h-20 w-20">
               {user?.imageUrl ? (
-          <Image
-            source={{ uri: user.imageUrl }}
-            className="h-20 w-20 rounded-full border-2 border-blue-400"
-            resizeMode="cover"
-          />
+                <Image
+                  source={{ uri: user.imageUrl }}
+                  className="h-20 w-20 rounded-full border-2 border-blue-400"
+                  resizeMode="cover"
+                />
               ) : (
-          <View className="h-20 w-20 items-center justify-center rounded-full bg-blue-100 border-2 border-blue-400">
-            <Ionicons name="person" size={36} color="#3B82F6" />
-          </View>
+                <View className="h-20 w-20 items-center justify-center rounded-full border-2 border-blue-400 bg-blue-100">
+                  <Ionicons name="person" size={36} color="#3B82F6" />
+                </View>
               )}
-              <View className="absolute bottom-2 right-2 h-5 w-5 rounded-full bg-green-400 border-2 border-white" />
+              <View className="absolute bottom-2 right-2 h-5 w-5 rounded-full border-2 border-white bg-green-400" />
             </View>
             <Text className="mb-1 text-xl font-bold text-gray-900">{user?.username || 'User'}</Text>
-            <Text className="mb-1 text-sm text-gray-500">{user?.primaryEmailAddress?.emailAddress}</Text>
-            <View className="flex-row items-center mt-2 space-x-2">
+            <Text className="mb-1 text-sm text-gray-500">
+              {user?.primaryEmailAddress?.emailAddress}
+            </Text>
+            <View className="mt-2 flex-row items-center space-x-2">
               <Ionicons name="shield-checkmark" size={16} color="#3B82F6" />
-              <Text className="text-xs text-blue-600 font-medium">Verified Account</Text>
+              <Text className="text-xs font-medium text-blue-600">Verified Account</Text>
             </View>
           </View>
         </View>
@@ -294,7 +345,6 @@ export default function ProfileSettings() {
         >
           <Text className="text-base font-semibold text-white">Sign Out</Text>
         </TouchableOpacity>
-
       </View>
     </ScrollView>
   );

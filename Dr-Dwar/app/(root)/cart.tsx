@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
 import React from 'react';
 import { Alert, FlatList, TouchableOpacity, View } from 'react-native';
@@ -31,7 +32,7 @@ export default function CartScreen() {
     return getTotalPrice() + getTaxAmount() + getDeliveryCharges();
   };
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (cartItems.length === 0) {
       Alert.alert('Empty Cart', 'Please add items to your cart before checkout.');
       return;
@@ -41,12 +42,46 @@ export default function CartScreen() {
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Confirm',
-        onPress: () => {
-          // In a real app, this would call an API to process the order
-          Alert.alert('Success!', 'Your order has been placed successfully.');
-          // Clear cart after successful order
-          // clearCart(); // Uncomment when implementing
-          router.back();
+        onPress: async () => {
+          try {
+            // Check notification permissions before sending
+            const { status } = await Notifications.getPermissionsAsync();
+
+            if (status === 'granted') {
+              // Send order confirmation notification
+              await Notifications.scheduleNotificationAsync({
+                content: {
+                  title: 'Order Confirmed! 🎉',
+                  body: `Your order of ${getTotalItems()} items totaling ₹${getFinalTotal().toFixed(2)} has been placed successfully.`,
+                  sound: 'default',
+                  data: {
+                    orderId: `ORD-${Date.now()}`,
+                    totalItems: getTotalItems(),
+                    totalAmount: getFinalTotal(),
+                  },
+                },
+                trigger: null, // Show immediately
+              });
+            }
+
+            // Show success alert
+            Alert.alert(
+              'Order Placed Successfully!',
+              `Your order has been confirmed. ${status === 'granted' ? 'You will receive a notification with order details.' : ''}`,
+              [
+                {
+                  text: 'OK',
+                  onPress: () => {
+                    router.replace('/(root)/(tabs)/pharmacy');
+                  },
+                },
+              ],
+            );
+          } catch (error) {
+            console.error('Error processing order:', error);
+            Alert.alert('Success!', 'Your order has been placed successfully.');
+            router.back();
+          }
         },
       },
     ]);
