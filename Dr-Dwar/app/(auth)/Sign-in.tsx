@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { View, ScrollView, TouchableOpacity, Image } from 'react-native';
-import { TextInput, Button, Text } from 'react-native-paper';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSignIn } from '@clerk/clerk-expo';
 import { Link, router } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { Image, ScrollView, TouchableOpacity, View } from 'react-native';
+import { Button, Text, TextInput } from 'react-native-paper';
 import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
   Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const logo = require('@/assets/images/logo.png');
 
@@ -104,7 +104,7 @@ export default function SignInScreen() {
 
       if (completeSignIn.status === 'complete') {
         await setActive({ session: completeSignIn.createdSessionId });
-        router.replace('/(root)/home');
+        router.replace('/(root)/(tabs)/home');
         setError(null);
       }
     } catch (err: any) {
@@ -189,6 +189,8 @@ export default function SignInScreen() {
                   textColor="#1f2937"
                   outlineColor="#d1d5db"
                   activeOutlineColor="#059669"
+                  accessibilityLabel="Phone number input"
+                  accessibilityHint="Enter your registered phone number"
                   theme={{
                     colors: {
                       placeholder: '#9ca3af',

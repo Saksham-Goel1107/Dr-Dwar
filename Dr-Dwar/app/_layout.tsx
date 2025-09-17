@@ -25,6 +25,7 @@ function InitialLayout() {
     if (!isLoaded) return;
 
     const inTabsGroup = segments[0] === '(root)';
+    if (segments[0] === 'terms' || segments[0] === 'privacy') return;
 
     if (isSignedIn && !inTabsGroup) {
       router.replace('/(root)/(tabs)/home');

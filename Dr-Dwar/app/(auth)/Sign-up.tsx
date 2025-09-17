@@ -1,25 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { View, ScrollView, TouchableOpacity, Image } from 'react-native';
-import { TextInput, Button, Text } from 'react-native-paper';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSignUp } from '@clerk/clerk-expo';
 import { Link, router } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { Image, ScrollView, TouchableOpacity, View } from 'react-native';
+import { Button, Checkbox, Text, TextInput } from 'react-native-paper';
 import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
   Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const logo = require('@/assets/images/logo.png');
 
 export default function SignUpScreen() {
   const { isLoaded, signUp, setActive } = useSignUp();
   const [phoneNumber, setPhoneNumber] = useState('+91');
+  const [username, setUsername] = useState('');
   const [code, setCode] = useState('');
   const [pendingVerification, setPendingVerification] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [agreeToTerms, setAgreeToTerms] = useState(false);
 
   // Animation
   const opacity = useSharedValue(0);
@@ -54,19 +56,32 @@ export default function SignUpScreen() {
 
   const isValidPhoneNumber = (number: string) => /^\+91\d{10}$/.test(number);
   const isValidCode = (c: string) => /^\d{6}$/.test(c);
+  const isValidUsername = (name: string) => /^[a-zA-Z0-9_]{3,20}$/.test(name);
 
   // Actions
   const onSignUpPress = async () => {
     if (!isLoaded) return;
+
+    if (!isValidUsername(username)) {
+      setError(
+        'Username must be 3-20 characters long and contain only letters, numbers, and underscores.',
+      );
+      return;
+    }
 
     if (!isValidPhoneNumber(phoneNumber)) {
       setError('Enter a valid 10-digit phone number.');
       return;
     }
 
+    if (!agreeToTerms) {
+      setError('Please agree to the Terms of Service and Privacy Policy to continue.');
+      return;
+    }
+
     setLoading(true);
     try {
-      await signUp.create({ phoneNumber });
+      await signUp.create({ phoneNumber, username });
       await signUp.preparePhoneNumberVerification({ strategy: 'phone_code' });
       setPendingVerification(true);
       setError(null);
@@ -93,7 +108,7 @@ export default function SignUpScreen() {
 
       if (completeSignUp.status === 'complete') {
         await setActive({ session: completeSignUp.createdSessionId });
-        router.replace('/(root)/home');
+        router.replace('/(root)/(tabs)/home');
         setError(null);
       }
     } catch (err: any) {
@@ -119,8 +134,8 @@ export default function SignUpScreen() {
           <Text className="mb-1 text-base" style={{ color: '#059669' }}>
             Healthcare Platform for Rural Areas
           </Text>
-          <Text className="mb-8 text-sm" style={{ color: '#64748b' }}>
-            Join us to access quality healthcare services in your area
+          <Text className="mb-8 text-center text-sm" style={{ color: '#64748b' }}>
+            Join us to access quality healthcare services. Your data is secure and protected.
           </Text>
 
           {/* Animated Form Card */}
@@ -151,16 +166,61 @@ export default function SignUpScreen() {
                   borderRadius: 12,
                   padding: 16,
                   marginBottom: 16,
+                  flexDirection: 'row',
+                  alignItems: 'flex-start',
                 }}
+                accessibilityLabel="Error message"
+                accessibilityLiveRegion="assertive"
               >
-                <Text style={{ color: '#dc2626', textAlign: 'center', fontWeight: '500' }}>
-                  {error}
+                <Text style={{ color: '#dc2626', fontSize: 14, flex: 1, lineHeight: 20 }}>
+                  ⚠️ {error}
                 </Text>
+                <TouchableOpacity
+                  onPress={() => setError(null)}
+                  accessibilityLabel="Dismiss error"
+                  accessibilityHint="Tap to dismiss this error message"
+                  style={{ marginLeft: 8 }}
+                >
+                  <Text style={{ color: '#dc2626', fontSize: 18, fontWeight: 'bold' }}>×</Text>
+                </TouchableOpacity>
               </View>
             )}
 
             {!pendingVerification ? (
               <>
+                <Text
+                  style={{ fontSize: 14, color: '#374151', marginBottom: 8, fontWeight: '600' }}
+                >
+                  Username
+                </Text>
+                <TextInput
+                  value={username}
+                  onChangeText={(text) => {
+                    setError(null);
+                    setUsername(text.toLowerCase().replace(/[^a-zA-Z0-9_]/g, ''));
+                  }}
+                  maxLength={20}
+                  mode="outlined"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  placeholder="Choose a username"
+                  left={<TextInput.Icon icon="account" color="#059669" />}
+                  style={{ backgroundColor: '#f9fafb', marginBottom: 16 }}
+                  textColor="#1f2937"
+                  outlineColor="#d1d5db"
+                  activeOutlineColor="#059669"
+                  accessibilityLabel="Username input"
+                  accessibilityHint="Enter a unique username with 3-20 characters"
+                  theme={{
+                    colors: {
+                      placeholder: '#9ca3af',
+                      onSurfaceVariant: '#6b7280',
+                    },
+                  }}
+                />
+                <Text style={{ fontSize: 12, color: '#6b7280', marginBottom: 16 }}>
+                  3-20 characters, letters, numbers, and underscores only
+                </Text>
                 <Text
                   style={{ fontSize: 14, color: '#374151', marginBottom: 8, fontWeight: '600' }}
                 >
@@ -178,6 +238,8 @@ export default function SignUpScreen() {
                   textColor="#1f2937"
                   outlineColor="#d1d5db"
                   activeOutlineColor="#059669"
+                  accessibilityLabel="Phone number input"
+                  accessibilityHint="Enter your 10-digit mobile number"
                   theme={{
                     colors: {
                       placeholder: '#9ca3af',
@@ -185,16 +247,59 @@ export default function SignUpScreen() {
                     },
                   }}
                 />
-
+                {/* Terms and Privacy Agreement */}
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 24 }}>
+                  <Checkbox
+                    status={agreeToTerms ? 'checked' : 'unchecked'}
+                    onPress={() => setAgreeToTerms(!agreeToTerms)}
+                    color="#059669"
+                  />
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      color: '#374151',
+                      marginLeft: 8,
+                      flex: 1,
+                      lineHeight: 20,
+                    }}
+                    accessibilityLabel="Terms and privacy agreement text"
+                  >
+                    I agree to the{' '}
+                    <Text
+                      style={{ color: '#059669', textDecorationLine: 'underline' }}
+                      onPress={() => {
+                        // Navigate to Terms of Service
+                        router.push('/terms');
+                      }}
+                      accessibilityLabel="Terms of Service link"
+                      accessibilityHint="Opens Terms of Service page"
+                    >
+                      Terms of Service
+                    </Text>{' '}
+                    and{' '}
+                    <Text
+                      style={{ color: '#059669', textDecorationLine: 'underline' }}
+                      onPress={() => {
+                        // Navigate to Privacy Policy
+                        router.push('/privacy');
+                      }}
+                      accessibilityLabel="Privacy Policy link"
+                      accessibilityHint="Opens Privacy Policy page"
+                    >
+                      Privacy Policy
+                    </Text>
+                  </Text>
+                </View>
                 <Button
                   mode="contained"
                   onPress={onSignUpPress}
                   loading={loading}
-                  disabled={!phoneNumber || loading}
+                  disabled={!username || !phoneNumber || !agreeToTerms || loading}
                   style={{
                     borderRadius: 12,
                     paddingVertical: 8,
-                    backgroundColor: loading || !phoneNumber ? '#9ca3af' : '#059669',
+                    backgroundColor:
+                      loading || !username || !phoneNumber || !agreeToTerms ? '#9ca3af' : '#059669',
                     elevation: 2,
                   }}
                   labelStyle={{ fontSize: 16, fontWeight: '600' }}
@@ -259,7 +364,10 @@ export default function SignUpScreen() {
             <View className="mt-8 flex-row justify-center">
               <Text style={{ color: '#6b7280', fontSize: 14 }}>Already have an account? </Text>
               <Link href="/(auth)/Sign-in" asChild>
-                <TouchableOpacity>
+                <TouchableOpacity
+                  accessibilityLabel="Sign in link"
+                  accessibilityHint="Navigate to sign in page"
+                >
                   <Text style={{ color: '#059669', fontWeight: '600', fontSize: 14 }}>Sign In</Text>
                 </TouchableOpacity>
               </Link>
