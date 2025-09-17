@@ -187,19 +187,26 @@ export default function ProfileSettings() {
         {/* User Profile Header */}
         <View className="mb-6 rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
           <View className="items-center">
-            {user?.imageUrl ? (
-              <Image
-                source={{ uri: user.imageUrl }}
-                className="mb-3 h-20 w-20 rounded-full"
-                resizeMode="cover"
-              />
-            ) : (
-              <View className="mb-3 h-20 w-20 items-center justify-center rounded-full bg-blue-100">
-                <Ionicons name="person" size={32} color="#3B82F6" />
-              </View>
-            )}
+            <View className="relative mb-3 h-20 w-20">
+              {user?.imageUrl ? (
+          <Image
+            source={{ uri: user.imageUrl }}
+            className="h-20 w-20 rounded-full border-2 border-blue-400"
+            resizeMode="cover"
+          />
+              ) : (
+          <View className="h-20 w-20 items-center justify-center rounded-full bg-blue-100 border-2 border-blue-400">
+            <Ionicons name="person" size={36} color="#3B82F6" />
+          </View>
+              )}
+              <View className="absolute bottom-2 right-2 h-5 w-5 rounded-full bg-green-400 border-2 border-white" />
+            </View>
             <Text className="mb-1 text-xl font-bold text-gray-900">{user?.username || 'User'}</Text>
-            <Text className="text-sm text-gray-500">{user?.primaryEmailAddress?.emailAddress}</Text>
+            <Text className="mb-1 text-sm text-gray-500">{user?.primaryEmailAddress?.emailAddress}</Text>
+            <View className="flex-row items-center mt-2 space-x-2">
+              <Ionicons name="shield-checkmark" size={16} color="#3B82F6" />
+              <Text className="text-xs text-blue-600 font-medium">Verified Account</Text>
+            </View>
           </View>
         </View>
 
@@ -288,10 +295,6 @@ export default function ProfileSettings() {
           <Text className="text-base font-semibold text-white">Sign Out</Text>
         </TouchableOpacity>
 
-        {/* Version Info */}
-        <View className="mt-8 items-center">
-          <Text className="text-sm text-gray-400">Dr-Dwar v1.0.0</Text>
-        </View>
       </View>
     </ScrollView>
   );
