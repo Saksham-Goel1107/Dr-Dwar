@@ -1,6 +1,7 @@
 import { useClerk, useUser } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
 import * as LocalAuthentication from 'expo-local-authentication';
+import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import React, { useEffect, useState } from 'react';
 import {
@@ -211,6 +212,12 @@ export default function ProfileSettings() {
             onPress={handleEditProfile}
           />
           <SettingItem
+            title="Edit Basic Info"
+            subtitle="Update your healthcare profile"
+            icon="create-outline"
+            onPress={() => router.push('../edit-basic-info')}
+          />
+          <SettingItem
             title="Notifications"
             subtitle="Receive app notifications"
             icon="notifications-outline"
@@ -247,6 +254,18 @@ export default function ProfileSettings() {
 
         {/* Support & About */}
         <ProfileSection title="Support & About">
+          <SettingItem
+            title="Terms of Service"
+            subtitle="Read our terms and conditions"
+            icon="document-text-outline"
+            onPress={() => router.push('/terms')}
+          />
+          <SettingItem
+            title="Privacy Policy"
+            subtitle="Learn about data protection"
+            icon="shield-checkmark-outline"
+            onPress={() => router.push('/privacy')}
+          />
           <SettingItem
             title="Help & Support"
             subtitle="Get help or contact support"
