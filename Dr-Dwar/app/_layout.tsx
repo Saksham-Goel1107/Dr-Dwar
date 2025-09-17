@@ -40,7 +40,7 @@ function InitialLayout() {
         metadata?.emergencyContact?.name;
       if (!hasBasicInfo && inTabsGroup) {
         router.replace('/(root)/basic-info');
-      } else if ((hasBasicInfo && !inTabsGroup) && segments[1] !== 'edit-basic-info') {
+      } else if ((hasBasicInfo && !inTabsGroup) && segments[1] !== 'edit-basic-info' && segments[1] !== 'cart') {
         router.replace('/(root)/(tabs)/home');
       }
     } else if (!isSignedIn && inTabsGroup) {
