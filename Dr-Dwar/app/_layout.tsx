@@ -1,4 +1,4 @@
-import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
+import { ClerkProvider, useAuth, useUser } from '@clerk/clerk-expo';
 import { resourceCache } from '@clerk/clerk-expo/resource-cache';
 import { tokenCache } from '@clerk/clerk-expo/token-cache';
 import { Slot, useRouter, useSegments } from 'expo-router';
@@ -18,21 +18,35 @@ if (!publishableKey) {
 
 function InitialLayout() {
   const { isLoaded, isSignedIn } = useAuth();
+  const { user } = useUser();
   const segments = useSegments();
   const router = useRouter();
 
   useEffect(() => {
     if (!isLoaded) return;
 
-    const inTabsGroup = segments[0] === '(root)';
-    if (segments[0] === 'terms' || segments[0] === 'privacy') return;
+    const inTabsGroup = segments[1] === '(tabs)';
+    if (segments[0] === 'terms' || segments[0] === 'privacy' || segments[1] === 'basic-info')
+      return;
 
-    if (isSignedIn && !inTabsGroup) {
-      router.replace('/(root)/(tabs)/home');
+    if (isSignedIn) {
+      const metadata = user?.unsafeMetadata as any;
+      const hasBasicInfo =
+        metadata?.firstName &&
+        metadata?.lastName &&
+        metadata?.dateOfBirth &&
+        metadata?.gender &&
+        metadata?.address?.city &&
+        metadata?.emergencyContact?.name;
+      if (!hasBasicInfo && inTabsGroup) {
+        router.replace('/(root)/basic-info');
+      } else if (hasBasicInfo && !inTabsGroup) {
+        router.replace('/(root)/(tabs)/home');
+      }
     } else if (!isSignedIn && inTabsGroup) {
       router.replace('/(auth)/Sign-in');
     }
-  }, [isSignedIn, isLoaded, router, segments]);
+  }, [isSignedIn, isLoaded, user, router, segments]);
 
   return <Slot />;
 }

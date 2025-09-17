@@ -108,7 +108,7 @@ export default function SignUpScreen() {
 
       if (completeSignUp.status === 'complete') {
         await setActive({ session: completeSignUp.createdSessionId });
-        router.replace('/(root)/(tabs)/home');
+        router.replace('/(root)/basic-info');
         setError(null);
       }
     } catch (err: any) {

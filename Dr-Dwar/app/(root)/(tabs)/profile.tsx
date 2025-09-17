@@ -3,7 +3,16 @@ import { Ionicons } from '@expo/vector-icons';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
 import React, { useEffect, useState } from 'react';
-import { Alert, Image, ScrollView, Switch, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  Image,
+  Linking,
+  ScrollView,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 interface ProfileSectionProps {
   title: string;
@@ -59,7 +68,7 @@ function SettingItem({
 
 export default function ProfileSettings() {
   const { user } = useUser();
-  const { signOut } = useClerk();
+  const clerk = useClerk();
   const [appLock, setAppLock] = useState(false);
   const [notifications, setNotifications] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -128,7 +137,13 @@ export default function ProfileSettings() {
         style: 'destructive',
         onPress: async () => {
           try {
-            await signOut();
+            // prefer clerk.signOut if available
+            if (clerk && typeof (clerk as any).signOut === 'function') {
+              await (clerk as any).signOut();
+            } else {
+              // fallback: try signOut from hook shape
+              console.warn('signOut not available on clerk instance');
+            }
           } catch (error) {
             console.error('Error signing out:', error);
             Alert.alert('Error', 'Failed to sign out. Please try again.');
@@ -138,9 +153,19 @@ export default function ProfileSettings() {
     ]);
   };
 
-  const handleEditProfile = () => {
-    // Navigate to edit profile screen
-    Alert.alert('Coming Soon', 'Profile editing will be available in a future update.');
+  const handleEditProfile = async () => {
+    try {
+      const fallbackUrl = 'https://apt-satyr-99.accounts.dev/user';
+      const canOpen = await Linking.canOpenURL(fallbackUrl);
+      if (canOpen) {
+        await Linking.openURL(fallbackUrl);
+      } else {
+        Alert.alert('Account Portal', 'Account portal is not available in this environment.');
+      }
+    } catch (err) {
+      console.error('Error opening account portal:', err);
+      Alert.alert('Error', 'Failed to open account portal.');
+    }
   };
 
   const handleSupport = () => {
