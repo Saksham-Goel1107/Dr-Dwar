@@ -1,13 +1,13 @@
+import { useUser } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
-import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
 import React from 'react';
 import { Alert, FlatList, TouchableOpacity, View } from 'react-native';
 import { Button, Card, Divider, IconButton, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { WebView } from 'react-native-webview';
 import { useCart } from '../../contexts/CartContext';
 
-// Define CartItem type according to your cart item structure
 type CartItem = {
   'Sr No': string;
   'Drug Code': string;
@@ -19,6 +19,25 @@ type CartItem = {
 
 export default function CartScreen() {
   const { cartItems, updateQuantity, getTotalPrice, getTotalItems } = useCart();
+  const { user } = useUser();
+  const [showPayment, setShowPayment] = React.useState(false);
+
+  // Extract user data for Razorpay
+  const userPhone = user?.phoneNumbers?.[0]?.phoneNumber || '';
+  const userName =
+    user?.username || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Customer';
+
+  const handlePaymentSuccess = (data: any) => {
+    setShowPayment(false);
+    Alert.alert('Success', `Payment ID: ${data.razorpay_payment_id}`);
+    // Here you can add logic to clear cart and navigate to success page
+    router.back();
+  };
+
+  const handlePaymentFailure = (error: any) => {
+    setShowPayment(false);
+    Alert.alert('Error', 'Payment failed. Please try again.');
+  };
 
   const getTaxAmount = () => {
     return getTotalPrice() * 0.18;
@@ -30,61 +49,6 @@ export default function CartScreen() {
 
   const getFinalTotal = () => {
     return getTotalPrice() + getTaxAmount() + getDeliveryCharges();
-  };
-
-  const handleCheckout = async () => {
-    if (cartItems.length === 0) {
-      Alert.alert('Empty Cart', 'Please add items to your cart before checkout.');
-      return;
-    }
-
-    Alert.alert('Confirm Order', `Total: ₹${getFinalTotal().toFixed(2)}\nProceed with checkout?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Confirm',
-        onPress: async () => {
-          try {
-            // Check notification permissions before sending
-            const { status } = await Notifications.getPermissionsAsync();
-
-            if (status === 'granted') {
-              // Send order confirmation notification
-              await Notifications.scheduleNotificationAsync({
-                content: {
-                  title: 'Order Confirmed! 🎉',
-                  body: `Your order of ${getTotalItems()} items totaling ₹${getFinalTotal().toFixed(2)} has been placed successfully.`,
-                  sound: 'default',
-                  data: {
-                    orderId: `ORD-${Date.now()}`,
-                    totalItems: getTotalItems(),
-                    totalAmount: getFinalTotal(),
-                  },
-                },
-                trigger: null, // Show immediately
-              });
-            }
-
-            // Show success alert
-            Alert.alert(
-              'Order Placed Successfully!',
-              `Your order has been confirmed. ${status === 'granted' ? 'You will receive a notification with order details.' : ''}`,
-              [
-                {
-                  text: 'OK',
-                  onPress: () => {
-                    router.replace('/(root)/(tabs)/pharmacy');
-                  },
-                },
-              ],
-            );
-          } catch (error) {
-            console.error('Error processing order:', error);
-            Alert.alert('Success!', 'Your order has been placed successfully.');
-            router.back();
-          }
-        },
-      },
-    ]);
   };
 
   const renderCartItem = ({ item }: { item: CartItem }) => (
@@ -348,7 +312,7 @@ export default function CartScreen() {
 
             <Button
               mode="contained"
-              onPress={handleCheckout}
+              onPress={() => setShowPayment(true)}
               style={{
                 backgroundColor: '#059669',
                 borderRadius: 12,
@@ -356,10 +320,55 @@ export default function CartScreen() {
               }}
               labelStyle={{ fontSize: 16, fontWeight: '600' }}
             >
-              Proceed to Checkout
+              Proceed to Payment
             </Button>
           </View>
         </>
+      )}
+
+      {showPayment && (
+        <View
+          style={{
+            flex: 1,
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'white',
+          }}
+        >
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              padding: 16,
+              borderBottomWidth: 1,
+              borderBottomColor: '#e2e8f0',
+            }}
+          >
+            <TouchableOpacity onPress={() => setShowPayment(false)} style={{ padding: 8 }}>
+              <Ionicons name="close" size={24} color="#1e293b" />
+            </TouchableOpacity>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#1e293b', marginLeft: 16 }}>
+              Payment
+            </Text>
+          </View>
+          <WebView
+            source={{
+              uri: `https://api.razorpay.com/v1/checkout/embedded?key_id=rzp_test_RIibXBoTRyGYcf&amount=${Math.round(getFinalTotal() * 100)}&currency=INR&name=${encodeURIComponent('Dr-Dwar Pharmacy')}&description=${encodeURIComponent('Medicine Purchase')}&prefill[contact]=${encodeURIComponent(userPhone)}&prefill[email]=${encodeURIComponent('user@example.com')}&prefill[name]=${encodeURIComponent(userName)}&theme[color]=%23059669`,
+            }}
+            onNavigationStateChange={(navState) => {
+              // Handle payment success/failure based on URL changes
+              if (navState.url.includes('success')) {
+                handlePaymentSuccess({ razorpay_payment_id: 'test_payment_id' });
+              } else if (navState.url.includes('failure')) {
+                handlePaymentFailure('Payment failed');
+              }
+            }}
+            style={{ flex: 1 }}
+          />
+        </View>
       )}
     </SafeAreaView>
   );

@@ -54,13 +54,8 @@ export default function OnboardingScreen() {
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       <SafeAreaView className="flex-1 bg-gradient-to-br from-gray-50 to-white">
         {/* Header */}
-        <View className="px-6 pb-4 pt-6">
-          <View className="mb-2 flex-row items-center justify-center">
-            <Text className="bg-gradient-to-r from-emerald-600 via-blue-600 to-orange-600 bg-clip-text text-4xl font-bold text-transparent">
-              Dr.
-            </Text>
-            <Text className="ml-1 text-4xl font-bold text-gray-900">Dwar</Text>
-          </View>
+        <View className="px-6 pb-4 pt-6 flex items-center">
+          <Image source={require('../assets/images/icon.png')} className="h-20 w-32" resizeMode="contain" />
           <Text className="mt-2 text-center text-base font-medium text-gray-600">
             Your Digital Health Companion
           </Text>
@@ -82,7 +77,7 @@ export default function OnboardingScreen() {
                 className={`flex-1 items-center justify-center p-8 ${item.color} mx-2 rounded-3xl border border-white/20 shadow-xl`}
               >
                 <View className="mb-8 rounded-2xl border border-gray-100 bg-white p-8 shadow-2xl">
-                  <Image source={item.image} className="h-40 w-40" resizeMode="contain" />
+                  <Image source={item.image} className="h-40 w-60" resizeMode="contain" />
                 </View>
                 <Text
                   className={`text-2xl font-bold ${item.accent} mb-4 text-center leading-tight`}
