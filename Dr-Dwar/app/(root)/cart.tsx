@@ -356,7 +356,7 @@ export default function CartScreen() {
           </View>
           <WebView
             source={{
-              uri: `https://api.razorpay.com/v1/checkout/embedded?key_id=rzp_test_RIibXBoTRyGYcf&amount=${Math.round(getFinalTotal() * 100)}&currency=INR&name=${encodeURIComponent('Dr-Dwar Pharmacy')}&description=${encodeURIComponent('Medicine Purchase')}&prefill[contact]=${encodeURIComponent(userPhone)}&prefill[email]=${encodeURIComponent('user@example.com')}&prefill[name]=${encodeURIComponent(userName)}&theme[color]=%23059669`,
+              uri: `https://api.razorpay.com/v1/checkout/embedded?key_id=${process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID}&amount=${Math.round(getFinalTotal() * 100)}&currency=INR&name=${encodeURIComponent('Dr-Dwar Pharmacy')}&description=${encodeURIComponent('Medicine Purchase')}&prefill[contact]=${encodeURIComponent(userPhone)}&prefill[email]=${encodeURIComponent('user@example.com')}&prefill[name]=${encodeURIComponent(userName)}&theme[color]=%23059669`,
             }}
             onNavigationStateChange={(navState) => {
               // Handle payment success/failure based on URL changes

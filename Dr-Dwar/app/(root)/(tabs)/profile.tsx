@@ -218,8 +218,30 @@ export default function ProfileSettings() {
     }
   };
 
-  const handleSupport = () => {
-    Alert.alert('Support', 'For support, please contact sakshamgoel1107@gmail.com');
+  const handleContactUs = () => {
+    Alert.alert(
+      'Contact Us',
+      'How would you like to reach us?',
+      [
+        {
+          text: 'GitHub',
+          onPress: () => {
+            Linking.openURL('https://github.com/Saksham-Goel1107');
+          },
+        },
+        {
+          text: 'Email',
+          onPress: () => {
+            Linking.openURL('mailto:sakshamgoel1107@gmail.com');
+          },
+        },
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+      ],
+      { cancelable: true },
+    );
   };
 
   const handleAbout = () => {
@@ -276,6 +298,12 @@ export default function ProfileSettings() {
             onPress={() => router.push('../edit-basic-info')}
           />
           <SettingItem
+            title="View Orders"
+            subtitle="Check your order history"
+            icon="bag-handle-outline"
+            onPress={() => router.push('/orders')}
+          />
+          <SettingItem
             title="Notifications"
             subtitle="Receive app notifications"
             icon="notifications-outline"
@@ -313,6 +341,12 @@ export default function ProfileSettings() {
         {/* Support & About */}
         <ProfileSection title="Support & About">
           <SettingItem
+            title="Support"
+            subtitle="Get help and support"
+            icon="headset-outline"
+            onPress={() => router.push('/Support')}
+          />
+          <SettingItem
             title="Terms of Service"
             subtitle="Read our terms and conditions"
             icon="document-text-outline"
@@ -325,10 +359,10 @@ export default function ProfileSettings() {
             onPress={() => router.push('/privacy')}
           />
           <SettingItem
-            title="Help & Support"
+            title="Contact Us"
             subtitle="Get help or contact support"
             icon="help-circle-outline"
-            onPress={handleSupport}
+            onPress={handleContactUs}
           />
           <SettingItem
             title="About"

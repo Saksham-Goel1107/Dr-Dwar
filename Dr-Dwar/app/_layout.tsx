@@ -26,7 +26,7 @@ function InitialLayout() {
     if (!isLoaded) return;
 
     const inTabsGroup = segments[1] === '(tabs)';
-    if (segments[0] === 'terms' || segments[0] === 'privacy')
+    if (segments[0] === 'terms' || segments[0] === 'privacy' || segments[0] === 'Support' )
       return;
 
     if (isSignedIn) {
@@ -40,7 +40,7 @@ function InitialLayout() {
         metadata?.emergencyContact?.name;
       if (!hasBasicInfo && inTabsGroup) {
         router.replace('/(root)/basic-info');
-      } else if ((hasBasicInfo && !inTabsGroup) && segments[1] !== 'edit-basic-info' && segments[1] !== 'cart') {
+      } else if ((hasBasicInfo && !inTabsGroup) && segments[1] !== 'edit-basic-info' && segments[1] !== 'cart' && segments[1] !== 'orders') {
         router.replace('/(root)/(tabs)/home');
       }
     } else if (!isSignedIn && inTabsGroup) {

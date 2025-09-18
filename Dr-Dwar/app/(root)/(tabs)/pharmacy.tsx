@@ -422,28 +422,63 @@ export default function PharmacyScreen() {
               alignItems: 'center',
               justifyContent: 'center',
               paddingVertical: 80,
+              paddingHorizontal: 40,
             }}
           >
-            <Ionicons name="search-outline" size={64} color="#cbd5e1" />
+            <View
+              style={{
+                backgroundColor: '#f8fafc',
+                borderRadius: 100,
+                padding: 24,
+                marginBottom: 24,
+              }}
+            >
+              <Ionicons name="search-outline" size={48} color="#cbd5e1" />
+            </View>
             <Text
               style={{
-                fontSize: 18,
-                fontWeight: '500',
-                marginTop: 16,
-                color: '#64748b',
+                fontSize: 20,
+                fontWeight: '600',
+                marginBottom: 8,
+                color: '#475569',
+                textAlign: 'center',
               }}
             >
               No medicines found
             </Text>
             <Text
               style={{
-                fontSize: 14,
-                marginTop: 8,
-                color: '#94a3b8',
+                fontSize: 16,
+                marginBottom: 32,
+                color: '#64748b',
+                textAlign: 'center',
+                lineHeight: 22,
               }}
             >
-              Try adjusting your search or filters
+              We couldn&apos;t find any medicines matching your search criteria.
             </Text>
+
+            {/* Quick Actions */}
+            <View style={{ width: '100%', gap: 12 }}>
+              {(searchQuery || filterCategory || minPrice || maxPrice) && (
+                <Button
+                  mode="outlined"
+                  onPress={() => {
+                    setSearchQuery('');
+                    setFilterCategory(null);
+                    setMinPrice('');
+                    setMaxPrice('');
+                  }}
+                  style={{
+                    borderColor: '#059669',
+                    borderRadius: 12,
+                  }}
+                  labelStyle={{ color: '#059669', fontSize: 16, fontWeight: '500' }}
+                >
+                  Clear all filters
+                </Button>
+              )}
+            </View>
           </View>
         )}
       />
