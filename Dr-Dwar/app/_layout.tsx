@@ -3,8 +3,9 @@ import { resourceCache } from '@clerk/clerk-expo/resource-cache';
 import { tokenCache } from '@clerk/clerk-expo/token-cache';
 import * as Sentry from '@sentry/react-native';
 import { Slot, useRouter, useSegments } from 'expo-router';
+import { Accelerometer } from 'expo-sensors';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, SafeAreaView } from 'react-native';
 import { PaperProvider } from 'react-native-paper';
 import { ErrorBoundary } from '../components/ErrorBoundary';
@@ -20,7 +21,20 @@ Sentry.init({
   // Configure Session Replay
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1,
-  integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
+  integrations: [
+    Sentry.mobileReplayIntegration(),
+    Sentry.feedbackIntegration({
+      // Additional SDK configuration goes in here, for example:
+      styles: {
+        submitButton: {
+          backgroundColor: '#6a1b9a',
+        },
+      },
+      namePlaceholder: 'Fullname',
+      isNameRequired: true,
+      isEmailRequired: true,
+    }),
+  ],
 
   // uncomment the line below to enable Spotlight (https://spotlightjs.com)
   // spotlight: __DEV__,
@@ -39,6 +53,7 @@ function InitialLayout() {
   const { user } = useUser();
   const segments = useSegments();
   const router = useRouter();
+  const [isFeedbackVisible, setIsFeedbackVisible] = useState(false);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -64,6 +79,77 @@ function InitialLayout() {
       router.replace('/(auth)/Sign-in');
     }
   }, [isSignedIn, isLoaded, user, router, segments]);
+
+  // Shake detection for Sentry feedback
+  useEffect(() => {
+    let subscription: any;
+
+    const startShakeDetection = async () => {
+      try {
+        // Request permission to use accelerometer
+        const { status } = await Accelerometer.requestPermissionsAsync();
+        if (status !== 'granted') {
+          console.log('Accelerometer permission denied');
+          return;
+        }
+
+        // Set update interval for shake detection
+        Accelerometer.setUpdateInterval(100);
+
+        let lastX = 0;
+        let lastY = 0;
+        let lastZ = 0;
+        let lastUpdate = 0;
+        const SHAKE_THRESHOLD = 2.7; // Adjust sensitivity as needed
+
+        subscription = Accelerometer.addListener((accelerometerData) => {
+          const { x, y, z } = accelerometerData;
+          const currentTime = Date.now();
+
+          // Only check for shake every 100ms to avoid too many calculations
+          if (currentTime - lastUpdate > 100) {
+            const acceleration = Math.abs(x - lastX) + Math.abs(y - lastY) + Math.abs(z - lastZ);
+
+            if (acceleration > SHAKE_THRESHOLD) {
+              // Device was shaken - toggle feedback widget
+              try {
+                if (isFeedbackVisible) {
+                  // Try to hide feedback widget (if method exists)
+                  if (typeof (Sentry as any).hideFeedbackWidget === 'function') {
+                    (Sentry as any).hideFeedbackWidget();
+                  } else if (typeof (Sentry as any).closeFeedback === 'function') {
+                    (Sentry as any).closeFeedback();
+                  }
+                  setIsFeedbackVisible(false);
+                } else {
+                  Sentry.showFeedbackWidget();
+                  setIsFeedbackVisible(true);
+                }
+              } catch (error) {
+                console.error('Error toggling feedback widget:', error);
+              }
+            }
+
+            lastX = x;
+            lastY = y;
+            lastZ = z;
+            lastUpdate = currentTime;
+          }
+        });
+      } catch (error) {
+        console.error('Error setting up shake detection:', error);
+      }
+    };
+
+    startShakeDetection();
+
+    // Cleanup subscription on unmount
+    return () => {
+      if (subscription) {
+        subscription.remove();
+      }
+    };
+  }, [isFeedbackVisible]);
 
   return <Slot />;
 }
