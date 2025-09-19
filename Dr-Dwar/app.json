@@ -33,7 +33,9 @@
           "icon": "./assets/images/icon.png",
           "color": "#059669",
           "defaultChannel": "default",
-          "sounds": ["./assets/sounds/notification.wav"]
+          "sounds": [
+            "./assets/sounds/notification.wav"
+          ]
         }
       ],
       [
@@ -46,6 +48,14 @@
           "dark": {
             "backgroundColor": "#000000"
           }
+        }
+      ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "dr-dwar",
+          "organization": "saksham-vj"
         }
       ]
     ],
