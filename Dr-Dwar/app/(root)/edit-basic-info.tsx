@@ -147,6 +147,7 @@ export default function EditBasicInfoScreen() {
 
     setLoading(true);
     try {
+      // First update Clerk metadata
       await user?.update({
         unsafeMetadata: {
           role: 'user',
@@ -172,6 +173,74 @@ export default function EditBasicInfoScreen() {
           email: email.trim(),
         },
       });
+
+      // Then sync with backend database
+      const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+      if (!apiUrl) {
+        console.warn('EXPO_PUBLIC_API_URL not configured, skipping backend sync');
+        router.back();
+        return;
+      }
+
+      const userData = {
+        userId: user?.id,
+        userName: user?.username,
+        phoneNumber: user?.phoneNumbers[0]?.phoneNumber,
+        email: email.trim() || undefined,
+      };
+
+      try {
+        // First try to get the user to see if they exist
+        const getResponse = await fetch(`${apiUrl}/api/users/by-userid/${user?.id}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'true',
+          },
+        });
+
+        if (getResponse.ok) {
+          // User exists, get their database ID and update them
+          const userData = await getResponse.json();
+          const dbUserId = userData.data.id;
+
+          const updateResponse = await fetch(`${apiUrl}/api/users/${dbUserId}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              userName: user?.username,
+              phoneNumber: user?.phoneNumbers[0]?.phoneNumber,
+              email: email.trim() || undefined,
+            }),
+          });
+
+          if (updateResponse.ok) {
+            console.log('User updated in backend successfully');
+          } else {
+            console.error('Failed to update user in backend');
+          }
+        } else {
+          // User doesn't exist, create them
+          const createResponse = await fetch(`${apiUrl}/api/users`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userData),
+          });
+
+          if (createResponse.ok) {
+            console.log('User created in backend successfully');
+          } else {
+            console.error('Failed to create user in backend');
+          }
+        }
+      } catch (apiError) {
+        console.error('Backend sync failed:', apiError);
+        // Don't block the user flow, just log the error
+      }
 
       router.back(); // Go back to previous screen
     } catch (err: any) {

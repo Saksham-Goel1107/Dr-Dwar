@@ -121,6 +121,7 @@ export default function BasicInfoScreen() {
 
     setLoading(true);
     try {
+      // First update Clerk metadata
       await user?.update({
         unsafeMetadata: {
           role: 'user',
@@ -146,6 +147,40 @@ export default function BasicInfoScreen() {
           email: email.trim(),
         },
       });
+
+      // Then sync with backend database
+      const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+      if (!apiUrl) {
+        console.warn('EXPO_PUBLIC_API_URL not configured, skipping backend sync');
+        router.replace('/(root)/(tabs)/home');
+        return;
+      }
+
+      const userData = {
+        userId: user?.id,
+        userName: user?.username,
+        phoneNumber: user?.phoneNumbers[0]?.phoneNumber,
+        email: email.trim() || undefined,
+      };
+
+      const response = await fetch(`${apiUrl}/api/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true',
+        },
+        body: JSON.stringify(userData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error('Backend sync failed:', result);
+        // Don't block the user flow, just log the error
+        // The user can still proceed to the home screen
+      } else {
+        console.log('User synced with backend successfully:', result);
+      }
 
       router.replace('/(root)/(tabs)/home');
     } catch (err: any) {
@@ -631,7 +666,7 @@ export default function BasicInfoScreen() {
                 label="Email (Optional)"
                 value={email}
                 onChangeText={setEmail}
-                autoCapitalize='none'
+                autoCapitalize="none"
                 mode="outlined"
                 style={{ marginBottom: 16, backgroundColor: '#f8fafc' }}
                 outlineColor="#e2e8f0"
