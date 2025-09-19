@@ -3,6 +3,10 @@ import cors from 'cors';
 import express from 'express';
 import { ENV } from './config/env';
 // import { arcjetMiddleware } from './middleware/arcjet.middleware';
+import { errorHandler, notFound } from './middleware/error.middleware';
+import { requestLogger } from './middleware/logger.middleware';
+import healthRoutes from './routes/health.routes';
+import orderRoutes from './routes/order.routes';
 import userRoutes from './routes/user.routes';
 
 const app = express();
@@ -11,6 +15,7 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
+app.use(requestLogger);
 
 // Clerk middleware for authentication
 app.use(clerkMiddleware());
@@ -20,34 +25,14 @@ app.use(clerkMiddleware());
 
 // Routes
 app.use('/api/users', userRoutes);
-
-// Health check
-app.get('/healthz', (_, res) => {
-  res.json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    environment: ENV.NODE_ENV,
-  });
-});
+app.use('/api/orders', orderRoutes);
+app.use('/', healthRoutes);
 
 // 404 handler
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: `Route ${req.originalUrl} not found`,
-  });
-});
+app.use(notFound);
 
 // Global error handler
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Error:', err);
-
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message || 'Internal server error',
-    ...(ENV.NODE_ENV === 'development' && { stack: err.stack }),
-  });
-});
+app.use(errorHandler);
 
 const PORT = Number(ENV.PORT) || 3000;
 

@@ -1,5 +1,6 @@
-import { useUser } from '@clerk/clerk-expo';
+import { useAuth, useUser } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
+import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
 import React from 'react';
 import { Alert, FlatList, TouchableOpacity, View } from 'react-native';
@@ -18,25 +19,129 @@ type CartItem = {
 };
 
 export default function CartScreen() {
-  const { cartItems, updateQuantity, getTotalPrice, getTotalItems } = useCart();
+  const { cartItems, updateQuantity, getTotalPrice, getTotalItems, clearCart } = useCart();
   const { user } = useUser();
+  const { getToken } = useAuth();
   const [showPayment, setShowPayment] = React.useState(false);
+  const [isProcessing, setIsProcessing] = React.useState(false);
+
+  React.useEffect(() => {
+    const requestPermissions = async () => {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission required', 'Notification permissions are needed to send alerts.');
+      }
+    };
+    requestPermissions();
+  }, []);
 
   // Extract user data for Razorpay
   const userPhone = user?.phoneNumbers?.[0]?.phoneNumber || '';
   const userName =
     user?.username || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Customer';
 
-  const handlePaymentSuccess = (data: any) => {
+  const handlePaymentSuccess = async (data: any) => {
     setShowPayment(false);
-    Alert.alert('Success', `Payment ID: ${data.razorpay_payment_id}`);
-    // Here you can add logic to clear cart and navigate to success page
-    router.back();
+    setIsProcessing(true);
+
+    try {
+      // Prepare order data
+      const orderData = {
+        userId: user?.id,
+        userName: userName,
+        userPhone: userPhone,
+        userEmail: user?.primaryEmailAddress?.emailAddress || '',
+        items: cartItems.map((item) => ({
+          srNo: item['Sr No'],
+          drugCode: item['Drug Code'],
+          genericName: item['Generic Name'],
+          unitSize: item['Unit Size'],
+          mrp: parseFloat(item.MRP),
+          quantity: item.quantity,
+          totalPrice: parseFloat(item.MRP) * item.quantity,
+        })),
+        subtotal: getTotalPrice(),
+        taxAmount: getTaxAmount(),
+        deliveryCharges: getDeliveryCharges(),
+        totalAmount: getFinalTotal(),
+        paymentId: data.razorpay_payment_id,
+        paymentStatus: 'completed',
+      };
+
+      // Send order to backend
+      const token = await getToken();
+      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/orders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true', // Only for local testing with ngrok
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(orderData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save order');
+      }
+
+      const orderResult = await response.json();
+
+      // Clear the cart
+      clearCart();
+
+      // Show success alert
+      Alert.alert(
+        'Success',
+        `Payment successful! Order ID: ${orderResult.orderId || data.razorpay_payment_id}`,
+      );
+
+      // Send success notification
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: '🎉 Order Placed Successfully!',
+          body: `Your order for ₹${getFinalTotal().toFixed(2)} has been confirmed. Order ID: ${orderResult.orderId || data.razorpay_payment_id}`,
+          sound: 'default',
+        },
+        trigger: null,
+      });
+
+      // Navigate back to home
+      router.replace('/(root)/(tabs)/home');
+    } catch (error) {
+      console.error('Error processing order:', error);
+      Alert.alert('Warning', 'Payment successful but order saving failed. Please contact support.');
+
+      // Still clear cart and show success notification
+      clearCart();
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: 'Payment Successful',
+          body: 'Your payment was processed successfully.',
+          sound: 'default',
+        },
+        trigger: null,
+      });
+      router.replace('/(root)/(tabs)/home');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  const handlePaymentFailure = (error: any) => {
+  const handlePaymentFailure = async (error: any) => {
     setShowPayment(false);
-    Alert.alert('Error', 'Payment failed. Please try again.');
+    Alert.alert(
+      'Payment Failed',
+      'Your payment could not be processed. Please try again or contact support if the issue persists.',
+    );
+    // Send failure notification
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: '💳 Payment Failed',
+        body: "We couldn't process your payment. Please check your payment method and try again.",
+        sound: 'default',
+      },
+      trigger: null,
+    });
   };
 
   const getTaxAmount = () => {
@@ -313,14 +418,16 @@ export default function CartScreen() {
             <Button
               mode="contained"
               onPress={() => setShowPayment(true)}
+              disabled={isProcessing}
+              loading={isProcessing}
               style={{
-                backgroundColor: '#059669',
+                backgroundColor: isProcessing ? '#9ca3af' : '#059669',
                 borderRadius: 12,
                 paddingVertical: 4,
               }}
               labelStyle={{ fontSize: 16, fontWeight: '600' }}
             >
-              Proceed to Payment
+              {isProcessing ? 'Processing...' : 'Proceed to Payment'}
             </Button>
           </View>
         </>
@@ -356,13 +463,15 @@ export default function CartScreen() {
           </View>
           <WebView
             source={{
-              uri: `https://api.razorpay.com/v1/checkout/embedded?key_id=${process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID}&amount=${Math.round(getFinalTotal() * 100)}&currency=INR&name=${encodeURIComponent('Dr-Dwar Pharmacy')}&description=${encodeURIComponent('Medicine Purchase')}&prefill[contact]=${encodeURIComponent(userPhone)}&prefill[email]=${encodeURIComponent('user@example.com')}&prefill[name]=${encodeURIComponent(userName)}&theme[color]=%23059669`,
+              uri: `https://api.razorpay.com/v1/checkout/embedded?key_id=${process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID}&amount=${Math.round(getFinalTotal() * 100)}&currency=INR&name=${encodeURIComponent('Dr-Dwar Pharmacy')}&description=${encodeURIComponent('Medicine Purchase')}&prefill[contact]=${encodeURIComponent(userPhone)}&prefill[email]=${encodeURIComponent('user@example.com')}&prefill[name]=${encodeURIComponent(userName)}&theme[color]=%23059669&callback_url=https://success&redirect_url=https://failure`,
             }}
             onNavigationStateChange={(navState) => {
               // Handle payment success/failure based on URL changes
-              if (navState.url.includes('success')) {
-                handlePaymentSuccess({ razorpay_payment_id: 'test_payment_id' });
-              } else if (navState.url.includes('failure')) {
+              if (navState.url.startsWith('https://success')) {
+                const urlParams = new URLSearchParams(navState.url.split('?')[1]);
+                const paymentId = urlParams.get('razorpay_payment_id');
+                handlePaymentSuccess({ razorpay_payment_id: paymentId || 'unknown' });
+              } else if (navState.url.startsWith('https://failure')) {
                 handlePaymentFailure('Payment failed');
               }
             }}

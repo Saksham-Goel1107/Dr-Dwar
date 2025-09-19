@@ -1,24 +1,24 @@
 import { Router } from 'express';
 import { UserController } from '../controllers/user.controller';
+import { protectRoute } from '../middleware/auth.middleware';
 
 const router = Router();
 
-// Create a new user
-router.post('/', UserController.createUser);
+router.post('/', protectRoute, UserController.createUser);
 
-// Get all users (with pagination)
-router.get('/', UserController.getAllUsers);
+// Get all users (with pagination) - requires authentication
+router.get('/', protectRoute, UserController.getAllUsers);
 
-// Get user by ID
-router.get('/:id', UserController.getUserById);
+// Get user by ID - requires authentication
+router.get('/:id', protectRoute, UserController.getUserById);
 
-// Get user by userId
-router.get('/by-userid/:userId', UserController.getUserByUserId);
+// Get user by userId - requires authentication
+router.get('/by-userid/:userId', protectRoute, UserController.getUserByUserId);
 
-// Update user
-router.put('/:id', UserController.updateUser);
+// Update user - requires authentication
+router.put('/:id', protectRoute, UserController.updateUser);
 
-// Delete user
-router.delete('/:id', UserController.deleteUser);
+// Delete user - requires authentication
+router.delete('/:id', protectRoute, UserController.deleteUser);
 
 export default router;

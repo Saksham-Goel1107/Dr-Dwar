@@ -1,5 +1,5 @@
 import '@/global.css';
-import { useUser } from '@clerk/clerk-expo';
+import { useAuth, useUser } from '@clerk/clerk-expo';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
@@ -10,6 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function EditBasicInfoScreen() {
   const { user } = useUser();
+  const { getToken } = useAuth();
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -191,11 +192,13 @@ export default function EditBasicInfoScreen() {
 
       try {
         // First try to get the user to see if they exist
+        const token = await getToken();
         const getResponse = await fetch(`${apiUrl}/api/users/by-userid/${user?.id}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
             'ngrok-skip-browser-warning': 'true',
+            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -208,6 +211,7 @@ export default function EditBasicInfoScreen() {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({
               userName: user?.username,
@@ -227,6 +231,7 @@ export default function EditBasicInfoScreen() {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify(userData),
           });

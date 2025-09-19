@@ -1,5 +1,5 @@
 import '@/global.css';
-import { useUser } from '@clerk/clerk-expo';
+import { useAuth, useUser } from '@clerk/clerk-expo';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
@@ -10,6 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function BasicInfoScreen() {
   const { user } = useUser();
+  const { getToken } = useAuth();
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -91,23 +92,6 @@ export default function BasicInfoScreen() {
       validateDateOfBirth(dateOfBirth) &&
       validatePincode(pincode.trim()) &&
       validatePhone(emergencyPhone.trim());
-    console.log('Form validation:', {
-      firstName: !!firstName.trim(),
-      lastName: !!lastName.trim(),
-      dateOfBirth: !!dateOfBirth,
-      gender: !!gender,
-      addressLine1: !!addressLine1.trim(),
-      city: !!city.trim(),
-      state: !!state.trim(),
-      pincode: !!pincode.trim(),
-      emergencyName: !!emergencyName.trim(),
-      emergencyRelation: !!emergencyRelation.trim(),
-      emergencyPhone: !!emergencyPhone.trim(),
-      dateValid: validateDateOfBirth(dateOfBirth),
-      pincodeValid: validatePincode(pincode.trim()),
-      phoneValid: validatePhone(emergencyPhone.trim()),
-      overall: valid,
-    });
     return valid;
   };
 
@@ -163,11 +147,13 @@ export default function BasicInfoScreen() {
         email: email.trim() || undefined,
       };
 
+      const token = await getToken();
       const response = await fetch(`${apiUrl}/api/users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'ngrok-skip-browser-warning': 'true',
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(userData),
       });
