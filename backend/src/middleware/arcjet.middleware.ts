@@ -1,4 +1,4 @@
-import { aj } from '../config/arcjet.ts';
+import { aj } from '../config/arcjet';
 
 import { NextFunction, Request, Response } from 'express';
 

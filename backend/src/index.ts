@@ -1,7 +1,7 @@
 import express from 'express';
-import { ENV } from './config/env.ts';
+import { ENV } from './config/env';
 import cors from 'cors';
-import { arcjetMiddleware } from './middleware/arcjet.middleware.ts';
+import { arcjetMiddleware } from './middleware/arcjet.middleware';
 import { clerkMiddleware } from '@clerk/express';
 
 const app = express();

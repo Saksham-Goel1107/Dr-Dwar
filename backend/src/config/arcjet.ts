@@ -1,5 +1,5 @@
 import arcjet, { detectBot, shield, tokenBucket } from '@arcjet/node';
-import { ENV } from './env.ts';
+import { ENV } from './env';
 
 if (!ENV.ARCJET_KEY) {
   throw new Error('ARCJET_KEY is not defined in the environment variables.');
