@@ -1,6 +1,6 @@
 import '@/global.css';
 import { useUser } from '@clerk/clerk-expo';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -25,6 +25,10 @@ export default function EditBasicInfoScreen() {
   const [emergencyName, setEmergencyName] = useState('');
   const [emergencyRelation, setEmergencyRelation] = useState('');
   const [emergencyPhone, setEmergencyPhone] = useState('');
+  const [diseases, setDiseases] = useState('');
+  const [allergies, setAllergies] = useState('');
+  const [medicalNote, setMedicalNote] = useState('');
+  const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,6 +52,10 @@ export default function EditBasicInfoScreen() {
           relation?: string;
           phone?: string;
         };
+        diseases?: string;
+        allergies?: string;
+        medicalNote?: string;
+        email?: string;
       };
       setFirstName(typeof metadata.firstName === 'string' ? metadata.firstName : '');
       setLastName(typeof metadata.lastName === 'string' ? metadata.lastName : '');
@@ -58,9 +66,21 @@ export default function EditBasicInfoScreen() {
       setCity(typeof metadata.address?.city === 'string' ? metadata.address.city : '');
       setState(typeof metadata.address?.state === 'string' ? metadata.address.state : '');
       setPincode(typeof metadata.address?.pincode === 'string' ? metadata.address.pincode : '');
-      setEmergencyName(typeof metadata.emergencyContact?.name === 'string' ? metadata.emergencyContact.name : '');
-      setEmergencyRelation(typeof metadata.emergencyContact?.relation === 'string' ? metadata.emergencyContact.relation : '');
-      setEmergencyPhone(typeof metadata.emergencyContact?.phone === 'string' ? metadata.emergencyContact.phone : '');
+      setEmergencyName(
+        typeof metadata.emergencyContact?.name === 'string' ? metadata.emergencyContact.name : '',
+      );
+      setEmergencyRelation(
+        typeof metadata.emergencyContact?.relation === 'string'
+          ? metadata.emergencyContact.relation
+          : '',
+      );
+      setEmergencyPhone(
+        typeof metadata.emergencyContact?.phone === 'string' ? metadata.emergencyContact.phone : '',
+      );
+      setDiseases(typeof metadata.diseases === 'string' ? metadata.diseases : '');
+      setAllergies(typeof metadata.allergies === 'string' ? metadata.allergies : '');
+      setMedicalNote(typeof metadata.medicalNote === 'string' ? metadata.medicalNote : '');
+      setEmail(typeof metadata.email === 'string' ? metadata.email : '');
 
       // Set selected date for date picker
       if (metadata.dateOfBirth) {
@@ -146,16 +166,17 @@ export default function EditBasicInfoScreen() {
             relation: emergencyRelation,
             phone: emergencyPhone,
           },
+          diseases: diseases.trim(),
+          allergies: allergies.trim(),
+          medicalNote: medicalNote.trim(),
+          email: email.trim(),
         },
       });
 
       router.back(); // Go back to previous screen
     } catch (err: any) {
       console.error('Error updating user metadata:', err);
-      setError(
-        err.errors?.[0]?.message ||
-          'Failed to save information. Please try again.'
-      );
+      setError(err.errors?.[0]?.message || 'Failed to save information. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -169,11 +190,11 @@ export default function EditBasicInfoScreen() {
       >
         <View className="flex-1 pt-8">
           {/* Header */}
-          <View className="items-center mb-8">
-            <View className="w-16 h-16 bg-green-600 rounded-full items-center justify-center mb-4">
+          <View className="mb-8 items-center">
+            <View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-green-600">
               <Ionicons name="create" size={32} color="white" />
             </View>
-            <Text className="text-2xl font-bold mb-2" style={{ color: '#1a202c' }}>
+            <Text className="mb-2 text-2xl font-bold" style={{ color: '#1a202c' }}>
               Edit Profile
             </Text>
             <Text className="text-center opacity-80" style={{ color: '#4a5568' }}>
@@ -183,21 +204,25 @@ export default function EditBasicInfoScreen() {
 
           {/* Error Message */}
           {error && (
-            <View className="bg-red-50 rounded-xl p-4 mb-6 border border-red-200">
+            <View className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4">
               <View className="flex-row items-center">
                 <Ionicons name="warning" size={20} color="#e53e3e" />
-                <Text className="ml-2 font-medium" style={{ color: '#e53e3e' }}>{error}</Text>
+                <Text className="ml-2 font-medium" style={{ color: '#e53e3e' }}>
+                  {error}
+                </Text>
               </View>
             </View>
           )}
 
           {/* Personal Info */}
           <View className="mb-6">
-            <View className="flex-row items-center mb-4">
-              <View className="w-8 h-8 bg-blue-600 rounded-full items-center justify-center mr-3">
+            <View className="mb-4 flex-row items-center">
+              <View className="mr-3 h-8 w-8 items-center justify-center rounded-full bg-blue-600">
                 <Ionicons name="person" size={16} color="white" />
               </View>
-              <Text className="text-lg font-semibold" style={{ color: '#1a202c' }}>Personal Information</Text>
+              <Text className="text-lg font-semibold" style={{ color: '#1a202c' }}>
+                Personal Information
+              </Text>
             </View>
             <View className="rounded-2xl bg-white p-6 shadow-lg">
               <TextInput
@@ -305,11 +330,13 @@ export default function EditBasicInfoScreen() {
                     color={gender === 'male' ? 'white' : '#4a5568'}
                     style={{ marginRight: 8 }}
                   />
-                  <Text style={{
-                    color: gender === 'male' ? 'white' : '#1a202c',
-                    fontSize: 16,
-                    fontWeight: '600'
-                  }}>
+                  <Text
+                    style={{
+                      color: gender === 'male' ? 'white' : '#1a202c',
+                      fontSize: 16,
+                      fontWeight: '600',
+                    }}
+                  >
                     Male
                   </Text>
                 </TouchableOpacity>
@@ -340,11 +367,13 @@ export default function EditBasicInfoScreen() {
                     color={gender === 'female' ? 'white' : '#4a5568'}
                     style={{ marginRight: 8 }}
                   />
-                  <Text style={{
-                    color: gender === 'female' ? 'white' : '#1a202c',
-                    fontSize: 16,
-                    fontWeight: '600'
-                  }}>
+                  <Text
+                    style={{
+                      color: gender === 'female' ? 'white' : '#1a202c',
+                      fontSize: 16,
+                      fontWeight: '600',
+                    }}
+                  >
                     Female
                   </Text>
                 </TouchableOpacity>
@@ -376,11 +405,13 @@ export default function EditBasicInfoScreen() {
                   color={gender === 'other' ? 'white' : '#4a5568'}
                   style={{ marginRight: 8 }}
                 />
-                <Text style={{
-                  color: gender === 'other' ? 'white' : '#1a202c',
-                  fontSize: 16,
-                  fontWeight: '600'
-                }}>
+                <Text
+                  style={{
+                    color: gender === 'other' ? 'white' : '#1a202c',
+                    fontSize: 16,
+                    fontWeight: '600',
+                  }}
+                >
                   Other
                 </Text>
               </TouchableOpacity>
@@ -389,11 +420,13 @@ export default function EditBasicInfoScreen() {
 
           {/* Address Info */}
           <View className="mb-6">
-            <View className="flex-row items-center mb-4">
-              <View className="w-8 h-8 bg-green-600 rounded-full items-center justify-center mr-3">
+            <View className="mb-4 flex-row items-center">
+              <View className="mr-3 h-8 w-8 items-center justify-center rounded-full bg-green-600">
                 <Ionicons name="home" size={16} color="white" />
               </View>
-              <Text className="text-lg font-semibold" style={{ color: '#1a202c' }}>Address Information</Text>
+              <Text className="text-lg font-semibold" style={{ color: '#1a202c' }}>
+                Address Information
+              </Text>
             </View>
             <View className="rounded-2xl bg-white p-6 shadow-lg">
               <TextInput
@@ -407,9 +440,7 @@ export default function EditBasicInfoScreen() {
                 textColor="#1a202c"
                 placeholderTextColor="#a0aec0"
                 left={
-                  <TextInput.Icon
-                    icon={() => <Ionicons name="home" size={20} color="#4a5568" />}
-                  />
+                  <TextInput.Icon icon={() => <Ionicons name="home" size={20} color="#4a5568" />} />
                 }
               />
               <TextInput
@@ -475,9 +506,7 @@ export default function EditBasicInfoScreen() {
                 textColor="#1a202c"
                 placeholderTextColor="#a0aec0"
                 left={
-                  <TextInput.Icon
-                    icon={() => <Ionicons name="pin" size={20} color="#4a5568" />}
-                  />
+                  <TextInput.Icon icon={() => <Ionicons name="pin" size={20} color="#4a5568" />} />
                 }
               />
             </View>
@@ -485,11 +514,13 @@ export default function EditBasicInfoScreen() {
 
           {/* Emergency Contact */}
           <View className="mb-8">
-            <View className="flex-row items-center mb-4">
-              <View className="w-8 h-8 bg-red-600 rounded-full items-center justify-center mr-3">
+            <View className="mb-4 flex-row items-center">
+              <View className="mr-3 h-8 w-8 items-center justify-center rounded-full bg-red-600">
                 <Ionicons name="call" size={16} color="white" />
               </View>
-              <Text className="text-lg font-semibold" style={{ color: '#1a202c' }}>Emergency Contact</Text>
+              <Text className="text-lg font-semibold" style={{ color: '#1a202c' }}>
+                Emergency Contact
+              </Text>
             </View>
             <View className="rounded-2xl bg-white p-6 shadow-lg">
               <TextInput
@@ -543,8 +574,92 @@ export default function EditBasicInfoScreen() {
             </View>
           </View>
 
+          {/* Medical Info (Optional) */}
+          <View className="mb-8">
+            <View className="mb-4 flex-row items-center">
+              <View className="mr-3 h-8 w-8 items-center justify-center rounded-full bg-blue-600">
+                <MaterialCommunityIcons name="medical-bag" size={16} color="white" />
+              </View>
+              <Text className="text-lg font-semibold" style={{ color: '#1a202c' }}>
+                Medical Information (Optional)
+              </Text>
+            </View>
+            <View className="rounded-2xl bg-white p-6 shadow-lg">
+              <TextInput
+                label="Diseases (Optional)"
+                value={diseases}
+                onChangeText={setDiseases}
+                mode="outlined"
+                style={{ marginBottom: 16, backgroundColor: '#f8fafc' }}
+                outlineColor="#e2e8f0"
+                activeOutlineColor="#4a5568"
+                textColor="#1a202c"
+                placeholderTextColor="#a0aec0"
+                left={
+                  <TextInput.Icon
+                    icon={() => <MaterialCommunityIcons name="virus" size={20} color="#4a5568" />}
+                  />
+                }
+              />
+              <TextInput
+                label="Allergies (Optional)"
+                value={allergies}
+                onChangeText={setAllergies}
+                mode="outlined"
+                style={{ marginBottom: 16, backgroundColor: '#f8fafc' }}
+                outlineColor="#e2e8f0"
+                activeOutlineColor="#4a5568"
+                textColor="#1a202c"
+                placeholderTextColor="#a0aec0"
+                left={
+                  <TextInput.Icon
+                    icon={() => <MaterialCommunityIcons name="allergy" size={20} color="#4a5568" />}
+                  />
+                }
+              />
+              <TextInput
+                label="Medical History / Note (Optional)"
+                value={medicalNote}
+                onChangeText={setMedicalNote}
+                mode="outlined"
+                style={{ marginBottom: 16, backgroundColor: '#f8fafc' }}
+                outlineColor="#e2e8f0"
+                activeOutlineColor="#4a5568"
+                textColor="#1a202c"
+                placeholderTextColor="#a0aec0"
+                left={
+                  <TextInput.Icon
+                    icon={() => (
+                      <MaterialCommunityIcons name="note-text" size={20} color="#4a5568" />
+                    )}
+                  />
+                }
+                multiline
+                numberOfLines={3}
+              />
+              <TextInput
+                label="Email (Optional)"
+                value={email}
+                onChangeText={setEmail}
+                mode="outlined"
+                autoCapitalize="none"
+                style={{ marginBottom: 16, backgroundColor: '#f8fafc' }}
+                outlineColor="#e2e8f0"
+                activeOutlineColor="#4a5568"
+                textColor="#1a202c"
+                placeholderTextColor="#a0aec0"
+                keyboardType="email-address"
+                left={
+                  <TextInput.Icon
+                    icon={() => <MaterialCommunityIcons name="email" size={20} color="#4a5568" />}
+                  />
+                }
+              />
+            </View>
+          </View>
+
           {/* Action Buttons */}
-          <View className="flex-row space-x-4 mb-6">
+          <View className="mb-6 flex-row space-x-4">
             <TouchableOpacity
               onPress={() => router.back()}
               style={{
@@ -579,12 +694,17 @@ export default function EditBasicInfoScreen() {
               {loading ? (
                 <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>Saving...</Text>
               ) : (
-                <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>Save Changes</Text>
+                <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>
+                  Save Changes
+                </Text>
               )}
             </TouchableOpacity>
           </View>
 
-          <Text className="text-center opacity-80" style={{ color: '#4a5568', textAlign: 'center' }}>
+          <Text
+            className="text-center opacity-80"
+            style={{ color: '#4a5568', textAlign: 'center' }}
+          >
             🔒 Your information is securely stored and protected
           </Text>
         </View>

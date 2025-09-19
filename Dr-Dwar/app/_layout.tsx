@@ -25,7 +25,7 @@ function InitialLayout() {
   useEffect(() => {
     if (!isLoaded) return;
 
-    const inTabsGroup = segments[1] === '(tabs)';
+    const inRoot = segments[0] === '(root)';
     if (segments[0] === 'terms' || segments[0] === 'privacy' || segments[0] === 'Support' )
       return;
 
@@ -38,12 +38,12 @@ function InitialLayout() {
         metadata?.gender &&
         metadata?.address?.city &&
         metadata?.emergencyContact?.name;
-      if (!hasBasicInfo && inTabsGroup) {
+      if (!hasBasicInfo && inRoot && segments[1] !== 'basic-info') {
         router.replace('/(root)/basic-info');
-      } else if ((hasBasicInfo && !inTabsGroup) && segments[1] !== 'edit-basic-info' && segments[1] !== 'cart' && segments[1] !== 'orders') {
+      } else if (hasBasicInfo && !inRoot) {
         router.replace('/(root)/(tabs)/home');
       }
-    } else if (!isSignedIn && inTabsGroup) {
+    } else if (!isSignedIn && inRoot) {
       router.replace('/(auth)/Sign-in');
     }
   }, [isSignedIn, isLoaded, user, router, segments]);

@@ -25,6 +25,10 @@ export default function BasicInfoScreen() {
   const [emergencyName, setEmergencyName] = useState('');
   const [emergencyRelation, setEmergencyRelation] = useState('');
   const [emergencyPhone, setEmergencyPhone] = useState('');
+  const [diseases, setDiseases] = useState('');
+  const [allergies, setAllergies] = useState('');
+  const [medicalNote, setMedicalNote] = useState('');
+  const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -136,6 +140,10 @@ export default function BasicInfoScreen() {
             relation: emergencyRelation.trim(),
             phone: emergencyPhone.trim(),
           },
+          diseases: diseases.trim(),
+          allergies: allergies.trim(),
+          medicalNote: medicalNote.trim(),
+          email: email.trim(),
         },
       });
 
@@ -548,6 +556,93 @@ export default function BasicInfoScreen() {
                 placeholderTextColor="#a0aec0"
                 left={
                   <TextInput.Icon icon={() => <Ionicons name="call" size={20} color="#e53e3e" />} />
+                }
+              />
+            </View>
+          </View>
+
+          {/* Medical Info (Optional) */}
+          <View className="mb-8">
+            <View className="mb-4 flex-row items-center">
+              <View
+                className="mr-3 h-10 w-10 items-center justify-center rounded-full"
+                style={{ backgroundColor: '#3182ce' }}
+              >
+                <MaterialCommunityIcons name="medical-bag" size={20} color="white" />
+              </View>
+              <Text className="text-xl font-bold" style={{ color: '#1a202c' }}>
+                Medical Information (Optional)
+              </Text>
+            </View>
+            <View className="rounded-2xl bg-white p-6 shadow-xl">
+              <TextInput
+                label="Diseases (Optional)"
+                value={diseases}
+                onChangeText={setDiseases}
+                mode="outlined"
+                style={{ marginBottom: 16, backgroundColor: '#f8fafc' }}
+                outlineColor="#e2e8f0"
+                activeOutlineColor="#3182ce"
+                textColor="#1a202c"
+                placeholderTextColor="#a0aec0"
+                left={
+                  <TextInput.Icon
+                    icon={() => <MaterialCommunityIcons name="virus" size={20} color="#3182ce" />}
+                  />
+                }
+              />
+              <TextInput
+                label="Allergies (Optional)"
+                value={allergies}
+                onChangeText={setAllergies}
+                mode="outlined"
+                style={{ marginBottom: 16, backgroundColor: '#f8fafc' }}
+                outlineColor="#e2e8f0"
+                activeOutlineColor="#3182ce"
+                textColor="#1a202c"
+                placeholderTextColor="#a0aec0"
+                left={
+                  <TextInput.Icon
+                    icon={() => <MaterialCommunityIcons name="allergy" size={20} color="#3182ce" />}
+                  />
+                }
+              />
+              <TextInput
+                label="Medical History / Note (Optional)"
+                value={medicalNote}
+                onChangeText={setMedicalNote}
+                mode="outlined"
+                style={{ marginBottom: 16, backgroundColor: '#f8fafc' }}
+                outlineColor="#e2e8f0"
+                activeOutlineColor="#3182ce"
+                textColor="#1a202c"
+                placeholderTextColor="#a0aec0"
+                left={
+                  <TextInput.Icon
+                    icon={() => (
+                      <MaterialCommunityIcons name="note-text" size={20} color="#3182ce" />
+                    )}
+                  />
+                }
+                multiline
+                numberOfLines={3}
+              />
+              <TextInput
+                label="Email (Optional)"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize='none'
+                mode="outlined"
+                style={{ marginBottom: 16, backgroundColor: '#f8fafc' }}
+                outlineColor="#e2e8f0"
+                activeOutlineColor="#3182ce"
+                textColor="#1a202c"
+                placeholderTextColor="#a0aec0"
+                keyboardType="email-address"
+                left={
+                  <TextInput.Icon
+                    icon={() => <MaterialCommunityIcons name="email" size={20} color="#3182ce" />}
+                  />
                 }
               />
             </View>
