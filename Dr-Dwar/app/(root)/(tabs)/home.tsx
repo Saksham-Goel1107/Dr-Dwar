@@ -3,9 +3,11 @@ import { View } from 'react-native';
 import { Text, Button } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@clerk/clerk-expo';
+import { useRouter } from 'expo-router';
 
 export default function HomeScreen() {
   const { signOut } = useAuth();
+  const router = useRouter();
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -19,6 +21,9 @@ export default function HomeScreen() {
 
         <Button mode="outlined" onPress={() => signOut()} className="mt-4">
           Sign Out
+        </Button>
+        <Button mode="outlined" onPress={() => router.push('/reminders')} className="mt-4">
+          Reminder
         </Button>
       </View>
     </SafeAreaView>
