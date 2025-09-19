@@ -62,7 +62,6 @@ model OrderItems {
 model Payment {
   id                String        @id @default(cuid())
   orderId           String
-  razorpayPaymentId String?       @unique
   amount            Float
   currency          String        @default("INR")
   paymentMethod     String?
@@ -72,7 +71,6 @@ model Payment {
   order             Orders        @relation(fields: [orderId], references: [id])
 
   @@index([orderId])
-  @@index([razorpayPaymentId])
 }
 
 enum OrderStatus {

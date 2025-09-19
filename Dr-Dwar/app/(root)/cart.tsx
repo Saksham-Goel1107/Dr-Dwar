@@ -64,7 +64,6 @@ export default function CartScreen() {
         taxAmount: getTaxAmount(),
         deliveryCharges: getDeliveryCharges(),
         totalAmount: getFinalTotal(),
-        paymentId: data.razorpay_payment_id,
       };
 
       // Send order to backend
@@ -89,10 +88,7 @@ export default function CartScreen() {
       clearCart();
 
       // Show success alert
-      Alert.alert(
-        'Success',
-        `Payment successful! Order ID: ${orderResult.orderId || data.razorpay_payment_id}`,
-      );
+      Alert.alert('Success', `Payment successful! Order ID: ${orderResult.orderId}`);
 
       // Send success notification
       await Notifications.scheduleNotificationAsync({
@@ -330,7 +326,7 @@ export default function CartScreen() {
             data={cartItems}
             renderItem={renderCartItem}
             keyExtractor={(item) => item['Sr No']}
-            contentContainerStyle={{ paddingTop: 16, paddingBottom: 120 }}
+            contentContainerStyle={{ paddingTop: 16, paddingBottom: 250 }}
             showsVerticalScrollIndicator={false}
           />
 

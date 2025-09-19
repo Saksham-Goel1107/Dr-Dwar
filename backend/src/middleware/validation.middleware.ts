@@ -1,7 +1,16 @@
 import { NextFunction, Request, Response } from 'express';
 
 export const validateOrderCreation = (req: Request, res: Response, next: NextFunction) => {
-  const { userName, userPhone, userEmail, items, totalAmount, paymentId, paymentStatus } = req.body;
+  const {
+    userName,
+    userPhone,
+    userEmail,
+    items,
+    subtotal,
+    taxAmount,
+    deliveryCharges,
+    totalAmount,
+  } = req.body;
 
   const errors: string[] = [];
 
@@ -31,21 +40,25 @@ export const validateOrderCreation = (req: Request, res: Response, next: NextFun
     });
   }
 
-  if (!totalAmount || typeof totalAmount !== 'number' || totalAmount <= 0) {
-    errors.push('totalAmount must be a positive number');
+  if (!subtotal || typeof subtotal !== 'number' || subtotal < 0) {
+    errors.push('subtotal must be a non-negative number');
   }
 
-  if (!paymentId || typeof paymentId !== 'string') {
-    errors.push('paymentId is required and must be a string');
+  if (!taxAmount || typeof taxAmount !== 'number' || taxAmount < 0) {
+    errors.push('taxAmount must be a non-negative number');
+  }
+
+  if (!deliveryCharges || typeof deliveryCharges !== 'number' || deliveryCharges < 0) {
+    errors.push('deliveryCharges must be a non-negative number');
+  }
+
+  if (!totalAmount || typeof totalAmount !== 'number' || totalAmount <= 0) {
+    errors.push('totalAmount must be a positive number');
   }
 
   // Validate optional fields
   if (userEmail && typeof userEmail !== 'string') {
     errors.push('userEmail must be a string');
-  }
-
-  if (paymentStatus && typeof paymentStatus !== 'string') {
-    errors.push('paymentStatus must be a string');
   }
 
   if (errors.length > 0) {

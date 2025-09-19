@@ -22,7 +22,6 @@ export class OrderController {
       taxAmount,
       deliveryCharges,
       totalAmount,
-      paymentId,
     } = req.body;
 
     // Validate required fields
@@ -76,7 +75,6 @@ export class OrderController {
     const payment = await prisma.payment.create({
       data: {
         orderId: order.id,
-        razorpayPaymentId: paymentId && paymentId !== 'unknown' ? paymentId : null,
         amount: totalAmount,
         paymentMethod: 'razorpay',
       },
@@ -96,7 +94,6 @@ export class OrderController {
       },
       payment: {
         id: payment.id,
-        razorpayPaymentId: payment.razorpayPaymentId,
         amount: payment.amount,
         createdAt: payment.createdAt,
       },
