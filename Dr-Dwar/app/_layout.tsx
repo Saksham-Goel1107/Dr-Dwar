@@ -3,6 +3,7 @@ import { resourceCache } from '@clerk/clerk-expo/resource-cache';
 import { tokenCache } from '@clerk/clerk-expo/token-cache';
 import * as Sentry from '@sentry/react-native';
 import { Slot, useRouter, useSegments } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { KeyboardAvoidingView, Platform, SafeAreaView } from 'react-native';
 import { PaperProvider } from 'react-native-paper';
@@ -70,22 +71,23 @@ function InitialLayout() {
 export default Sentry.wrap(function RootLayout() {
   return (
     <ErrorBoundary>
-        <ClerkProvider
-          publishableKey={publishableKey}
-          tokenCache={tokenCache}
-          __experimental_resourceCache={resourceCache}
-        >
-          <SafeAreaView style={{ flex: 1 }}>
-            <KeyboardAvoidingView
-              style={{ flex: 1 }}
-              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            >
-              <PaperProvider>
-                <InitialLayout />
-              </PaperProvider>
-            </KeyboardAvoidingView>
-          </SafeAreaView>
-        </ClerkProvider>
+      <ClerkProvider
+        publishableKey={publishableKey}
+        tokenCache={tokenCache}
+        __experimental_resourceCache={resourceCache}
+      >
+        <SafeAreaView style={{ flex: 1 }}>
+          <StatusBar style="dark" backgroundColor="#000000" />
+          <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          >
+            <PaperProvider>
+              <InitialLayout />
+            </PaperProvider>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
+      </ClerkProvider>
     </ErrorBoundary>
   );
 });
