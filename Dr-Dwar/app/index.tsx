@@ -54,8 +54,12 @@ export default function OnboardingScreen() {
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       <SafeAreaView className="flex-1 bg-gradient-to-br from-gray-50 to-white">
         {/* Header */}
-        <View className="px-6 pb-4 pt-6 flex items-center">
-          <Image source={require('../assets/images/icon.png')} className="h-20 w-32" resizeMode="contain" />
+        <View className="flex items-center px-6 pb-4 pt-6">
+          <Image
+            source={require('../assets/images/icon.png')}
+            className="h-20 w-32"
+            resizeMode="contain"
+          />
           <Text className="mt-2 text-center text-base font-medium text-gray-600">
             Your Digital Health Companion
           </Text>

@@ -2,7 +2,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-
 type ChatBotModalProps = {
   visible: boolean;
   onClose: () => void;
@@ -128,7 +127,7 @@ export default function FloatingChatBot() {
           duration: 1000,
           useNativeDriver: true,
         }),
-      ])
+      ]),
     );
     pulse.start();
     return () => pulse.stop();

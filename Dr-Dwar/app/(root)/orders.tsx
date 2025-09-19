@@ -522,7 +522,6 @@ export default function OrdersScreen() {
           alignItems: 'center',
         }}
       >
-
         <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#1e293b', flex: 1 }}>
           My Orders
         </Text>

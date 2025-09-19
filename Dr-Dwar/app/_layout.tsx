@@ -26,8 +26,7 @@ function InitialLayout() {
     if (!isLoaded) return;
 
     const inRoot = segments[0] === '(root)';
-    if (segments[0] === 'terms' || segments[0] === 'privacy' || segments[0] === 'Support' )
-      return;
+    if (segments[0] === 'terms' || segments[0] === 'privacy' || segments[0] === 'Support') return;
 
     if (isSignedIn) {
       const metadata = user?.unsafeMetadata as any;

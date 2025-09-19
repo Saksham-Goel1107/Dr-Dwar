@@ -31,8 +31,7 @@ export default function TermsOfService() {
               borderRadius: 8,
               backgroundColor: '#f8fafc',
             }}
-          >
-          </TouchableOpacity>
+          ></TouchableOpacity>
           <Text
             style={{
               fontSize: 28,

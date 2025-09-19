@@ -56,14 +56,12 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [cartItems]);
 
   const addToCart = (medicine: Medicine) => {
-    setCartItems(prevItems => {
-      const existingItem = prevItems.find(item => item["Sr No"] === medicine["Sr No"]);
+    setCartItems((prevItems) => {
+      const existingItem = prevItems.find((item) => item['Sr No'] === medicine['Sr No']);
 
       if (existingItem) {
-        return prevItems.map(item =>
-          item["Sr No"] === medicine["Sr No"]
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
+        return prevItems.map((item) =>
+          item['Sr No'] === medicine['Sr No'] ? { ...item, quantity: item.quantity + 1 } : item,
         );
       } else {
         return [...prevItems, { ...medicine, quantity: 1 }];
@@ -72,7 +70,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const removeFromCart = (medicineId: string) => {
-    setCartItems(prevItems => prevItems.filter(item => item["Sr No"] !== medicineId));
+    setCartItems((prevItems) => prevItems.filter((item) => item['Sr No'] !== medicineId));
   };
 
   const updateQuantity = (medicineId: string, quantity: number) => {
@@ -81,12 +79,8 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return;
     }
 
-    setCartItems(prevItems =>
-      prevItems.map(item =>
-        item["Sr No"] === medicineId
-          ? { ...item, quantity }
-          : item
-      )
+    setCartItems((prevItems) =>
+      prevItems.map((item) => (item['Sr No'] === medicineId ? { ...item, quantity } : item)),
     );
   };
 
@@ -95,7 +89,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const getItemQuantity = (medicineId: string): number => {
-    const item = cartItems.find(item => item["Sr No"] === medicineId);
+    const item = cartItems.find((item) => item['Sr No'] === medicineId);
     return item ? item.quantity : 0;
   };
 
@@ -104,9 +98,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const getTotalPrice = (): number => {
-    return cartItems.reduce((total, item) =>
-      total + (parseFloat(item.MRP) * item.quantity), 0
-    );
+    return cartItems.reduce((total, item) => total + parseFloat(item.MRP) * item.quantity, 0);
   };
 
   const value: CartContextType = {

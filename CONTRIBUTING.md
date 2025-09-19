@@ -29,12 +29,12 @@ Be kind, respectful, and collaborative — this app is built to **serve people i
 
 You can contribute in many ways:
 
-* 🐛 **Bug Reports**: Found an issue? File it with clear steps to reproduce.
-* 💡 **Feature Requests**: Suggest new features that help rural healthcare.
-* 🛠 **Code Contributions**: Fix bugs, optimize performance, or add new features.
-* 🎨 **Design & UX**: Improve accessibility, typography, or user experience.
-* 🌍 **Translations**: Help localize Dr-Dwar into more rural languages.
-* 📖 **Documentation**: Improve guides, README, or developer notes.
+- 🐛 **Bug Reports**: Found an issue? File it with clear steps to reproduce.
+- 💡 **Feature Requests**: Suggest new features that help rural healthcare.
+- 🛠 **Code Contributions**: Fix bugs, optimize performance, or add new features.
+- 🎨 **Design & UX**: Improve accessibility, typography, or user experience.
+- 🌍 **Translations**: Help localize Dr-Dwar into more rural languages.
+- 📖 **Documentation**: Improve guides, README, or developer notes.
 
 ---
 
@@ -42,9 +42,9 @@ You can contribute in many ways:
 
 ### Prerequisites
 
-* [Node.js](https://nodejs.org/) (v22+)
-* [Expo CLI](https://docs.expo.dev/get-started/installation/)
-* [Git](https://git-scm.com/)
+- [Node.js](https://nodejs.org/) (v22+)
+- [Expo CLI](https://docs.expo.dev/get-started/installation/)
+- [Git](https://git-scm.com/)
 
 ### Setup
 
@@ -77,17 +77,19 @@ npx expo start
    ```bash
    git checkout -b feature/your-feature-name
    ```
-2. **Write Clean Code**
 
-   * Follow existing code style.
-   * Use **NativeWind** for styling.
-   * Ensure low-bandwidth optimization.
+2. **Write Clean Code**
+   - Follow existing code style.
+   - Use **NativeWind** for styling.
+   - Ensure low-bandwidth optimization.
+
 3. **Run Tests & Linting**
 
    ```bash
    npm run lint
    npm run test
    ```
+
 4. **Commit & Push**
 
    ```bash
@@ -101,10 +103,10 @@ npx expo start
 
 We follow [Conventional Commits](https://www.conventionalcommits.org/). Examples:
 
-* `feat: add patient profile screen`
-* `fix: handle OTP error state`
-* `docs: update README with setup steps`
-* `refactor: simplify carousel component`
+- `feat: add patient profile screen`
+- `fix: handle OTP error state`
+- `docs: update README with setup steps`
+- `refactor: simplify carousel component`
 
 ---
 
@@ -112,10 +114,10 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/). Examples
 
 1. Ensure your branch is **up-to-date** with `main`.
 2. Open a PR with:
+   - Clear title and description.
+   - Screenshots for UI changes.
+   - Reference to related issue(s).
 
-   * Clear title and description.
-   * Screenshots for UI changes.
-   * Reference to related issue(s).
 3. Wait for review — maintainers may request changes.
 4. PRs will be merged once checks pass ✅.
 
@@ -123,17 +125,17 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/). Examples
 
 ## 🐞 Issue Reporting
 
-* Use the **GitHub Issues tab**.
-* Include details: device, OS, screenshots, and steps to reproduce.
-* Add appropriate labels (`bug`, `enhancement`, `documentation`).
+- Use the **GitHub Issues tab**.
+- Include details: device, OS, screenshots, and steps to reproduce.
+- Add appropriate labels (`bug`, `enhancement`, `documentation`).
 
 ---
 
 ## 🌍 Community
 
-* 💬 Join discussions in GitHub Issues & Discussions.
-* 🧑‍🤝‍🧑 Respect contributors from diverse backgrounds.
-* 🙏 Remember: every small contribution helps **save lives in rural communities**.
+- 💬 Join discussions in GitHub Issues & Discussions.
+- 🧑‍🤝‍🧑 Respect contributors from diverse backgrounds.
+- 🙏 Remember: every small contribution helps **save lives in rural communities**.
 
 ---
 

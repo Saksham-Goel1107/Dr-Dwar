@@ -42,25 +42,39 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
       return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
-          <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}>
-            <View style={{
-              backgroundColor: 'white',
-              borderRadius: 24,
-              padding: 32,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.1,
-              shadowRadius: 12,
-              elevation: 8,
-              borderWidth: 1,
-              borderColor: '#fee2e2',
-            }}>
+          <ScrollView
+            contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}
+          >
+            <View
+              style={{
+                backgroundColor: 'white',
+                borderRadius: 24,
+                padding: 32,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.1,
+                shadowRadius: 12,
+                elevation: 8,
+                borderWidth: 1,
+                borderColor: '#fee2e2',
+              }}
+            >
               <View style={{ alignItems: 'center', marginBottom: 24 }}>
                 <Text style={{ fontSize: 48, marginBottom: 16 }}>🏥</Text>
-                <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#dc2626', textAlign: 'center', marginBottom: 8 }}>
+                <Text
+                  style={{
+                    fontSize: 24,
+                    fontWeight: 'bold',
+                    color: '#dc2626',
+                    textAlign: 'center',
+                    marginBottom: 8,
+                  }}
+                >
                   Something went wrong
                 </Text>
-                <Text style={{ fontSize: 16, color: '#6b7280', textAlign: 'center', lineHeight: 24 }}>
+                <Text
+                  style={{ fontSize: 16, color: '#6b7280', textAlign: 'center', lineHeight: 24 }}
+                >
                   We&apos;re sorry for the inconvenience. Our team has been notified.
                 </Text>
               </View>
@@ -74,9 +88,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                     borderRadius: 12,
                     elevation: 2,
                   }}
-                  onPress={() => this.setState({ hasError: false, error: undefined, errorInfo: undefined })}
+                  onPress={() =>
+                    this.setState({ hasError: false, error: undefined, errorInfo: undefined })
+                  }
                 >
-                  <Text style={{ color: 'white', fontWeight: '600', textAlign: 'center', fontSize: 16 }}>
+                  <Text
+                    style={{ color: 'white', fontWeight: '600', textAlign: 'center', fontSize: 16 }}
+                  >
                     Try Again
                   </Text>
                 </TouchableOpacity>
@@ -92,14 +110,30 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                   }}
                   onPress={this.handleReportIssue}
                 >
-                  <Text style={{ color: '#374151', fontWeight: '600', textAlign: 'center', fontSize: 16 }}>
+                  <Text
+                    style={{
+                      color: '#374151',
+                      fontWeight: '600',
+                      textAlign: 'center',
+                      fontSize: 16,
+                    }}
+                  >
                     Report Issue on GitHub
                   </Text>
                 </TouchableOpacity>
               </View>
 
-              <View style={{ marginTop: 24, paddingTop: 24, borderTopWidth: 1, borderTopColor: '#e5e7eb' }}>
-                <Text style={{ fontSize: 12, color: '#9ca3af', textAlign: 'center', marginBottom: 8 }}>
+              <View
+                style={{
+                  marginTop: 24,
+                  paddingTop: 24,
+                  borderTopWidth: 1,
+                  borderTopColor: '#e5e7eb',
+                }}
+              >
+                <Text
+                  style={{ fontSize: 12, color: '#9ca3af', textAlign: 'center', marginBottom: 8 }}
+                >
                   Dr. Dwar v1.0.0 • Healthcare Platform
                 </Text>
                 <Text style={{ fontSize: 12, color: '#9ca3af', textAlign: 'center' }}>
