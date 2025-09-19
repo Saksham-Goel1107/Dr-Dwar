@@ -65,7 +65,6 @@ export default function CartScreen() {
         deliveryCharges: getDeliveryCharges(),
         totalAmount: getFinalTotal(),
         paymentId: data.razorpay_payment_id,
-        paymentStatus: 'completed',
       };
 
       // Send order to backend
@@ -105,8 +104,7 @@ export default function CartScreen() {
         trigger: null,
       });
 
-      // Navigate back to home
-      router.replace('/(root)/(tabs)/home');
+      router.replace('/(root)/(tabs)/pharmacy');
     } catch (error) {
       console.error('Error processing order:', error);
       Alert.alert('Warning', 'Payment successful but order saving failed. Please contact support.');
@@ -121,7 +119,7 @@ export default function CartScreen() {
         },
         trigger: null,
       });
-      router.replace('/(root)/(tabs)/home');
+      router.replace('/(root)/(tabs)/pharmacy');
     } finally {
       setIsProcessing(false);
     }

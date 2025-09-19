@@ -32,7 +32,7 @@ model Orders {
   id          String   @id @default(cuid())
   userId      String
   amount      Float
-  status      String
+  status      OrderStatus @default(PENDING)
   isApproved  Boolean  @default(false)
   orderId     String?  @unique
   createdAt   DateTime @default(now())
@@ -40,6 +40,7 @@ model Orders {
 
   user        User     @relation(fields: [userId], references: [id])
   orderItems  OrderItems[]
+  payments    Payment[]
 
   @@index([userId])
 }
@@ -56,4 +57,31 @@ model OrderItems {
   order       Orders   @relation(fields: [orderId], references: [id])
 
   @@index([orderId])
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  orderId           String
+  razorpayPaymentId String?       @unique
+  amount            Float
+  currency          String        @default("INR")
+  paymentMethod     String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  order             Orders        @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
+  @@index([razorpayPaymentId])
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  PACKED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+  REFUNDED
 }

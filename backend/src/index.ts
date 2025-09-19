@@ -7,6 +7,7 @@ import { errorHandler, notFound } from './middleware/error.middleware';
 import { requestLogger } from './middleware/logger.middleware';
 import healthRoutes from './routes/health.routes';
 import orderRoutes from './routes/order.routes';
+import paymentRoutes from './routes/payment.routes';
 import userRoutes from './routes/user.routes';
 
 const app = express();
@@ -26,6 +27,7 @@ app.use(clerkMiddleware());
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/payments', paymentRoutes);
 app.use('/', healthRoutes);
 
 // 404 handler

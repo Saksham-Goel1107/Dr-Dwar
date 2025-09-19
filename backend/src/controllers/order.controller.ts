@@ -12,7 +12,8 @@ export class OrderController {
         success: false,
         message: 'Authentication required',
       });
-    }    const {
+    }
+    const {
       userName,
       userPhone,
       userEmail,
@@ -22,7 +23,6 @@ export class OrderController {
       deliveryCharges,
       totalAmount,
       paymentId,
-      paymentStatus,
     } = req.body;
 
     // Validate required fields
@@ -57,7 +57,7 @@ export class OrderController {
       data: {
         userId: user.id,
         amount: totalAmount,
-        status: paymentStatus || 'pending',
+        status: 'CONFIRMED', // Always confirmed since payment was successful
         orderId,
         orderItems: {
           create: items.map((item: any) => ({
@@ -72,6 +72,16 @@ export class OrderController {
       },
     });
 
+    // Create payment record
+    const payment = await prisma.payment.create({
+      data: {
+        orderId: order.id,
+        razorpayPaymentId: paymentId && paymentId !== 'unknown' ? paymentId : null,
+        amount: totalAmount,
+        paymentMethod: 'razorpay',
+      },
+    });
+
     res.status(201).json({
       success: true,
       message: 'Order created successfully',
@@ -83,6 +93,12 @@ export class OrderController {
         status: order.status,
         items: order.orderItems.length,
         createdAt: order.createdAt,
+      },
+      payment: {
+        id: payment.id,
+        razorpayPaymentId: payment.razorpayPaymentId,
+        amount: payment.amount,
+        createdAt: payment.createdAt,
       },
     });
   });
@@ -103,6 +119,7 @@ export class OrderController {
         orders: {
           include: {
             orderItems: true,
+            payments: true,
           },
           orderBy: {
             createdAt: 'desc',
@@ -134,6 +151,7 @@ export class OrderController {
       where: { id },
       include: {
         orderItems: true,
+        payments: true,
         user: {
           select: {
             userName: true,
