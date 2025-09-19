@@ -1,5 +1,6 @@
 import { useAuth, useUser } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
+import NetInfo from '@react-native-community/netinfo';
 import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
 import React from 'react';
@@ -24,6 +25,60 @@ export default function CartScreen() {
   const { getToken } = useAuth();
   const [showPayment, setShowPayment] = React.useState(false);
   const [isProcessing, setIsProcessing] = React.useState(false);
+  const [networkStatus, setNetworkStatus] = React.useState<boolean | null>(null);
+
+  // Custom network detection using NetInfo
+  React.useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      const isConnected = state.isConnected && state.isInternetReachable;
+      setNetworkStatus(isConnected);
+      console.log('NetInfo status:', {
+        isConnected: state.isConnected,
+        isInternetReachable: state.isInternetReachable,
+        type: state.type,
+        isOnline: isConnected,
+      });
+    });
+
+    // Initial check
+    NetInfo.fetch().then((state) => {
+      const isConnected = state.isConnected && state.isInternetReachable;
+      setNetworkStatus(isConnected);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Alternative simple network check
+  const simpleNetworkCheck = async () => {
+    try {
+      const state = await NetInfo.fetch();
+      // Simple check: if connected to any network, assume internet access
+      const isOnline = state.isConnected === true;
+      console.log('Simple network check:', {
+        isConnected: state.isConnected,
+        type: state.type,
+      });
+      return isOnline;
+    } catch (error) {
+      console.error('Simple network check failed:', error);
+      return false;
+    }
+  };
+
+  // Use simple check as fallback
+  React.useEffect(() => {
+    const checkNetwork = async () => {
+      const isOnline = await simpleNetworkCheck();
+      if (networkStatus === null) {
+        setNetworkStatus(isOnline);
+      }
+    };
+
+    if (networkStatus === null) {
+      checkNetwork();
+    }
+  }, [networkStatus]);
 
   React.useEffect(() => {
     const requestPermissions = async () => {
@@ -408,21 +463,37 @@ export default function CartScreen() {
                 </Text>
               )}
             </View>
-
-            <Button
-              mode="contained"
-              onPress={() => setShowPayment(true)}
-              disabled={isProcessing}
-              loading={isProcessing}
-              style={{
-                backgroundColor: isProcessing ? '#9ca3af' : '#059669',
-                borderRadius: 12,
-                paddingVertical: 4,
-              }}
-              labelStyle={{ fontSize: 16, fontWeight: '600' }}
-            >
-              {isProcessing ? 'Processing...' : 'Proceed to Payment'}
-            </Button>
+            <View>
+              {networkStatus ? (
+                <Button
+                  mode="contained"
+                  onPress={() => setShowPayment(true)}
+                  disabled={isProcessing}
+                  loading={isProcessing}
+                  style={{
+                    backgroundColor: isProcessing ? '#9ca3af' : '#059669',
+                    borderRadius: 12,
+                    paddingVertical: 4,
+                  }}
+                  labelStyle={{ fontSize: 16, fontWeight: '600' }}
+                >
+                  {isProcessing ? 'Processing...' : 'Proceed to Payment'}
+                </Button>
+              ) : (
+                <Button
+                  mode="contained"
+                  disabled={true}
+                  style={{
+                    backgroundColor: '#9ca3af',
+                    borderRadius: 12,
+                    paddingVertical: 4,
+                  }}
+                  labelStyle={{ fontSize: 16, fontWeight: '600' }}
+                >
+                  No internet connection
+                </Button>
+              )}
+            </View>
           </View>
         </>
       )}

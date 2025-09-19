@@ -1,5 +1,6 @@
 import { useAuth } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
+import NetInfo from '@react-native-community/netinfo';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, FlatList, RefreshControl, TouchableOpacity, View } from 'react-native';
@@ -73,14 +74,29 @@ export default function OrdersScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
-
-  // Cache orders to reduce DB calls
+  const [networkStatus, setNetworkStatus] = React.useState<boolean | null>(null);
+  const [isOffline, setIsOffline] = useState(false);
   const [cachedOrders, setCachedOrders] = useState<Order[]>([]);
   const [lastFetchTime, setLastFetchTime] = useState<number>(0);
   const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
   const fetchOrders = useCallback(
     async (forceRefresh = false) => {
+      // Check if offline
+      if (networkStatus === false) {
+        setIsOffline(true);
+        if (cachedOrders.length > 0) {
+          setOrders(cachedOrders);
+        } else {
+          setOrders([]);
+        }
+        setLoading(false);
+        setRefreshing(false);
+        return;
+      }
+
+      setIsOffline(false);
+
       try {
         // Use cache if available and not forcing refresh
         const now = Date.now();
@@ -120,7 +136,7 @@ export default function OrdersScreen() {
         setRefreshing(false);
       }
     },
-    [getToken, cachedOrders, lastFetchTime, CACHE_DURATION],
+    [getToken, cachedOrders, lastFetchTime, CACHE_DURATION, networkStatus],
   );
 
   useEffect(() => {
@@ -128,9 +144,13 @@ export default function OrdersScreen() {
   }, [fetchOrders]);
 
   const onRefresh = useCallback(() => {
+    if (isOffline) {
+      Alert.alert('Offline', 'Cannot refresh while offline. Please check your connection.');
+      return;
+    }
     setRefreshing(true);
     fetchOrders(true); // Force refresh
-  }, [fetchOrders]);
+  }, [fetchOrders, isOffline]);
 
   // Memoized formatters to prevent unnecessary re-renders
   const formatDate = useCallback((dateString: string) => {
@@ -143,6 +163,61 @@ export default function OrdersScreen() {
       minute: '2-digit',
     });
   }, []);
+
+  // Custom network detection using NetInfo
+  React.useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      const isConnected = state.isConnected && state.isInternetReachable;
+      setNetworkStatus(isConnected);
+      setIsOffline(!isConnected);
+      console.log('NetInfo status:', {
+        isConnected: state.isConnected,
+        isInternetReachable: state.isInternetReachable,
+        type: state.type,
+        isOnline: isConnected,
+      });
+    });
+
+    // Initial check
+    NetInfo.fetch().then((state) => {
+      const isConnected = state.isConnected && state.isInternetReachable;
+      setNetworkStatus(isConnected);
+      setIsOffline(!isConnected);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Alternative simple network check
+  const simpleNetworkCheck = async () => {
+    try {
+      const state = await NetInfo.fetch();
+      // Simple check: if connected to any network, assume internet access
+      const isOnline = state.isConnected === true;
+      console.log('Simple network check:', {
+        isConnected: state.isConnected,
+        type: state.type,
+      });
+      return isOnline;
+    } catch (error) {
+      console.error('Simple network check failed:', error);
+      return false;
+    }
+  };
+
+  // Use simple check as fallback
+  React.useEffect(() => {
+    const checkNetwork = async () => {
+      const isOnline = await simpleNetworkCheck();
+      if (networkStatus === null) {
+        setNetworkStatus(isOnline);
+      }
+    };
+
+    if (networkStatus === null) {
+      checkNetwork();
+    }
+  }, [networkStatus]);
 
   const formatCurrency = useCallback((amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -497,9 +572,19 @@ export default function OrdersScreen() {
             paddingVertical: 16,
             borderBottomWidth: 1,
             borderBottomColor: '#e2e8f0',
+            flexDirection: 'row',
+            alignItems: 'center',
           }}
         >
-          <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#1e293b' }}>My Orders</Text>
+          <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#1e293b', flex: 1 }}>
+            My Orders
+          </Text>
+          {isOffline && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 8 }}>
+              <Ionicons name="cloud-offline" size={16} color="#ef4444" />
+              <Text style={{ fontSize: 14, color: '#ef4444', marginLeft: 4 }}>Offline</Text>
+            </View>
+          )}
         </View>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <Text style={{ fontSize: 16, color: '#64748b' }}>Loading orders...</Text>
@@ -525,6 +610,12 @@ export default function OrdersScreen() {
         <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#1e293b', flex: 1 }}>
           My Orders
         </Text>
+        {isOffline && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 8 }}>
+            <Ionicons name="cloud-offline" size={16} color="#ef4444" />
+            <Text style={{ fontSize: 14, color: '#ef4444', marginLeft: 4 }}>Offline</Text>
+          </View>
+        )}
         {orders.length > 0 && (
           <Text style={{ fontSize: 16, color: '#64748b' }}>
             {orders.length} order{orders.length !== 1 ? 's' : ''}

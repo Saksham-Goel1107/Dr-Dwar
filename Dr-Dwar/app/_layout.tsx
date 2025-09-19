@@ -1,13 +1,13 @@
 import { ClerkProvider, useAuth, useUser } from '@clerk/clerk-expo';
 import { resourceCache } from '@clerk/clerk-expo/resource-cache';
 import { tokenCache } from '@clerk/clerk-expo/token-cache';
+import * as Sentry from '@sentry/react-native';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { useEffect } from 'react';
 import { KeyboardAvoidingView, Platform, SafeAreaView } from 'react-native';
 import { PaperProvider } from 'react-native-paper';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import '../global.css';
-import * as Sentry from '@sentry/react-native';
 
 Sentry.init({
   dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
@@ -70,22 +70,22 @@ function InitialLayout() {
 export default Sentry.wrap(function RootLayout() {
   return (
     <ErrorBoundary>
-      <ClerkProvider
-        publishableKey={publishableKey}
-        tokenCache={tokenCache}
-        __experimental_resourceCache={resourceCache}
-      >
-        <SafeAreaView style={{ flex: 1 }}>
-          <KeyboardAvoidingView
-            style={{ flex: 1 }}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          >
-            <PaperProvider>
-              <InitialLayout />
-            </PaperProvider>
-          </KeyboardAvoidingView>
-        </SafeAreaView>
-      </ClerkProvider>
+        <ClerkProvider
+          publishableKey={publishableKey}
+          tokenCache={tokenCache}
+          __experimental_resourceCache={resourceCache}
+        >
+          <SafeAreaView style={{ flex: 1 }}>
+            <KeyboardAvoidingView
+              style={{ flex: 1 }}
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            >
+              <PaperProvider>
+                <InitialLayout />
+              </PaperProvider>
+            </KeyboardAvoidingView>
+          </SafeAreaView>
+        </ClerkProvider>
     </ErrorBoundary>
   );
 });

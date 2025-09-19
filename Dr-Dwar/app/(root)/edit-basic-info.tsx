@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { Platform, ScrollView, TouchableOpacity, View } from 'react-native';
 import { Text, TextInput } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import NetInfo from '@react-native-community/netinfo';
 
 export default function EditBasicInfoScreen() {
   const { user } = useUser();
@@ -32,6 +33,7 @@ export default function EditBasicInfoScreen() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [networkStatus, setNetworkStatus] = React.useState<boolean | null>(null);
 
   useEffect(() => {
     // Load existing user data
@@ -89,6 +91,59 @@ export default function EditBasicInfoScreen() {
       }
     }
   }, [user]);
+
+  // Custom network detection using NetInfo
+  React.useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      const isConnected = state.isConnected && state.isInternetReachable;
+      setNetworkStatus(isConnected);
+      console.log('NetInfo status:', {
+        isConnected: state.isConnected,
+        isInternetReachable: state.isInternetReachable,
+        type: state.type,
+        isOnline: isConnected,
+      });
+    });
+
+    // Initial check
+    NetInfo.fetch().then((state) => {
+      const isConnected = state.isConnected && state.isInternetReachable;
+      setNetworkStatus(isConnected);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Alternative simple network check
+  const simpleNetworkCheck = async () => {
+    try {
+      const state = await NetInfo.fetch();
+      // Simple check: if connected to any network, assume internet access
+      const isOnline = state.isConnected === true;
+      console.log('Simple network check:', {
+        isConnected: state.isConnected,
+        type: state.type,
+      });
+      return isOnline;
+    } catch (error) {
+      console.error('Simple network check failed:', error);
+      return false;
+    }
+  };
+
+  // Use simple check as fallback
+  React.useEffect(() => {
+    const checkNetwork = async () => {
+      const isOnline = await simpleNetworkCheck();
+      if (networkStatus === null) {
+        setNetworkStatus(isOnline);
+      }
+    };
+
+    if (networkStatus === null) {
+      checkNetwork();
+    }
+  }, [networkStatus]);
 
   // Validation helpers
   const validateDateOfBirth = (dob: string) => {
@@ -749,6 +804,7 @@ export default function EditBasicInfoScreen() {
               <Text style={{ color: '#4a5568', fontSize: 16, fontWeight: '600' }}>Cancel</Text>
             </TouchableOpacity>
 
+            {networkStatus ? (
             <TouchableOpacity
               onPress={handleSubmit}
               disabled={loading || !isFormValid()}
@@ -773,6 +829,21 @@ export default function EditBasicInfoScreen() {
                 </Text>
               )}
             </TouchableOpacity>
+            ):(
+              <View
+              style={{
+                flex: 1,
+                backgroundColor: '#e2e8f0',
+                borderRadius: 12,
+                paddingVertical: 14,
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ color: '#4a5568', fontSize: 16, fontWeight: '600' }}>
+                You are offline
+              </Text>
+            </View>
+            )}
           </View>
 
           <Text
