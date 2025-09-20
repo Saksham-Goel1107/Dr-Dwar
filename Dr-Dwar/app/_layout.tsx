@@ -11,6 +11,7 @@ import { KeyboardAvoidingView, Platform, SafeAreaView } from 'react-native';
 import { PaperProvider } from 'react-native-paper';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import '../global.css';
+import * as ScreenCapture from 'expo-screen-capture';
 
 // Initialize Sentry conditionally based on user settings
 const initializeSentry = async () => {
@@ -78,6 +79,14 @@ function InitialLayout() {
   const router = useRouter();
   const [isFeedbackVisible, setIsFeedbackVisible] = useState(false);
   const [shakeToReportEnabled, setShakeToReportEnabled] = useState(true);
+
+  useEffect(() => {
+    ScreenCapture.preventScreenCaptureAsync();
+    return () => {
+      ScreenCapture.allowScreenCaptureAsync();
+    };
+  }, []);
+
 
   useEffect(() => {
     if (!isLoaded) return;
