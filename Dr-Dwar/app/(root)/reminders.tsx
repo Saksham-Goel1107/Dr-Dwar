@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import * as Haptics from 'expo-haptics';
 import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
@@ -777,6 +778,21 @@ interface ReminderItemProps {
 }
 
 function ReminderItem({ reminder, onToggle, onDelete, onEdit }: ReminderItemProps) {
+  const [vibrationsEnabled, setVibrationsEnabled] = useState(true);
+
+  useEffect(() => {
+    const loadVibrationSettings = async () => {
+      try {
+        const vib = await SecureStore.getItemAsync('VIBRATIONS');
+        setVibrationsEnabled(vib !== 'false'); // Default to true
+      } catch (error) {
+        console.error('Error loading vibration settings:', error);
+        setVibrationsEnabled(true); // Default to true on error
+      }
+    };
+
+    loadVibrationSettings();
+  }, []);
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('en-US', {
       hour: '2-digit',
@@ -975,7 +991,13 @@ function ReminderItem({ reminder, onToggle, onDelete, onEdit }: ReminderItemProp
             {/* Action Buttons */}
             <View style={{ alignItems: 'flex-end', gap: 8 }}>
               <TouchableOpacity
-                onPress={() => onToggle(reminder.id)}
+                onPress={() => {
+                  // Provide vibration feedback if enabled
+                  if (vibrationsEnabled) {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }
+                  onToggle(reminder.id);
+                }}
                 style={{
                   padding: 8,
                   borderRadius: 20,
@@ -990,7 +1012,13 @@ function ReminderItem({ reminder, onToggle, onDelete, onEdit }: ReminderItemProp
               </TouchableOpacity>
 
               <TouchableOpacity
-                onPress={handleDelete}
+                onPress={() => {
+                  // Provide vibration feedback if enabled
+                  if (vibrationsEnabled) {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }
+                  handleDelete();
+                }}
                 style={{
                   padding: 8,
                   borderRadius: 20,

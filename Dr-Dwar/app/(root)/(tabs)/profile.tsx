@@ -1,5 +1,6 @@
 import { useClerk, useUser } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
@@ -91,6 +92,7 @@ export default function ProfileSettings() {
   const [notifications, setNotifications] = useState(true);
   const [shakeToReport, setShakeToReport] = useState(true);
   const [sendDiagnosticData, setSendDiagnosticData] = useState(true);
+  const [vibrations, setVibrations] = useState(true);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -103,11 +105,13 @@ export default function ProfileSettings() {
       const notif = await SecureStore.getItemAsync('NOTIFICATIONS');
       const shake = await SecureStore.getItemAsync('SHAKE_TO_REPORT');
       const diagnostic = await SecureStore.getItemAsync('SEND_DIAGNOSTIC_DATA');
+      const vib = await SecureStore.getItemAsync('VIBRATIONS');
 
       setAppLock(lock === 'true');
       setNotifications(notif !== 'false'); // Default to true
       setShakeToReport(shake !== 'false'); // Default to true
       setSendDiagnosticData(diagnostic !== 'false'); // Default to true
+      setVibrations(vib !== 'false'); // Default to true
     } catch (error) {
       console.error('Error loading settings:', error);
     }
@@ -116,21 +120,43 @@ export default function ProfileSettings() {
   const toggleAppLock = async (val: boolean) => {
     setLoading(true);
     try {
+      // Verify device supports authentication
+      const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+      if (!hasHardware || !isEnrolled) {
+        Alert.alert(
+          'Device Lock Required',
+          'Please set up biometric authentication or PIN in your device settings to manage app lock.',
+          [{ text: 'OK' }],
+        );
+        return;
+      }
+
+      // Request biometric authentication before any app lock change
+      const authResult = await LocalAuthentication.authenticateAsync({
+        promptMessage: val ? 'Authenticate to enable app lock' : 'Authenticate to disable app lock',
+        fallbackLabel: 'Use PIN',
+        cancelLabel: 'Cancel',
+        disableDeviceFallback: false,
+      });
+
+      if (!authResult.success) {
+        Alert.alert(
+          'Authentication Failed',
+          'Authentication is required to change app lock settings. Please try again.',
+          [{ text: 'OK' }],
+        );
+        return;
+      }
+
+      // Proceed with the toggle after successful authentication
       if (val) {
-        // Verify device supports authentication before enabling
-        const hasHardware = await LocalAuthentication.hasHardwareAsync();
-        const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-        if (!hasHardware || !isEnrolled) {
-          Alert.alert(
-            'Device Lock Required',
-            'Please set up biometric authentication or PIN in your device settings before enabling app lock.',
-            [{ text: 'OK' }],
-          );
-          return;
-        }
         await SecureStore.setItemAsync('APP_LOCK', 'true');
         setAppLock(true);
-        Alert.alert('Success', 'App lock has been enabled.');
+        Alert.alert(
+          'Success',
+          'App lock has been enabled. Please refresh the app to put this into action.',
+        );
       } else {
         await SecureStore.setItemAsync('APP_LOCK', 'false');
         setAppLock(false);
@@ -209,7 +235,9 @@ export default function ProfileSettings() {
       Alert.alert(
         'Success',
         `Shake to report bug has been ${val ? 'enabled' : 'disabled'}. Please refresh the app to put this into action. ${
-          val ? 'Shake your device to report issues. Please refresh the app to put this into action.' : ''
+          val
+            ? 'Shake your device to report issues. Please refresh the app to put this into action.'
+            : ''
         }`,
       );
     } catch (error) {
@@ -234,6 +262,30 @@ export default function ProfileSettings() {
     } catch (error) {
       console.error('Error toggling diagnostic data:', error);
       Alert.alert('Error', 'Failed to update diagnostic data setting. Please try again.');
+    }
+  };
+
+  const toggleVibrations = async (val: boolean) => {
+    try {
+      await SecureStore.setItemAsync('VIBRATIONS', val.toString());
+      setVibrations(val);
+
+      // Provide haptic feedback when enabling vibrations
+      if (val) {
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+
+      Alert.alert(
+        'Success',
+        `Vibrations have been ${val ? 'enabled' : 'disabled'}. ${
+          val
+            ? 'You will feel haptic feedback for interactions. Please refresh the app to put this into action.'
+            : 'No vibration feedback will be provided. Please refresh the app to put this into action.'
+        }`,
+      );
+    } catch (error) {
+      console.error('Error toggling vibrations:', error);
+      Alert.alert('Error', 'Failed to update vibration setting. Please try again.');
     }
   };
 
@@ -416,6 +468,20 @@ export default function ProfileSettings() {
               <Switch
                 value={sendDiagnosticData}
                 onValueChange={toggleSendDiagnosticData}
+                trackColor={{ false: '#D1D5DB', true: '#3B82F6' }}
+                thumbColor="#FFFFFF"
+              />
+            }
+            showChevron={false}
+          />
+          <SettingItem
+            title="Vibrations"
+            subtitle="Haptic feedback for interactions"
+            icon="phone-portrait-outline"
+            rightElement={
+              <Switch
+                value={vibrations}
+                onValueChange={toggleVibrations}
                 trackColor={{ false: '#D1D5DB', true: '#3B82F6' }}
                 thumbColor="#FFFFFF"
               />

@@ -9,6 +9,8 @@ import { Button, Card, Divider, IconButton, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { useCart } from '../../contexts/CartContext';
+import * as Haptics from 'expo-haptics';
+import * as SecureStore from 'expo-secure-store';
 
 type CartItem = {
   'Sr No': string;
@@ -26,6 +28,22 @@ export default function CartScreen() {
   const [showPayment, setShowPayment] = React.useState(false);
   const [isProcessing, setIsProcessing] = React.useState(false);
   const [networkStatus, setNetworkStatus] = React.useState<boolean | null>(null);
+  const [vibrationsEnabled, setVibrationsEnabled] = React.useState(true);
+
+  // Load vibration settings
+    React.useEffect(() => {
+      const loadVibrationSettings = async () => {
+        try {
+          const vib = await SecureStore.getItemAsync('VIBRATIONS');
+          setVibrationsEnabled(vib !== 'false'); // Default to true
+        } catch (error) {
+          console.error('Error loading vibration settings:', error);
+          setVibrationsEnabled(true); // Default to true on error
+        }
+      };
+
+      loadVibrationSettings();
+    }, []);
 
   // Custom network detection using NetInfo
   React.useEffect(() => {
@@ -467,7 +485,12 @@ export default function CartScreen() {
               {networkStatus ? (
                 <Button
                   mode="contained"
-                  onPress={() => setShowPayment(true)}
+                  onPress={() => {
+                    if (vibrationsEnabled) {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    }
+                    setShowPayment(true);
+                  }}
                   disabled={isProcessing}
                   loading={isProcessing}
                   style={{
