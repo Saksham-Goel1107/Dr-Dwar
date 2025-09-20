@@ -25,6 +25,9 @@ export default function HomeScreen() {
         <Button mode="outlined" onPress={() => router.push('/reminders')} className="mt-4">
           Reminder
         </Button>
+        <Button mode="outlined" onPress={() => router.push('/hospitals')} className="mt-4">
+          Hospitals
+        </Button>
       </View>
     </SafeAreaView>
   );
