@@ -31,19 +31,19 @@ export default function CartScreen() {
   const [vibrationsEnabled, setVibrationsEnabled] = React.useState(true);
 
   // Load vibration settings
-    React.useEffect(() => {
-      const loadVibrationSettings = async () => {
-        try {
-          const vib = await SecureStore.getItemAsync('VIBRATIONS');
-          setVibrationsEnabled(vib !== 'false'); // Default to true
-        } catch (error) {
-          console.error('Error loading vibration settings:', error);
-          setVibrationsEnabled(true); // Default to true on error
-        }
-      };
+  React.useEffect(() => {
+    const loadVibrationSettings = async () => {
+      try {
+        const vib = await SecureStore.getItemAsync('VIBRATIONS');
+        setVibrationsEnabled(vib !== 'false'); // Default to true
+      } catch (error) {
+        console.error('Error loading vibration settings:', error);
+        setVibrationsEnabled(true); // Default to true on error
+      }
+    };
 
-      loadVibrationSettings();
-    }, []);
+    loadVibrationSettings();
+  }, []);
 
   // Custom network detection using NetInfo
   React.useEffect(() => {

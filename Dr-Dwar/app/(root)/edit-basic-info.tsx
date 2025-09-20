@@ -805,44 +805,44 @@ export default function EditBasicInfoScreen() {
             </TouchableOpacity>
 
             {networkStatus ? (
-            <TouchableOpacity
-              onPress={handleSubmit}
-              disabled={loading || !isFormValid()}
-              style={{
-                flex: 1,
-                backgroundColor: isFormValid() ? '#008000' : '#cbd5e0',
-                borderRadius: 12,
-                paddingVertical: 14,
-                alignItems: 'center',
-                shadowColor: '#008000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.3,
-                shadowRadius: 4,
-                elevation: 4,
-              }}
-            >
-              {loading ? (
-                <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>Saving...</Text>
-              ) : (
-                <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>
-                  Save Changes
-                </Text>
-              )}
-            </TouchableOpacity>
-            ):(
+              <TouchableOpacity
+                onPress={handleSubmit}
+                disabled={loading || !isFormValid()}
+                style={{
+                  flex: 1,
+                  backgroundColor: isFormValid() ? '#008000' : '#cbd5e0',
+                  borderRadius: 12,
+                  paddingVertical: 14,
+                  alignItems: 'center',
+                  shadowColor: '#008000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 4,
+                  elevation: 4,
+                }}
+              >
+                {loading ? (
+                  <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>Saving...</Text>
+                ) : (
+                  <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>
+                    Save Changes
+                  </Text>
+                )}
+              </TouchableOpacity>
+            ) : (
               <View
-              style={{
-                flex: 1,
-                backgroundColor: '#e2e8f0',
-                borderRadius: 12,
-                paddingVertical: 14,
-                alignItems: 'center',
-              }}
-            >
-              <Text style={{ color: '#4a5568', fontSize: 16, fontWeight: '600' }}>
-                You are offline
-              </Text>
-            </View>
+                style={{
+                  flex: 1,
+                  backgroundColor: '#e2e8f0',
+                  borderRadius: 12,
+                  paddingVertical: 14,
+                  alignItems: 'center',
+                }}
+              >
+                <Text style={{ color: '#4a5568', fontSize: 16, fontWeight: '600' }}>
+                  You are offline
+                </Text>
+              </View>
             )}
           </View>
 

@@ -87,7 +87,6 @@ function InitialLayout() {
     };
   }, []);
 
-
   useEffect(() => {
     if (!isLoaded) return;
 
