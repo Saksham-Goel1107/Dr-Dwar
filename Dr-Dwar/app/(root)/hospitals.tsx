@@ -123,25 +123,6 @@ export default function Hospitals() {
       console.log('Loaded hospitals:', (result as Hospital[]).length);
     } catch (error) {
       console.log('Error loading database:', error);
-      const db = await SQLite.openDatabaseAsync('test.db');
-      await db.execAsync(`
-        CREATE TABLE IF NOT EXISTS facilities (
-          Sr_No INTEGER,
-          Hospital_Name TEXT,
-          Hospital_Category TEXT,
-          State TEXT,
-          District TEXT,
-          Address_Original_First_Line TEXT,
-          Telephone TEXT,
-          Emergency_Num TEXT,
-          Total_Num_Beds TEXT,
-          Specialties TEXT,
-          Location_Coordinates TEXT
-        );
-        INSERT INTO facilities VALUES (1, 'Test Hospital', 'Government', 'Delhi', 'Central Delhi', '123 Test Street', '011-12345678', '102', '100', 'General Medicine', '28.6139,77.2090');
-      `);
-      const result = await db.getAllAsync('SELECT * FROM facilities ORDER BY Hospital_Name');
-      setHospitals(result as Hospital[]);
     }
     setLoading(false);
   };
