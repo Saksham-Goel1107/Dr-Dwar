@@ -20,15 +20,30 @@ import {
 interface ProfileSectionProps {
   title: string;
   children: React.ReactNode;
+  defaultExpanded?: boolean;
 }
 
-function ProfileSection({ title, children }: ProfileSectionProps) {
+function ProfileSection({
+  title,
+  children,
+  defaultExpanded = false,
+}: ProfileSectionProps & { defaultExpanded?: boolean }) {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+
   return (
     <View className="mb-6">
-      <Text className="mb-3 text-lg font-semibold text-gray-800">{title}</Text>
-      <View className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
-        {children}
-      </View>
+      <TouchableOpacity
+        className="flex-row items-center justify-between border-b border-gray-100 p-4 active:bg-gray-50"
+        onPress={() => setIsExpanded(!isExpanded)}
+      >
+        <Text className="text-lg font-semibold text-gray-800">{title}</Text>
+        <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={20} color="#6B7280" />
+      </TouchableOpacity>
+      {isExpanded && (
+        <View className="overflow-hidden rounded-b-xl border border-gray-100 bg-white shadow-sm">
+          {children}
+        </View>
+      )}
     </View>
   );
 }
@@ -74,6 +89,8 @@ export default function ProfileSettings() {
   const clerk = useClerk();
   const [appLock, setAppLock] = useState(false);
   const [notifications, setNotifications] = useState(true);
+  const [shakeToReport, setShakeToReport] = useState(true);
+  const [sendDiagnosticData, setSendDiagnosticData] = useState(true);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -84,8 +101,13 @@ export default function ProfileSettings() {
     try {
       const lock = await SecureStore.getItemAsync('APP_LOCK');
       const notif = await SecureStore.getItemAsync('NOTIFICATIONS');
+      const shake = await SecureStore.getItemAsync('SHAKE_TO_REPORT');
+      const diagnostic = await SecureStore.getItemAsync('SEND_DIAGNOSTIC_DATA');
+
       setAppLock(lock === 'true');
       setNotifications(notif !== 'false'); // Default to true
+      setShakeToReport(shake !== 'false'); // Default to true
+      setSendDiagnosticData(diagnostic !== 'false'); // Default to true
     } catch (error) {
       console.error('Error loading settings:', error);
     }
@@ -176,6 +198,42 @@ export default function ProfileSettings() {
     } catch (error) {
       console.error('Error toggling notifications:', error);
       Alert.alert('Error', 'Failed to update notification settings. Please try again.');
+    }
+  };
+
+  const toggleShakeToReport = async (val: boolean) => {
+    try {
+      await SecureStore.setItemAsync('SHAKE_TO_REPORT', val.toString());
+      setShakeToReport(val);
+
+      Alert.alert(
+        'Success',
+        `Shake to report bug has been ${val ? 'enabled' : 'disabled'}. Please refresh the app to put this into action. ${
+          val ? 'Shake your device to report issues. Please refresh the app to put this into action.' : ''
+        }`,
+      );
+    } catch (error) {
+      console.error('Error toggling shake to report:', error);
+      Alert.alert('Error', 'Failed to update shake to report setting. Please try again.');
+    }
+  };
+
+  const toggleSendDiagnosticData = async (val: boolean) => {
+    try {
+      await SecureStore.setItemAsync('SEND_DIAGNOSTIC_DATA', val.toString());
+      setSendDiagnosticData(val);
+
+      Alert.alert(
+        'Success',
+        `Diagnostic data collection has been ${val ? 'enabled' : 'disabled'}. ${
+          val
+            ? 'We will collect crash reports and performance data to improve the app. Please refresh the app to put this into action.'
+            : 'No diagnostic data will be collected. Please refresh the app to put this into action.'
+        }`,
+      );
+    } catch (error) {
+      console.error('Error toggling diagnostic data:', error);
+      Alert.alert('Error', 'Failed to update diagnostic data setting. Please try again.');
     }
   };
 
@@ -284,7 +342,7 @@ export default function ProfileSettings() {
         </View>
 
         {/* Account Settings */}
-        <ProfileSection title="Account">
+        <ProfileSection title="Account" defaultExpanded={false}>
           <SettingItem
             title="Edit Profile"
             subtitle="Update your personal information"
@@ -320,7 +378,7 @@ export default function ProfileSettings() {
         </ProfileSection>
 
         {/* Security Settings */}
-        <ProfileSection title="Security">
+        <ProfileSection title="Security" defaultExpanded={false}>
           <SettingItem
             title="App Lock"
             subtitle="Use device PIN or biometric"
@@ -336,10 +394,38 @@ export default function ProfileSettings() {
             }
             showChevron={false}
           />
+          <SettingItem
+            title="Shake to Report Bug"
+            subtitle="Shake device to report issues"
+            icon="bug-outline"
+            rightElement={
+              <Switch
+                value={shakeToReport}
+                onValueChange={toggleShakeToReport}
+                trackColor={{ false: '#D1D5DB', true: '#3B82F6' }}
+                thumbColor="#FFFFFF"
+              />
+            }
+            showChevron={false}
+          />
+          <SettingItem
+            title="Send Diagnostic Data"
+            subtitle="Help improve app with crash reports"
+            icon="analytics-outline"
+            rightElement={
+              <Switch
+                value={sendDiagnosticData}
+                onValueChange={toggleSendDiagnosticData}
+                trackColor={{ false: '#D1D5DB', true: '#3B82F6' }}
+                thumbColor="#FFFFFF"
+              />
+            }
+            showChevron={false}
+          />
         </ProfileSection>
 
         {/* Support & About */}
-        <ProfileSection title="Support & About">
+        <ProfileSection title="Support & About" defaultExpanded={false}>
           <SettingItem
             title="Support"
             subtitle="Get help and support"

@@ -3,6 +3,7 @@ import { resourceCache } from '@clerk/clerk-expo/resource-cache';
 import { tokenCache } from '@clerk/clerk-expo/token-cache';
 import * as Sentry from '@sentry/react-native';
 import { Slot, useRouter, useSegments } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
 import { Accelerometer } from 'expo-sensors';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
@@ -11,34 +12,56 @@ import { PaperProvider } from 'react-native-paper';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import '../global.css';
 
-Sentry.init({
-  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+// Initialize Sentry conditionally based on user settings
+const initializeSentry = async () => {
+  try {
+    const sendDiagnosticData = await SecureStore.getItemAsync('SEND_DIAGNOSTIC_DATA');
 
-  // Adds more context data to events (IP address, cookies, user, etc.)
-  // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
-  sendDefaultPii: true,
+    // Only initialize Sentry if diagnostic data is enabled (default: true)
+    if (sendDiagnosticData !== 'false') {
+      Sentry.init({
+        dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
 
-  // Configure Session Replay
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1,
-  integrations: [
-    Sentry.mobileReplayIntegration(),
-    Sentry.feedbackIntegration({
-      // Additional SDK configuration goes in here, for example:
-      styles: {
-        submitButton: {
-          backgroundColor: '#6a1b9a',
-        },
-      },
-      namePlaceholder: 'Fullname',
-      isNameRequired: true,
-      isEmailRequired: true,
-    }),
-  ],
+        // Adds more context data to events (IP address, cookies, user, etc.)
+        // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
+        sendDefaultPii: true,
 
-  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
-  // spotlight: __DEV__,
-});
+        // Configure Session Replay
+        replaysSessionSampleRate: 0.1,
+        replaysOnErrorSampleRate: 1,
+        integrations: [
+          Sentry.mobileReplayIntegration(),
+          Sentry.feedbackIntegration({
+            // Additional SDK configuration goes in here, for example:
+            styles: {
+              submitButton: {
+                backgroundColor: '#6a1b9a',
+              },
+            },
+            namePlaceholder: 'Fullname',
+            isNameRequired: true,
+            isEmailRequired: true,
+          }),
+        ],
+
+        // uncomment the line below to enable Spotlight (https://spotlightjs.com)
+        // spotlight: __DEV__,
+      });
+    }
+  } catch (error) {
+    console.error('Error initializing Sentry:', error);
+    // Fallback: initialize with minimal config if settings can't be loaded
+    Sentry.init({
+      dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+      sendDefaultPii: false,
+      replaysSessionSampleRate: 0,
+      replaysOnErrorSampleRate: 0,
+    });
+  }
+};
+
+// Initialize Sentry on app start
+initializeSentry();
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
@@ -54,6 +77,7 @@ function InitialLayout() {
   const segments = useSegments();
   const router = useRouter();
   const [isFeedbackVisible, setIsFeedbackVisible] = useState(false);
+  const [shakeToReportEnabled, setShakeToReportEnabled] = useState(true);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -80,11 +104,31 @@ function InitialLayout() {
     }
   }, [isSignedIn, isLoaded, user, router, segments]);
 
+  // Load shake to report setting
+  useEffect(() => {
+    const loadShakeSetting = async () => {
+      try {
+        const shakeSetting = await SecureStore.getItemAsync('SHAKE_TO_REPORT');
+        setShakeToReportEnabled(shakeSetting !== 'false'); // Default to true
+      } catch (error) {
+        console.error('Error loading shake setting:', error);
+        setShakeToReportEnabled(true); // Default to true on error
+      }
+    };
+
+    loadShakeSetting();
+  }, []);
+
   // Shake detection for Sentry feedback
   useEffect(() => {
     let subscription: any;
 
     const startShakeDetection = async () => {
+      // Only start shake detection if enabled
+      if (!shakeToReportEnabled) {
+        return;
+      }
+
       try {
         // Request permission to use accelerometer
         const { status } = await Accelerometer.requestPermissionsAsync();
@@ -143,13 +187,13 @@ function InitialLayout() {
 
     startShakeDetection();
 
-    // Cleanup subscription on unmount
+    // Cleanup subscription on unmount or when setting changes
     return () => {
       if (subscription) {
         subscription.remove();
       }
     };
-  }, [isFeedbackVisible]);
+  }, [isFeedbackVisible, shakeToReportEnabled]);
 
   return <Slot />;
 }
