@@ -16,18 +16,25 @@
   "dependencies": {
     "@arcjet/node": "^1.0.0-beta.11",
     "@clerk/express": "^1.7.31",
+    "@langchain/openai": "^0.0.14",
     "@prisma/client": "^6.16.2",
     "@sentry/node": "^10.12.0",
+    "axios": "^1.12.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
+    "langchain": "^0.1.25",
+    "langsmith": "^0.3.69",
     "prisma": "^6.16.2",
-    "winston": "^3.17.0"
+    "uuid": "^9.0.1",
+    "winston": "^3.17.0",
+    "ws": "^8.14.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/node": "^24.5.0",
+    "@types/uuid": "^9.0.8",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.0",
     "tsx": "^4.20.5",
