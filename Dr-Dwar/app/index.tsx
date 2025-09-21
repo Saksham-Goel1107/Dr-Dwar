@@ -5,6 +5,7 @@ import { View, Text, Image, Dimensions, TouchableOpacity, StatusBar } from 'reac
 import Carousel from 'react-native-reanimated-carousel';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@clerk/clerk-expo';
+import * as Speech from 'expo-speech';
 
 const { width, height } = Dimensions.get('window');
 
@@ -48,6 +49,17 @@ export default function OnboardingScreen() {
       router.replace('/(root)/(tabs)/home');
     }
   }, [isSignedIn, router]);
+
+  useEffect(() => {
+    Speech.speak(
+      'Home page: The Dr-Dwar Home page which tells the features of the app and has Sign-in and Sign-up buttons.',
+      {
+        language: 'en',
+        pitch: 1,
+        rate: 1,
+      },
+    );
+  }, []);
 
   return (
     <>

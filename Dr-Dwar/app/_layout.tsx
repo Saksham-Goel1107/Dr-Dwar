@@ -3,15 +3,16 @@ import { resourceCache } from '@clerk/clerk-expo/resource-cache';
 import { tokenCache } from '@clerk/clerk-expo/token-cache';
 import * as Sentry from '@sentry/react-native';
 import { Slot, useRouter, useSegments } from 'expo-router';
+import * as ScreenCapture from 'expo-screen-capture';
 import * as SecureStore from 'expo-secure-store';
 import { Accelerometer } from 'expo-sensors';
+import * as Speech from 'expo-speech';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, SafeAreaView } from 'react-native';
 import { PaperProvider } from 'react-native-paper';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import '../global.css';
-import * as ScreenCapture from 'expo-screen-capture';
 
 // Initialize Sentry conditionally based on user settings
 const initializeSentry = async () => {
@@ -79,6 +80,7 @@ function InitialLayout() {
   const router = useRouter();
   const [isFeedbackVisible, setIsFeedbackVisible] = useState(false);
   const [shakeToReportEnabled, setShakeToReportEnabled] = useState(true);
+  const [readPageAloud, setReadPageAloud] = useState(false);
 
   useEffect(() => {
     ScreenCapture.preventScreenCaptureAsync();
@@ -126,6 +128,70 @@ function InitialLayout() {
 
     loadShakeSetting();
   }, []);
+
+  // Load read page aloud setting
+  useEffect(() => {
+    const loadReadPageAloudSetting = async () => {
+      try {
+        const readAloudSetting = await SecureStore.getItemAsync('READ_PAGE_ALOUD');
+        setReadPageAloud(readAloudSetting === 'true');
+      } catch (error) {
+        console.error('Error loading read page aloud setting:', error);
+        setReadPageAloud(false);
+      }
+    };
+
+    loadReadPageAloudSetting();
+  }, []);
+
+  // Function to get detailed page description from segments
+  const getPageDescription = (segments: string[]) => {
+    const path = segments.join('/');
+
+    const pageDescriptions: { [key: string]: string } = {
+      '(root)/(tabs)/home':
+        'Home page: Your main dashboard showing health overview, quick access to features, and personalized health insights.',
+      '(root)/hospitals':
+        'Hospitals page: Find nearby hospitals, view their details, ratings, and get directions to reach them.',
+      '(root)/(tabs)/pharmacy':
+        'Pharmacy page: Browse a wide variety of medicines you can purchase. There is a cart icon at the top right corner where you can view and pay for your selected items.',
+      '(root)/(tabs)/appointment':
+        'Appointments page: Schedule and manage your health appointments with doctors, dentists, and other healthcare providers.',
+      '(root)/orders':
+        'Orders page: View your medication order history, track deliveries, and manage your purchases.',
+      '(root)/reminders':
+        'Reminders page: Set and manage health reminders for medications, appointments, and wellness activities.',
+      '(root)/(tabs)/profile':
+        'Profile page: Manage your account settings, update personal information, and configure app preferences.',
+      '(root)/basic-info':
+        'Basic Information page: Update your essential health profile including medical history and emergency contacts.',
+      '(root)/edit-basic-info':
+        'Edit Basic Information page: Modify your health details, address, and contact information.',
+      '(auth)/Sign-in':
+        'Sign In page: Enter your credentials to securely access your Dr-Dwar account.',
+      '(auth)/Sign-up':
+        'Sign Up page: Create a new account to start using Dr-Dwar health services.',
+      terms:
+        'Terms of Service page: Read the terms and conditions for using the Dr-Dwar application.',
+      privacy: 'Privacy Policy page: Learn about how we protect your data and privacy in the app.',
+      Support: 'Support page: Get help, contact support, and access frequently asked questions.',
+    };
+
+    return pageDescriptions[path] || `Page: ${path.replace(/[^a-zA-Z0-9]/g, ' ')}`;
+  };
+
+  // Read page description aloud when segments change
+  useEffect(() => {
+    if (readPageAloud && segments.length > 0) {
+      Speech.stop();
+      const pageDescription = getPageDescription(segments);
+      Speech.speak(pageDescription, {
+        language: 'en',
+        pitch: 1,
+        rate: 1,
+      });
+    }
+  }, [segments, readPageAloud]);
 
   // Shake detection for Sentry feedback
   useEffect(() => {

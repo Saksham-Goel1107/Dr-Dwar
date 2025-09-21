@@ -5,6 +5,7 @@ import * as LocalAuthentication from 'expo-local-authentication';
 import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
+import * as Speech from 'expo-speech';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
@@ -93,6 +94,7 @@ export default function ProfileSettings() {
   const [shakeToReport, setShakeToReport] = useState(true);
   const [sendDiagnosticData, setSendDiagnosticData] = useState(true);
   const [vibrations, setVibrations] = useState(true);
+  const [readPageAloud, setReadPageAloud] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -106,12 +108,14 @@ export default function ProfileSettings() {
       const shake = await SecureStore.getItemAsync('SHAKE_TO_REPORT');
       const diagnostic = await SecureStore.getItemAsync('SEND_DIAGNOSTIC_DATA');
       const vib = await SecureStore.getItemAsync('VIBRATIONS');
+      const readAloud = await SecureStore.getItemAsync('READ_PAGE_ALOUD');
 
       setAppLock(lock === 'true');
       setNotifications(notif !== 'false'); // Default to true
       setShakeToReport(shake !== 'false'); // Default to true
       setSendDiagnosticData(diagnostic !== 'false'); // Default to true
       setVibrations(vib !== 'false'); // Default to true
+      setReadPageAloud(readAloud === 'true');
     } catch (error) {
       console.error('Error loading settings:', error);
     }
@@ -289,6 +293,29 @@ export default function ProfileSettings() {
     }
   };
 
+  const toggleReadPageAloud = async (val: boolean) => {
+    try {
+      await SecureStore.setItemAsync('READ_PAGE_ALOUD', val.toString());
+      setReadPageAloud(val);
+
+      const alertMessage = val
+        ? 'Read Page Aloud has been enabled. Page names will be read aloud when navigating. Please refresh the app to put this into action.'
+        : 'Read Page Aloud has been disabled.';
+
+      if (val) {
+        Speech.speak(alertMessage, {
+          language: 'en',
+          pitch: 1,
+          rate: 1,
+        });
+      }
+
+      Alert.alert('Success', alertMessage);
+    } catch (error) {
+      console.error('Error toggling read page aloud:', error);
+      Alert.alert('Error', 'Failed to update read page aloud setting. Please try again.');
+    }
+  };
   const handleSignOut = () => {
     Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
       { text: 'Cancel', style: 'cancel' },
@@ -482,6 +509,20 @@ export default function ProfileSettings() {
               <Switch
                 value={vibrations}
                 onValueChange={toggleVibrations}
+                trackColor={{ false: '#D1D5DB', true: '#3B82F6' }}
+                thumbColor="#FFFFFF"
+              />
+            }
+            showChevron={false}
+          />
+          <SettingItem
+            title="Read Page Aloud"
+            subtitle="Automatically read aloud page names"
+            icon="volume-high-outline"
+            rightElement={
+              <Switch
+                value={readPageAloud}
+                onValueChange={toggleReadPageAloud}
                 trackColor={{ false: '#D1D5DB', true: '#3B82F6' }}
                 thumbColor="#FFFFFF"
               />
