@@ -6,6 +6,7 @@ import Carousel from 'react-native-reanimated-carousel';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@clerk/clerk-expo';
 import * as Speech from 'expo-speech';
+import * as SecureStore from 'expo-secure-store';
 
 const { width, height } = Dimensions.get('window');
 
@@ -41,6 +42,7 @@ const data = [
 
 export default function OnboardingScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [readPageAloud, setReadPageAloud] = useState(false);
   const router = useRouter();
   const { isSignedIn } = useAuth();
 
@@ -51,15 +53,27 @@ export default function OnboardingScreen() {
   }, [isSignedIn, router]);
 
   useEffect(() => {
-    Speech.speak(
-      'Home page: The Dr-Dwar Home page which tells the features of the app and has Sign-in and Sign-up buttons.',
-      {
-        language: 'en',
-        pitch: 1,
-        rate: 1,
-      },
-    );
-  }, []);
+    const loadReadPageAloudSetting = async () => {
+      try {
+        const readAloudSetting = await SecureStore.getItemAsync('READ_PAGE_ALOUD');
+        setReadPageAloud(readAloudSetting === 'true');
+      } catch (error) {
+        console.error('Error loading read page aloud setting:', error);
+        setReadPageAloud(false);
+      }
+    };
+    loadReadPageAloudSetting();
+    if (readPageAloud) {
+      Speech.speak(
+        'Home page: The Dr-Dwar Home page which tells the features of the app and has Sign-in and Sign-up buttons.',
+        {
+          language: 'en',
+          pitch: 1,
+          rate: 1,
+        },
+      );
+    }
+  }, [readPageAloud]);
 
   return (
     <>

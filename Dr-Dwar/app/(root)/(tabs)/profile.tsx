@@ -300,7 +300,7 @@ export default function ProfileSettings() {
 
       const alertMessage = val
         ? 'Read Page Aloud has been enabled. Page names will be read aloud when navigating. Please refresh the app to put this into action.'
-        : 'Read Page Aloud has been disabled.';
+        : 'Read Page Aloud has been disabled. Please refresh the app to put this into action.';
 
       if (val) {
         Speech.speak(alertMessage, {

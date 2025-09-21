@@ -155,8 +155,10 @@ function InitialLayout() {
         'Hospitals page: Find nearby hospitals, view their details, ratings, and get directions to reach them.',
       '(root)/(tabs)/pharmacy':
         'Pharmacy page: Browse a wide variety of medicines you can purchase. There is a cart icon at the top right corner where you can view and pay for your selected items.',
-      '(root)/(tabs)/appointment':
-        'Appointments page: Schedule and manage your health appointments with doctors, dentists, and other healthcare providers.',
+      '(root)/(tabs)/jan-news':
+        'Jan News page: Stay updated with the latest health news and information. Pull down to refresh for the newest articles.',
+      '(root)/(tabs)/JanNews':
+        'Jan News page: Stay updated with the latest news and announcements from Jan News.',
       '(root)/orders':
         'Orders page: View your medication order history, track deliveries, and manage your purchases.',
       '(root)/reminders':
