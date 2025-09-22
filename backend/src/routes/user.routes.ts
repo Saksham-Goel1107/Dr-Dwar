@@ -15,6 +15,9 @@ router.get('/:id', protectRoute, UserController.getUserById);
 // Get user by userId - requires authentication
 router.get('/by-userid/:userId', protectRoute, UserController.getUserByUserId);
 
+// Get decrypted user profile - requires authentication
+router.get('/profile/:userId', protectRoute, UserController.getUserProfile);
+
 // Update user - requires authentication
 router.put('/:id', protectRoute, UserController.updateUser);
 

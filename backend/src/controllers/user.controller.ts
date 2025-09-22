@@ -1,11 +1,39 @@
+import CryptoJS from 'crypto-js';
 import { Request, Response } from 'express';
 import { prisma } from '../config/database';
 import { asyncHandler } from '../middleware/error.middleware';
+import { ENV } from '../config/env';
+
+// Production-ready encryption using AES
+const ENCRYPTION_KEY = ENV.ENCRYPTION_KEY || 'DrDwar2025SecureKey!@#DefaultKeyForDev';
+
+const encryptData = (data: string): string => {
+  return CryptoJS.AES.encrypt(data, ENCRYPTION_KEY).toString();
+};
+
+const decryptData = (encryptedData: string): string => {
+  const bytes = CryptoJS.AES.decrypt(encryptedData, ENCRYPTION_KEY);
+  return bytes.toString(CryptoJS.enc.Utf8);
+};
 
 export class UserController {
-  // Create a new user
+  // Create or update user with profile data
   static createUser = asyncHandler(async (req: Request, res: Response) => {
-    const { userId, userName, phoneNumber, email } = req.body;
+    const {
+      userId,
+      userName,
+      phoneNumber,
+      email,
+      firstName,
+      lastName,
+      dateOfBirth,
+      gender,
+      address,
+      diseases,
+      allergies,
+      medicalNote,
+      emergencyContact,
+    } = req.body;
 
     // Validate required fields
     if (!userId || !userName || !phoneNumber) {
@@ -15,27 +43,38 @@ export class UserController {
       });
     }
 
-    // Check if user already exists
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [{ userId }, { userName }, { phoneNumber }, ...(email ? [{ email }] : [])],
+    // Prepare profile data for encryption
+    const profileData = {
+      firstName,
+      lastName,
+      dateOfBirth,
+      gender,
+      address,
+      diseases,
+      allergies,
+      medicalNote,
+      emergencyContact,
+      email,
+    };
+
+    // Encrypt the profile data
+    const encryptedProfileData = encryptData(JSON.stringify(profileData));
+
+    // Upsert user (create if doesn't exist, update if exists)
+    const user = await prisma.user.upsert({
+      where: { userId },
+      update: {
+        userName,
+        phoneNumber,
+        ...(email && { email }),
+        encryptedProfileData,
       },
-    });
-
-    if (existingUser) {
-      return res.status(409).json({
-        success: false,
-        message: 'User already exists with this userId, userName, phoneNumber, or email',
-      });
-    }
-
-    // Create new user
-    const newUser = await prisma.user.create({
-      data: {
+      create: {
         userId,
         userName,
         phoneNumber,
         ...(email && { email }),
+        encryptedProfileData,
       },
       select: {
         id: true,
@@ -44,13 +83,16 @@ export class UserController {
         phoneNumber: true,
         email: true,
         createdAt: true,
+        updatedAt: true,
       },
     });
 
-    res.status(201).json({
+    const isNewUser = user.createdAt.getTime() === user.updatedAt.getTime();
+
+    res.status(isNewUser ? 201 : 200).json({
       success: true,
-      message: 'User created successfully',
-      data: newUser,
+      message: isNewUser ? 'User created successfully' : 'User profile updated successfully',
+      data: user,
     });
   });
 
@@ -140,7 +182,64 @@ export class UserController {
     });
   });
 
-  // Update user
+  // Get decrypted user profile data
+  static getUserProfile = asyncHandler(async (req: Request, res: Response) => {
+    const auth = typeof req.auth === 'function' ? req.auth() : req.auth;
+    if (!auth || !auth.userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required',
+      });
+    }
+
+    const { userId } = req.params;
+
+    const user = await prisma.user.findUnique({
+      where: { userId },
+      select: {
+        id: true,
+        userId: true,
+        userName: true,
+        phoneNumber: true,
+        email: true,
+        encryptedProfileData: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    // Decrypt profile data
+    let profileData = null;
+    if (user.encryptedProfileData) {
+      try {
+        const decryptedData = decryptData(user.encryptedProfileData);
+        profileData = JSON.parse(decryptedData);
+      } catch (error) {
+        console.error('Error decrypting profile data:', error);
+        return res.status(500).json({
+          success: false,
+          message: 'Error decrypting profile data',
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      data: {
+        ...user,
+        profileData,
+      },
+    });
+  });
+
+  // Update user with profile data
   static updateUser = asyncHandler(async (req: Request, res: Response) => {
     const auth = typeof req.auth === 'function' ? req.auth() : req.auth;
     if (!auth || !auth.userId) {
@@ -151,15 +250,61 @@ export class UserController {
     }
 
     const { id } = req.params;
-    const { userName, phoneNumber, email } = req.body;
+    const {
+      userName,
+      phoneNumber,
+      email,
+      firstName,
+      lastName,
+      dateOfBirth,
+      gender,
+      address,
+      diseases,
+      allergies,
+      medicalNote,
+      emergencyContact,
+    } = req.body;
+
+    // Check if profile data is being updated
+    let updateData: any = {
+      ...(userName && { userName }),
+      ...(phoneNumber && { phoneNumber }),
+      ...(email !== undefined && { email }),
+    };
+
+    // If profile data is provided, encrypt and update it
+    if (
+      firstName ||
+      lastName ||
+      dateOfBirth ||
+      gender ||
+      address ||
+      diseases ||
+      allergies ||
+      medicalNote ||
+      emergencyContact
+    ) {
+      const profileData = {
+        firstName,
+        lastName,
+        dateOfBirth,
+        gender,
+        address,
+        diseases,
+        allergies,
+        medicalNote,
+        emergencyContact,
+        email,
+      };
+
+      // Encrypt the profile data
+      const encryptedProfileData = encryptData(JSON.stringify(profileData));
+      updateData.encryptedProfileData = encryptedProfileData;
+    }
 
     const updatedUser = await prisma.user.update({
-      where: { id },
-      data: {
-        ...(userName && { userName }),
-        ...(phoneNumber && { phoneNumber }),
-        ...(email !== undefined && { email }),
-      },
+      where: { userId: id },
+      data: updateData,
       select: {
         id: true,
         userId: true,

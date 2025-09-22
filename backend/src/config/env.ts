@@ -9,4 +9,5 @@ export const ENV = {
   CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
   ARCJET_KEY: process.env.ARCJET_KEY,
   SENTRY_DSN: process.env.SENTRY_DSN,
+  ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
 };

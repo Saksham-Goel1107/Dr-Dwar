@@ -35,12 +35,7 @@ export default function BasicInfoScreen() {
 
   useEffect(() => {
     // Redirect if already completed
-    if (
-      user?.unsafeMetadata?.firstName &&
-      user?.unsafeMetadata?.lastName &&
-      user?.unsafeMetadata?.dateOfBirth &&
-      user?.unsafeMetadata?.gender
-    ) {
+    if (user?.unsafeMetadata?.basicInfoCompleted) {
       router.replace('/(root)/(tabs)/home');
     }
   }, [user]);
@@ -105,47 +100,50 @@ export default function BasicInfoScreen() {
 
     setLoading(true);
     try {
-      // First update Clerk metadata
-      await user?.update({
-        unsafeMetadata: {
-          role: 'user',
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
-          dateOfBirth,
-          gender,
-          address: {
-            line1: addressLine1.trim(),
-            line2: addressLine2.trim(),
-            city: city.trim(),
-            state: state.trim(),
-            pincode: pincode.trim(),
-          },
-          emergencyContact: {
-            name: emergencyName.trim(),
-            relation: emergencyRelation.trim(),
-            phone: emergencyPhone.trim(),
-          },
-          diseases: diseases.trim(),
-          allergies: allergies.trim(),
-          medicalNote: medicalNote.trim(),
-          email: email.trim(),
+      // Prepare user data to send to backend (backend will handle encryption)
+      const userData = {
+        userId: user?.id,
+        userName: user?.username,
+        phoneNumber: user?.phoneNumbers[0]?.phoneNumber,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        dateOfBirth,
+        gender,
+        address: {
+          line1: addressLine1.trim(),
+          line2: addressLine2.trim(),
+          city: city.trim(),
+          state: state.trim(),
+          pincode: pincode.trim(),
         },
+        diseases: diseases.trim(),
+        allergies: allergies.trim(),
+        medicalNote: medicalNote.trim(),
+        emergencyContact: {
+          name: emergencyName.trim(),
+          relation: emergencyRelation.trim(),
+          phone: emergencyPhone.trim(),
+        },
+        email: email.trim() || undefined,
+      };
+
+      // Only store completion flag in Clerk (no actual data)
+      const clerkData = {
+        basicInfoCompleted: true,
+      };
+
+      // First update Clerk metadata with only completion flag
+      await user?.update({
+        unsafeMetadata: clerkData,
       });
 
-      // Then sync with backend database
+      // Then sync with backend database (backend will encrypt and store data)
       const apiUrl = process.env.EXPO_PUBLIC_API_URL;
       if (!apiUrl) {
         console.warn('EXPO_PUBLIC_API_URL not configured, skipping backend sync');
         router.replace('/(root)/(tabs)/home');
         return;
       }
-
-      const userData = {
-        userId: user?.id,
-        userName: user?.username,
-        phoneNumber: user?.phoneNumbers[0]?.phoneNumber,
-        email: email.trim() || undefined,
-      };
 
       const token = await getToken();
       const response = await fetch(`${apiUrl}/api/users`, {

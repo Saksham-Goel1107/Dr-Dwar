@@ -2,12 +2,12 @@ import '@/global.css';
 import { useAuth, useUser } from '@clerk/clerk-expo';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import NetInfo from '@react-native-community/netinfo';
 import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Platform, ScrollView, TouchableOpacity, View } from 'react-native';
 import { Text, TextInput } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import NetInfo from '@react-native-community/netinfo';
 
 export default function EditBasicInfoScreen() {
   const { user } = useUser();
@@ -34,63 +34,66 @@ export default function EditBasicInfoScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [networkStatus, setNetworkStatus] = React.useState<boolean | null>(null);
+  const [dataLoaded, setDataLoaded] = useState(false);
+
+  const loadUserData = useCallback(async () => {
+    if (!user?.id || !networkStatus || dataLoaded) return;
+
+    try {
+      const token = await getToken();
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/users/profile/${user.id}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'true',
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data.profileData) {
+          const profile = result.data.profileData;
+
+          // Set form data from decrypted backend data
+          setFirstName(profile.firstName || '');
+          setLastName(profile.lastName || '');
+          setDateOfBirth(profile.dateOfBirth || '');
+          setGender(profile.gender || '');
+          setAddressLine1(profile.address?.line1 || '');
+          setAddressLine2(profile.address?.line2 || '');
+          setCity(profile.address?.city || '');
+          setState(profile.address?.state || '');
+          setPincode(profile.address?.pincode || '');
+          setEmergencyName(profile.emergencyContact?.name || '');
+          setEmergencyRelation(profile.emergencyContact?.relation || '');
+          setEmergencyPhone(profile.emergencyContact?.phone || '');
+          setDiseases(profile.diseases || '');
+          setAllergies(profile.allergies || '');
+          setMedicalNote(profile.medicalNote || '');
+          setEmail(profile.email || '');
+
+          // Set selected date for date picker
+          if (profile.dateOfBirth) {
+            setSelectedDate(new Date(profile.dateOfBirth));
+          }
+
+          setDataLoaded(true);
+        }
+      } else {
+        console.error('Failed to load user profile from backend');
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    }
+  }, [user?.id, networkStatus, dataLoaded, getToken]);
 
   useEffect(() => {
-    // Load existing user data
-    if (user?.unsafeMetadata) {
-      const metadata = user.unsafeMetadata as {
-        firstName?: string;
-        lastName?: string;
-        dateOfBirth?: string;
-        gender?: string;
-        address?: {
-          line1?: string;
-          line2?: string;
-          city?: string;
-          state?: string;
-          pincode?: string;
-        };
-        emergencyContact?: {
-          name?: string;
-          relation?: string;
-          phone?: string;
-        };
-        diseases?: string;
-        allergies?: string;
-        medicalNote?: string;
-        email?: string;
-      };
-      setFirstName(typeof metadata.firstName === 'string' ? metadata.firstName : '');
-      setLastName(typeof metadata.lastName === 'string' ? metadata.lastName : '');
-      setDateOfBirth(typeof metadata.dateOfBirth === 'string' ? metadata.dateOfBirth : '');
-      setGender(typeof metadata.gender === 'string' ? metadata.gender : '');
-      setAddressLine1(typeof metadata.address?.line1 === 'string' ? metadata.address.line1 : '');
-      setAddressLine2(typeof metadata.address?.line2 === 'string' ? metadata.address.line2 : '');
-      setCity(typeof metadata.address?.city === 'string' ? metadata.address.city : '');
-      setState(typeof metadata.address?.state === 'string' ? metadata.address.state : '');
-      setPincode(typeof metadata.address?.pincode === 'string' ? metadata.address.pincode : '');
-      setEmergencyName(
-        typeof metadata.emergencyContact?.name === 'string' ? metadata.emergencyContact.name : '',
-      );
-      setEmergencyRelation(
-        typeof metadata.emergencyContact?.relation === 'string'
-          ? metadata.emergencyContact.relation
-          : '',
-      );
-      setEmergencyPhone(
-        typeof metadata.emergencyContact?.phone === 'string' ? metadata.emergencyContact.phone : '',
-      );
-      setDiseases(typeof metadata.diseases === 'string' ? metadata.diseases : '');
-      setAllergies(typeof metadata.allergies === 'string' ? metadata.allergies : '');
-      setMedicalNote(typeof metadata.medicalNote === 'string' ? metadata.medicalNote : '');
-      setEmail(typeof metadata.email === 'string' ? metadata.email : '');
-
-      // Set selected date for date picker
-      if (metadata.dateOfBirth) {
-        setSelectedDate(new Date(metadata.dateOfBirth));
-      }
-    }
-  }, [user]);
+    loadUserData();
+  }, [loadUserData]);
 
   // Custom network detection using NetInfo
   React.useEffect(() => {
@@ -196,45 +199,48 @@ export default function EditBasicInfoScreen() {
   const handleSubmit = async () => {
     setError(null);
 
-    if (!isFormValid()) {
-      setError('Please fill all required fields correctly.');
+    // Validate required fields before submission
+    if (
+      !firstName.trim() ||
+      !lastName.trim() ||
+      !dateOfBirth ||
+      !gender ||
+      !addressLine1.trim() ||
+      !city.trim() ||
+      !state.trim() ||
+      !pincode.trim() ||
+      !emergencyName.trim() ||
+      !emergencyRelation.trim() ||
+      !emergencyPhone.trim()
+    ) {
+      setError('Please fill all required fields.');
+      return;
+    }
+
+    // Validate date of birth
+    if (!validateDateOfBirth(dateOfBirth)) {
+      setError('Please enter a valid date of birth (between 18 and 100 years old).');
+      return;
+    }
+
+    // Validate pincode
+    if (!validatePincode(pincode.trim())) {
+      setError('Please enter a valid 6-digit pincode.');
+      return;
+    }
+
+    // Validate emergency phone
+    if (!validatePhone(emergencyPhone.trim())) {
+      setError('Please enter a valid 10-digit emergency phone number.');
       return;
     }
 
     setLoading(true);
     try {
-      // First update Clerk metadata
-      await user?.update({
-        unsafeMetadata: {
-          role: 'user',
-          firstName,
-          lastName,
-          dateOfBirth,
-          gender,
-          address: {
-            line1: addressLine1,
-            line2: addressLine2,
-            city,
-            state,
-            pincode,
-          },
-          emergencyContact: {
-            name: emergencyName,
-            relation: emergencyRelation,
-            phone: emergencyPhone,
-          },
-          diseases: diseases.trim(),
-          allergies: allergies.trim(),
-          medicalNote: medicalNote.trim(),
-          email: email.trim(),
-        },
-      });
-
-      // Then sync with backend database
+      // Send updated data to backend (backend will encrypt and store)
       const apiUrl = process.env.EXPO_PUBLIC_API_URL;
       if (!apiUrl) {
-        console.warn('EXPO_PUBLIC_API_URL not configured, skipping backend sync');
-        router.back();
+        setError('API URL not configured');
         return;
       }
 
@@ -242,70 +248,51 @@ export default function EditBasicInfoScreen() {
         userId: user?.id,
         userName: user?.username,
         phoneNumber: user?.phoneNumbers[0]?.phoneNumber,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        dateOfBirth,
+        gender,
+        address: {
+          line1: addressLine1.trim(),
+          line2: addressLine2.trim(),
+          city: city.trim(),
+          state: state.trim(),
+          pincode: pincode.trim(),
+        },
+        diseases: diseases.trim(),
+        allergies: allergies.trim(),
+        medicalNote: medicalNote.trim(),
+        emergencyContact: {
+          name: emergencyName.trim(),
+          relation: emergencyRelation.trim(),
+          phone: emergencyPhone.trim(),
+        },
         email: email.trim() || undefined,
       };
 
-      try {
-        // First try to get the user to see if they exist
-        const token = await getToken();
-        const getResponse = await fetch(`${apiUrl}/api/users/by-userid/${user?.id}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'ngrok-skip-browser-warning': 'true',
-            Authorization: `Bearer ${token}`,
-          },
-        });
+      const token = await getToken();
+      const response = await fetch(`${apiUrl}/api/users/${user?.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(userData),
+      });
 
-        if (getResponse.ok) {
-          // User exists, get their database ID and update them
-          const userData = await getResponse.json();
-          const dbUserId = userData.data.id;
+      const result = await response.json();
 
-          const updateResponse = await fetch(`${apiUrl}/api/users/${dbUserId}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              userName: user?.username,
-              phoneNumber: user?.phoneNumbers[0]?.phoneNumber,
-              email: email.trim() || undefined,
-            }),
-          });
-
-          if (updateResponse.ok) {
-            console.log('User updated in backend successfully');
-          } else {
-            console.error('Failed to update user in backend');
-          }
-        } else {
-          // User doesn't exist, create them
-          const createResponse = await fetch(`${apiUrl}/api/users`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(userData),
-          });
-
-          if (createResponse.ok) {
-            console.log('User created in backend successfully');
-          } else {
-            console.error('Failed to create user in backend');
-          }
-        }
-      } catch (apiError) {
-        console.error('Backend sync failed:', apiError);
-        // Don't block the user flow, just log the error
+      if (!response.ok) {
+        console.error('Backend sync failed:', result);
+        setError(result.message || 'Failed to save changes. Please try again.');
+      } else {
+        console.log('Profile updated successfully:', result);
+        router.back(); // Go back to previous screen
       }
-
-      router.back(); // Go back to previous screen
     } catch (err: any) {
-      console.error('Error updating user metadata:', err);
-      setError(err.errors?.[0]?.message || 'Failed to save information. Please try again.');
+      console.error('Error updating profile:', err);
+      setError(err.message || 'Failed to save changes. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -807,7 +794,7 @@ export default function EditBasicInfoScreen() {
             {networkStatus ? (
               <TouchableOpacity
                 onPress={handleSubmit}
-                disabled={loading || !isFormValid()}
+                disabled={loading}
                 style={{
                   flex: 1,
                   backgroundColor: isFormValid() ? '#008000' : '#cbd5e0',

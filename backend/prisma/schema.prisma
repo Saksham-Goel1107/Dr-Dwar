@@ -20,6 +20,8 @@ model User {
   userName          String   @unique
   phoneNumber       String   @unique
   email             String?  @unique
+  // Encrypted user profile data
+  encryptedProfileData String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

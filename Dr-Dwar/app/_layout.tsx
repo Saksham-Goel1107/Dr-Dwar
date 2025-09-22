@@ -99,16 +99,10 @@ function InitialLayout() {
 
     if (isSignedIn) {
       const metadata = user?.unsafeMetadata as any;
-      const hasBasicInfo =
-        metadata?.firstName &&
-        metadata?.lastName &&
-        metadata?.dateOfBirth &&
-        metadata?.gender &&
-        metadata?.address?.city &&
-        metadata?.emergencyContact?.name;
-      if (!hasBasicInfo && inRoot && segments[1] !== 'basic-info') {
+      const hasCompletedProfile = metadata?.basicInfoCompleted === true;
+      if (!hasCompletedProfile && inRoot && segments[1] !== 'basic-info') {
         router.replace('/(root)/basic-info');
-      } else if (hasBasicInfo && !inRoot) {
+      } else if (hasCompletedProfile && !inRoot) {
         router.replace('/(root)/(tabs)/home');
       }
     } else if (!isSignedIn && inRoot) {
