@@ -274,7 +274,8 @@ export default function PharmacyScreen() {
             borderRadius: 16,
             elevation: 0,
           }}
-          inputStyle={{ fontSize: 16 }}
+          placeholderTextColor={'#000000'}
+          inputStyle={{ fontSize: 16, color: '#000000' }}
           iconColor="#64748b"
         />
 
@@ -330,17 +331,19 @@ export default function PharmacyScreen() {
               value={minPrice}
               onChangeText={setMinPrice}
               keyboardType="numeric"
+              maxLength={5}
               style={{
                 backgroundColor: '#f1f5f9',
                 height: 48,
                 flex: 1,
                 marginRight: 8,
               }}
-              contentStyle={{ fontSize: 14 }}
+              contentStyle={{ fontSize: 14, color: '#000000' }}
             />
             <TextInput
               label="Max ₹"
               value={maxPrice}
+              maxLength={5}
               onChangeText={setMaxPrice}
               keyboardType="numeric"
               style={{
@@ -348,7 +351,7 @@ export default function PharmacyScreen() {
                 height: 48,
                 flex: 1,
               }}
-              contentStyle={{ fontSize: 14 }}
+              contentStyle={{ fontSize: 14, color: '#000000' }}
             />
           </View>
 
@@ -383,7 +386,7 @@ export default function PharmacyScreen() {
                 setMenuVisible(false);
               }}
               title="Name (A-Z)"
-              titleStyle={{ fontSize: 14 }}
+              titleStyle={{ fontSize: 14,color: sortBy === 'name' ? '#059669' : undefined }}
             />
             <Menu.Item
               onPress={() => {
@@ -391,7 +394,7 @@ export default function PharmacyScreen() {
                 setMenuVisible(false);
               }}
               title="Price (Low to High)"
-              titleStyle={{ fontSize: 14 }}
+              titleStyle={{ fontSize: 14,color: sortBy === 'price-low' ? '#059669' : undefined }}
             />
             <Menu.Item
               onPress={() => {
@@ -399,7 +402,7 @@ export default function PharmacyScreen() {
                 setMenuVisible(false);
               }}
               title="Price (High to Low)"
-              titleStyle={{ fontSize: 14 }}
+              titleStyle={{ fontSize: 14,color: sortBy === 'price-high' ? '#059669' : undefined }}
             />
           </Menu>
         </View>
