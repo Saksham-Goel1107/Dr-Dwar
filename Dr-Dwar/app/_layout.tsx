@@ -2,6 +2,7 @@ import { ClerkProvider, useAuth, useUser } from '@clerk/clerk-expo';
 import { resourceCache } from '@clerk/clerk-expo/resource-cache';
 import { tokenCache } from '@clerk/clerk-expo/token-cache';
 import * as Sentry from '@sentry/react-native';
+import * as NavigationBar from 'expo-navigation-bar';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import * as ScreenCapture from 'expo-screen-capture';
 import * as SecureStore from 'expo-secure-store';
@@ -12,8 +13,8 @@ import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, SafeAreaView } from 'react-native';
 import { PaperProvider } from 'react-native-paper';
 import { ErrorBoundary } from '../components/ErrorBoundary';
-import * as NavigationBar from 'expo-navigation-bar';
 import '../global.css';
+import Splash from './components/Splash';
 
 // Initialize Sentry conditionally based on user settings
 const initializeSentry = async () => {
@@ -270,6 +271,9 @@ function InitialLayout() {
     };
   }, [isFeedbackVisible, shakeToReportEnabled]);
 
+  if (!isLoaded) {
+    return <Splash />;
+  }
   return <Slot />;
 }
 
