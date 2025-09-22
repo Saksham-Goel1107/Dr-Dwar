@@ -6,7 +6,6 @@ import { router } from 'expo-router';
 import React from 'react';
 import { Alert, FlatList, TouchableOpacity, View } from 'react-native';
 import { Button, Card, Divider, IconButton, Text } from 'react-native-paper';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { useCart } from '../../contexts/CartContext';
 import * as Haptics from 'expo-haptics';
@@ -363,7 +362,7 @@ export default function CartScreen() {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+    <>
       {/* Header */}
       <View
         style={{
@@ -373,6 +372,7 @@ export default function CartScreen() {
           alignItems: 'center',
           borderBottomWidth: 1,
           borderBottomColor: '#e2e8f0',
+          paddingVertical: 12,
         }}
       >
         <Text
@@ -567,6 +567,6 @@ export default function CartScreen() {
           />
         </View>
       )}
-    </SafeAreaView>
+    </>
   );
 }

@@ -1612,7 +1612,7 @@ export default function MedicineReminderScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+    <>
       {/* Header */}
       <View
         style={{
@@ -1763,6 +1763,6 @@ export default function MedicineReminderScreen() {
           </View>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </>
   );
 }

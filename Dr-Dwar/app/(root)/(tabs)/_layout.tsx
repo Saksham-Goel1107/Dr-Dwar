@@ -1,11 +1,9 @@
 import '@/global.css';
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function TabsLayout() {
   return (
-    <SafeAreaView style={{ flex: 1 }}>
       <Tabs
         screenOptions={({ route }) => ({
           headerShown: false,
@@ -54,6 +52,5 @@ export default function TabsLayout() {
         <Tabs.Screen name="jan-news" options={{ title: 'Jan News' }} />
         <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
       </Tabs>
-    </SafeAreaView>
   );
 }

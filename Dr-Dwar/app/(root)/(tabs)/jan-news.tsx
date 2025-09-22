@@ -184,7 +184,7 @@ export default function JanNews() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-100" edges={['top']}>
+    <>
       <View className="flex-1 p-4">
         <View className="mb-4 flex-row items-center justify-center">
           <Text className="text-center text-2xl font-bold">Jan News</Text>
@@ -329,6 +329,6 @@ export default function JanNews() {
           )}
         </SafeAreaView>
       </Modal>
-    </SafeAreaView>
+    </>
   );
 }
