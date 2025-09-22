@@ -92,46 +92,82 @@ export default function OnboardingScreen() {
         </View>
 
         {/* Carousel */}
-        <View className="flex-1 px-4">
+        <View className="flex-1">
           <Carousel
-            width={width - 32}
+            width={width}
             height={height * 0.6}
             data={data}
-            scrollAnimationDuration={1000}
+            scrollAnimationDuration={2000}
             onSnapToItem={(index) => setCurrentIndex(index)}
             autoPlay={true}
-            autoPlayInterval={3000}
+            autoPlayInterval={4000}
             loop={true}
             renderItem={({ item, index }) => (
               <View
-                className={`flex-1 items-center justify-center p-8 ${item.color} mx-2 rounded-3xl border border-white/20 shadow-xl`}
+                style={{
+                  flex: 1,
+                  width: width,
+                  height: height * 0.6,
+                }}
               >
-                <View className="mb-8 rounded-2xl border border-gray-100 bg-white p-8 shadow-2xl">
-                  <Image source={item.image} className="h-40 w-60" resizeMode="contain" />
-                </View>
-                <Text
-                  className={`text-2xl font-bold ${item.accent} mb-4 text-center leading-tight`}
+                <Image
+                  source={item.image}
+                  style={{
+                    width: width,
+                    height: height * 0.6,
+                  }}
+                  resizeMode="cover"
+                />
+                <View
+                  style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                  }}
+                />
+                <View
+                  style={{
+                    position: 'absolute',
+                    bottom: 30,
+                    left: 20,
+                    right: 20,
+                  }}
                 >
-                  {item.title}
-                </Text>
-                <Text className="px-2 text-center text-base leading-7 text-gray-700">
-                  {item.desc}
-                </Text>
+                  <Text
+                    style={{
+                      fontWeight: '800',
+                      fontSize: 24,
+                      color: '#FFFFFF',
+                      marginBottom: 12,
+                      textShadowColor: 'rgba(0, 0, 0, 0.8)',
+                      textShadowOffset: { width: 0, height: 2 },
+                      textShadowRadius: 4,
+                      textAlign: 'center',
+                    }}
+                  >
+                    {item.title}
+                  </Text>
+                  <Text
+                    style={{
+                      color: '#F0F0F0',
+                      fontSize: 16,
+                      lineHeight: 24,
+                      fontWeight: '500',
+                      textShadowColor: 'rgba(0, 0, 0, 0.6)',
+                      textShadowOffset: { width: 0, height: 1 },
+                      textShadowRadius: 3,
+                      textAlign: 'center',
+                    }}
+                  >
+                    {item.desc}
+                  </Text>
+                </View>
               </View>
             )}
           />
-        </View>
-
-        {/* Pagination Dots */}
-        <View className="flex-row items-center justify-center py-8">
-          {data.map((_, index) => (
-            <View
-              key={index}
-              className={`mx-1.5 h-3 rounded-full transition-all duration-500 ${
-                index === currentIndex ? 'w-10 bg-emerald-500 shadow-md' : 'w-3 bg-gray-300'
-              }`}
-            />
-          ))}
         </View>
 
         {/* Bottom Actions */}

@@ -581,7 +581,12 @@ function ChatBotModal({ visible, onClose }: ChatBotModalProps) {
                     }}
                   >
                     {/* Selected Message */}
-                    <View className="mb-6 rounded-lg border-2 border-blue-500 bg-gray-100 p-4">
+                    <ScrollView
+                      className="mb-6 max-h-60 rounded-lg border-2 border-blue-500 bg-gray-100"
+                      contentContainerStyle={{ padding: 16 }}
+                      showsVerticalScrollIndicator={true}
+                      bounces={false}
+                    >
                       {selectedMessage.isBot ? (
                         <Markdown
                           style={{
@@ -621,7 +626,7 @@ function ChatBotModal({ visible, onClose }: ChatBotModalProps) {
                       ) : (
                         <Text className="text-sm text-gray-800">{selectedMessage.text}</Text>
                       )}
-                    </View>
+                    </ScrollView>
 
                     {/* Action Buttons */}
                     <View className="flex-row justify-around">
