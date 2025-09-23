@@ -132,7 +132,6 @@ export default function HospitalsScreen() {
   };
 
   const openDirections = async (hospital: Hospital) => {
-
     if (!hospital.Location_Coordinates) {
       Alert.alert('Error', 'Location coordinates not available for this hospital');
       return;
@@ -147,7 +146,6 @@ export default function HospitalsScreen() {
 
     const latitude = parseFloat(coords[0].trim());
     const longitude = parseFloat(coords[1].trim());
-
 
     if (isNaN(latitude) || isNaN(longitude)) {
       Alert.alert('Error', 'Invalid latitude or longitude values');

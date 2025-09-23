@@ -12,7 +12,7 @@ export default function CreditsScreen() {
       role: 'Developer and Owner',
       github: 'https://github.com/Saksham-Goel1107',
       linkedin: 'https://www.linkedin.com/in/saksham-goel-88b74b33a',
-    }
+    },
   ];
 
   const technologies = [

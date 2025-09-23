@@ -2,7 +2,7 @@ import { useUser } from '@clerk/clerk-expo';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Dimensions, FlatList, Image, TouchableOpacity, View } from 'react-native';
+import { Dimensions, FlatList, Image, Linking, TouchableOpacity, View } from 'react-native';
 import { Card, Text } from 'react-native-paper';
 import Carousel from 'react-native-reanimated-carousel';
 
@@ -54,9 +54,30 @@ const services = [
   {
     title: 'Book Teleconsultation',
     subtitle: 'Book an appointment with a doctor',
-    icon: 'alarm',
-    bg: '#FFF8F0',
+    icon: 'video',
+    bg: '#E0F2FE',
     route: '/(root)/(tabs)/appointment',
+  },
+  {
+    title: 'Medical Emergency',
+    subtitle: 'Call emergency services (112)',
+    icon: 'ambulance',
+    bg: '#FEE2E2',
+    action: 'emergency',
+  },
+  {
+    title: 'First Aid Guide',
+    subtitle: 'Learn essential first aid tips',
+    icon: 'medical-bag',
+    bg: '#FEF3C7',
+    route: '/(root)/first-aid',
+  },
+  {
+    title: 'Health Records',
+    subtitle: 'View your medical history',
+    icon: 'file-document',
+    bg: '#ECFDF5',
+    route: '/(root)/health-records',
   },
 ];
 
@@ -241,7 +262,13 @@ export default function HomeScreen() {
                     alignItems: 'center',
                     padding: 16,
                   }}
-                  onPress={() => (router.push as any)(item.route)}
+                  onPress={() => {
+                    if (item.action === 'emergency') {
+                      Linking.openURL('tel:112');
+                    } else if (item.route) {
+                      (router.push as any)(item.route);
+                    }
+                  }}
                 >
                   <View
                     style={{

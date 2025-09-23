@@ -386,7 +386,7 @@ export default function PharmacyScreen() {
                 setMenuVisible(false);
               }}
               title="Name (A-Z)"
-              titleStyle={{ fontSize: 14,color: sortBy === 'name' ? '#059669' : undefined }}
+              titleStyle={{ fontSize: 14, color: sortBy === 'name' ? '#059669' : undefined }}
             />
             <Menu.Item
               onPress={() => {
@@ -394,7 +394,7 @@ export default function PharmacyScreen() {
                 setMenuVisible(false);
               }}
               title="Price (Low to High)"
-              titleStyle={{ fontSize: 14,color: sortBy === 'price-low' ? '#059669' : undefined }}
+              titleStyle={{ fontSize: 14, color: sortBy === 'price-low' ? '#059669' : undefined }}
             />
             <Menu.Item
               onPress={() => {
@@ -402,7 +402,7 @@ export default function PharmacyScreen() {
                 setMenuVisible(false);
               }}
               title="Price (High to Low)"
-              titleStyle={{ fontSize: 14,color: sortBy === 'price-high' ? '#059669' : undefined }}
+              titleStyle={{ fontSize: 14, color: sortBy === 'price-high' ? '#059669' : undefined }}
             />
           </Menu>
         </View>

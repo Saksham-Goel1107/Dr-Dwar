@@ -155,80 +155,123 @@ export default function JanNews() {
 
   const renderNewsItem = ({ item }: { item: NewsItem }) => (
     <TouchableOpacity
-      className="m-2 rounded-lg bg-white p-4 shadow-md"
+      className="mx-4 mb-4 overflow-hidden rounded-xl bg-white shadow-lg"
+      style={{ elevation: 3 }}
       onPress={() => {
         setSelectedNews(item);
         setModalVisible(true);
       }}
     >
       {item.imageUrl && (
-        <Image
-          source={{ uri: item.imageUrl }}
-          className="mb-3 h-32 w-full rounded-lg"
-          resizeMode="cover"
-        />
+        <Image source={{ uri: item.imageUrl }} className="h-48 w-full" resizeMode="cover" />
       )}
-      <Text className="mb-2 text-lg font-bold text-gray-800">{item.title}</Text>
-      <Text className="text-gray-600" numberOfLines={2}>
-        {item.description}
-      </Text>
+      <View className="p-4">
+        <Text className="mb-2 text-lg font-bold leading-6 text-gray-900" numberOfLines={2}>
+          {item.title}
+        </Text>
+        <Text className="mb-3 text-sm leading-5 text-gray-600" numberOfLines={3}>
+          {item.description}
+        </Text>
+        <View className="flex-row items-center justify-between">
+          <Text className="text-xs text-gray-500">
+            {new Date(item.publishedAt).toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            })}
+          </Text>
+          <View className="flex-row items-center">
+            <Text className="mr-1 text-xs text-blue-600">Read more</Text>
+            <Ionicons name="chevron-forward" size={12} color="#2563eb" />
+          </View>
+        </View>
+      </View>
     </TouchableOpacity>
   );
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-gray-100">
-        <Text className="text-lg">Loading news...</Text>
+      <SafeAreaView className="flex-1 items-center justify-center bg-gray-50">
+        <View className="items-center">
+          <Ionicons name="newspaper-outline" size={48} color="#6b7280" />
+          <Text className="mt-4 text-lg font-medium text-gray-700">Loading news...</Text>
+          <Text className="mt-1 text-sm text-gray-500">
+            Please wait while we fetch the latest updates
+          </Text>
+        </View>
       </SafeAreaView>
     );
   }
 
   return (
     <>
-      <View className="flex-1 p-4">
-        <View className="mb-4 flex-row items-center justify-center">
-          <Text className="text-center text-2xl font-bold">Jan News</Text>
-          {isOffline && (
-            <View className="ml-2 flex-row items-center">
-              <Ionicons name="cloud-offline" size={20} color="#ef4444" />
-              <Text className="ml-1 text-sm text-red-500">Offline</Text>
+      <View className="flex-1">
+        {/* Header */}
+        <View className="bg-white px-4 py-6 shadow-sm">
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center">
+              <Ionicons name="newspaper" size={28} color="#1f2937" />
+              <Text className="ml-3 text-2xl font-bold text-gray-900">Jan News</Text>
             </View>
-          )}
+            {isOffline && (
+              <View className="flex-row items-center rounded-full bg-red-50 px-3 py-1">
+                <Ionicons name="cloud-offline" size={16} color="#ef4444" />
+                <Text className="ml-1 text-xs font-medium text-red-600">Offline</Text>
+              </View>
+            )}
+          </View>
         </View>
-        <TextInput
-          className="mb-2 rounded-lg border border-gray-300 p-2"
-          placeholder="Search news..."
-          value={search}
-          onChangeText={setSearch}
-        />
-        <View className="mb-4 flex-row items-center">
-          <TouchableOpacity
-            className="mr-2 rounded-lg border border-gray-300 p-2"
-            onPress={() => setShowFromPicker(true)}
-          >
-            <Text className="text-gray-700">
-              From: {fromDate ? fromDate.toLocaleDateString() : 'Select Date'}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            className="rounded-lg border border-gray-300 p-2"
-            onPress={() => setShowToPicker(true)}
-          >
-            <Text className="text-gray-700">
-              To: {toDate ? toDate.toLocaleDateString() : 'Select Date'}
-            </Text>
-          </TouchableOpacity>
-          {(fromDate || toDate) && (
+
+        {/* Search and Filters */}
+        <View className="bg-white px-4 py-3">
+          <View className="mb-3 flex-row items-center rounded-xl bg-gray-100 px-4 py-3">
+            <Ionicons name="search" size={20} color="#6b7280" />
+            <TextInput
+              className="ml-3 flex-1 text-base text-gray-900"
+              placeholder="Search news..."
+              placeholderTextColor="#9ca3af"
+              value={search}
+              onChangeText={setSearch}
+            />
+          </View>
+
+          <View className="flex-row items-center">
             <TouchableOpacity
-              className="ml-2 rounded-lg bg-red-500 p-2"
-              onPress={() => {
-                setFromDate(null);
-                setToDate(null);
-              }}
+              className="mr-2 flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2"
+              onPress={() => setShowFromPicker(true)}
             >
-              <Text className="text-white">Clear</Text>
+              <Text className="text-xs font-medium text-gray-500">FROM</Text>
+              <Text className="text-sm text-gray-900">
+                {fromDate
+                  ? fromDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                  : 'Select Date'}
+              </Text>
             </TouchableOpacity>
-          )}
+
+            <TouchableOpacity
+              className="mr-2 flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2"
+              onPress={() => setShowToPicker(true)}
+            >
+              <Text className="text-xs font-medium text-gray-500">TO</Text>
+              <Text className="text-sm text-gray-900">
+                {toDate
+                  ? toDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                  : 'Select Date'}
+              </Text>
+            </TouchableOpacity>
+
+            {(fromDate || toDate) && (
+              <TouchableOpacity
+                className="rounded-lg bg-red-500 p-2"
+                onPress={() => {
+                  setFromDate(null);
+                  setToDate(null);
+                }}
+              >
+                <Ionicons name="close" size={20} color="white" />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
         {showFromPicker && (
           <DateTimePicker
@@ -271,26 +314,52 @@ export default function JanNews() {
           data={news}
           keyExtractor={(item) => item.id}
           renderItem={renderNewsItem}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#3b82f6']}
+              tintColor="#3b82f6"
+            />
+          }
           onEndReached={loadMore}
           onEndReachedThreshold={0.3}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingTop: 16, paddingBottom: 20 }}
           ListFooterComponent={
             loadingMore ? (
-              <View className="items-center py-4">
-                <Text className="text-gray-500">Loading more news...</Text>
+              <View className="items-center py-6">
+                <View className="flex-row items-center">
+                  <Ionicons name="refresh" size={16} color="#6b7280" />
+                  <Text className="ml-2 text-sm text-gray-600">Loading more news...</Text>
+                </View>
               </View>
             ) : null
           }
           ListEmptyComponent={
-            <View className="items-center justify-center py-10">
+            <View className="items-center justify-center px-8 py-20">
               {isOffline ? (
-                <>
-                  <Ionicons name="cloud-offline" size={60} color="#9ca3af" />
-                  <Text className="mt-4 text-gray-500">You&apos;re offline</Text>
-                  <Text className="text-gray-400">Check your connection to load news</Text>
-                </>
+                <View className="items-center">
+                  <View className="mb-4 rounded-full bg-red-100 p-4">
+                    <Ionicons name="cloud-offline" size={32} color="#ef4444" />
+                  </View>
+                  <Text className="mb-2 text-lg font-semibold text-gray-900">
+                    You&apos;re offline
+                  </Text>
+                  <Text className="text-center text-sm text-gray-500">
+                    Check your internet connection to load the latest news
+                  </Text>
+                </View>
               ) : (
-                <Text className="text-gray-500">No news available</Text>
+                <View className="items-center">
+                  <View className="mb-4 rounded-full bg-gray-100 p-4">
+                    <Ionicons name="newspaper-outline" size={32} color="#6b7280" />
+                  </View>
+                  <Text className="mb-2 text-lg font-semibold text-gray-900">No news found</Text>
+                  <Text className="text-center text-sm text-gray-500">
+                    Try adjusting your search or date filters
+                  </Text>
+                </View>
               )}
             </View>
           }
@@ -303,31 +372,70 @@ export default function JanNews() {
         presentationStyle="pageSheet"
         onRequestClose={() => setModalVisible(false)}
       >
-        <SafeAreaView className="flex-1 bg-white">
-          <View className="flex-row items-center justify-between p-4">
-            <TouchableOpacity onPress={() => setModalVisible(false)}>
-              <Text className="text-blue-500">Close</Text>
-            </TouchableOpacity>
-            <Text className="text-lg font-bold">News Details</Text>
-            <View />
+        <>
+          {/* Modal Header */}
+          <View className="border-b border-gray-200 bg-white px-4 py-3">
+            <View className="flex-row items-center justify-between">
+              <TouchableOpacity
+                className="flex-row items-center rounded-lg bg-gray-100 px-3 py-2"
+                onPress={() => setModalVisible(false)}
+              >
+                <Ionicons name="chevron-back" size={20} color="#374151" />
+                <Text className="ml-1 font-medium text-gray-700">Back</Text>
+              </TouchableOpacity>
+              <Text className="text-lg font-semibold text-gray-900">Article</Text>
+              <View className="w-16" />
+            </View>
           </View>
+
           {selectedNews && (
-            <ScrollView className="flex-1 p-4" contentContainerStyle={{ paddingBottom: 40 }}>
+            <ScrollView
+              className="flex-1"
+              contentContainerStyle={{ paddingBottom: 40 }}
+              showsVerticalScrollIndicator={false}
+            >
               {selectedNews.imageUrl && (
                 <Image
                   source={{ uri: selectedNews.imageUrl }}
-                  className="mb-4 h-48 w-full rounded-lg"
+                  className="h-64 w-full"
                   resizeMode="cover"
                 />
               )}
-              <Text className="mb-2 text-2xl font-bold text-gray-800">{selectedNews.title}</Text>
-              <Text className="mb-4 text-sm text-gray-500">
-                Published: {new Date(selectedNews.publishedAt).toLocaleDateString()}
-              </Text>
-              <Markdown>{selectedNews.content}</Markdown>
+
+              <View className="p-6">
+                <Text className="mb-4 text-2xl font-bold leading-8 text-gray-900">
+                  {selectedNews.title}
+                </Text>
+
+                <View className="mb-6 flex-row items-center">
+                  <Ionicons name="time-outline" size={16} color="#6b7280" />
+                  <Text className="ml-2 text-sm text-gray-600">
+                    Published{' '}
+                    {new Date(selectedNews.publishedAt).toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
+                  </Text>
+                </View>
+
+                <View className="rounded-lg bg-gray-50 p-4">
+                  <Markdown
+                    style={{
+                      body: { fontSize: 16, lineHeight: 24, color: '#374151' },
+                      paragraph: { marginBottom: 12 },
+                      heading1: { fontSize: 24, fontWeight: 'bold', marginBottom: 16 },
+                      heading2: { fontSize: 20, fontWeight: 'bold', marginBottom: 12 },
+                    }}
+                  >
+                    {selectedNews.content}
+                  </Markdown>
+                </View>
+              </View>
             </ScrollView>
           )}
-        </SafeAreaView>
+        </>
       </Modal>
     </>
   );

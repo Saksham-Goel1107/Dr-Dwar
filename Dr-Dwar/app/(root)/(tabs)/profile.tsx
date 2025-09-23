@@ -15,6 +15,7 @@ import {
   ScrollView,
   Switch,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -97,6 +98,7 @@ export default function ProfileSettings() {
   const [readPageAloud, setReadPageAloud] = useState(false);
   const [preventScreenCapture, setPreventScreenCapture] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     loadSettings();
@@ -407,6 +409,148 @@ export default function ProfileSettings() {
     );
   };
 
+  // Define all sections and their items for filtering
+  const allSections = [
+    {
+      title: 'Account',
+      items: [
+        {
+          title: 'Edit Profile',
+          subtitle: 'Update your personal information',
+          icon: 'person-outline',
+          onPress: handleEditProfile,
+        },
+        {
+          title: 'Edit Basic Info',
+          subtitle: 'Update your healthcare profile',
+          icon: 'create-outline',
+          onPress: () => router.push('../edit-basic-info'),
+        },
+        {
+          title: 'View Orders',
+          subtitle: 'Check your order history',
+          icon: 'bag-handle-outline',
+          onPress: () => router.push('/orders'),
+        },
+        {
+          title: 'Notifications',
+          subtitle: 'Receive app notifications',
+          icon: 'notifications-outline',
+          isSwitch: true,
+          value: notifications,
+          onValueChange: toggleNotifications,
+        },
+      ],
+    },
+    {
+      title: 'Security',
+      items: [
+        {
+          title: 'App Lock',
+          subtitle: 'Use device PIN or biometric',
+          icon: 'lock-closed-outline',
+          isSwitch: true,
+          value: appLock,
+          onValueChange: toggleAppLock,
+          disabled: loading,
+        },
+        {
+          title: 'Shake to Report Bug',
+          subtitle: 'Shake device to report issues',
+          icon: 'bug-outline',
+          isSwitch: true,
+          value: shakeToReport,
+          onValueChange: toggleShakeToReport,
+        },
+        {
+          title: 'Send Diagnostic Data',
+          subtitle: 'Help improve app with crash reports',
+          icon: 'analytics-outline',
+          isSwitch: true,
+          value: sendDiagnosticData,
+          onValueChange: toggleSendDiagnosticData,
+        },
+        {
+          title: 'Vibrations',
+          subtitle: 'Haptic feedback for interactions',
+          icon: 'phone-portrait-outline',
+          isSwitch: true,
+          value: vibrations,
+          onValueChange: toggleVibrations,
+        },
+        {
+          title: 'Read Page Aloud',
+          subtitle: 'Automatically read aloud page names',
+          icon: 'volume-high-outline',
+          isSwitch: true,
+          value: readPageAloud,
+          onValueChange: toggleReadPageAloud,
+        },
+        {
+          title: 'Prevent Screenshots',
+          subtitle: 'Block screenshots and screen recording',
+          icon: 'eye-off-outline',
+          isSwitch: true,
+          value: preventScreenCapture,
+          onValueChange: togglePreventScreenCapture,
+        },
+      ],
+    },
+    {
+      title: 'Support & About',
+      items: [
+        {
+          title: 'Support',
+          subtitle: 'Get help and support',
+          icon: 'headset-outline',
+          onPress: () => router.push('/Support'),
+        },
+        {
+          title: 'Terms of Service',
+          subtitle: 'Read our terms and conditions',
+          icon: 'document-text-outline',
+          onPress: () => router.push('/terms'),
+        },
+        {
+          title: 'Privacy Policy',
+          subtitle: 'Learn about data protection',
+          icon: 'shield-checkmark-outline',
+          onPress: () => router.push('/privacy'),
+        },
+        {
+          title: 'Contact Us',
+          subtitle: 'Get help or contact support',
+          icon: 'help-circle-outline',
+          onPress: handleContactUs,
+        },
+        {
+          title: 'Credits',
+          subtitle: 'App contributors and technologies',
+          icon: 'people-outline',
+          onPress: () => router.push('/credits'),
+        },
+        {
+          title: 'About',
+          subtitle: 'App version and information',
+          icon: 'information-circle-outline',
+          onPress: handleAbout,
+        },
+      ],
+    },
+  ]; // Filter sections and items based on search query
+  const filteredSections = searchQuery
+    ? allSections
+        .map((section) => ({
+          ...section,
+          items: section.items.filter(
+            (item) =>
+              item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              item.subtitle?.toLowerCase().includes(searchQuery.toLowerCase()),
+          ),
+        }))
+        .filter((section) => section.items.length > 0)
+    : allSections;
+
   return (
     <ScrollView className="flex-1 bg-gray-50">
       <View className="p-5">
@@ -438,171 +582,112 @@ export default function ProfileSettings() {
           </View>
         </View>
 
+        {/* Search Bar */}
+        <View className="mb-6">
+          <View className="flex-row items-center rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+            <Ionicons name="search" size={20} color="#6B7280" />
+            <TextInput
+              className="ml-3 flex-1 text-base text-gray-900"
+              placeholder="Search settings..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholderTextColor="#9CA3AF"
+            />
+            {searchQuery ? (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <Ionicons name="close-circle" size={20} color="#6B7280" />
+              </TouchableOpacity>
+            ) : null}
+          </View>
+        </View>
+
         {/* Account Settings */}
-        <ProfileSection title="Account" defaultExpanded={false}>
-          <SettingItem
-            title="Edit Profile"
-            subtitle="Update your personal information"
-            icon="person-outline"
-            onPress={handleEditProfile}
-          />
-          <SettingItem
-            title="Edit Basic Info"
-            subtitle="Update your healthcare profile"
-            icon="create-outline"
-            onPress={() => router.push('../edit-basic-info')}
-          />
-          <SettingItem
-            title="View Orders"
-            subtitle="Check your order history"
-            icon="bag-handle-outline"
-            onPress={() => router.push('/orders')}
-          />
-          <SettingItem
-            title="Notifications"
-            subtitle="Receive app notifications"
-            icon="notifications-outline"
-            rightElement={
-              <Switch
-                value={notifications}
-                onValueChange={toggleNotifications}
-                trackColor={{ false: '#D1D5DB', true: '#3B82F6' }}
-                thumbColor="#FFFFFF"
-              />
-            }
-            showChevron={false}
-          />
-        </ProfileSection>
+        {filteredSections.map(
+          (section) =>
+            section.title === 'Account' && (
+              <ProfileSection key={section.title} title={section.title} defaultExpanded={false}>
+                {section.items.map((item, index) =>
+                  'isSwitch' in item && item.isSwitch ? (
+                    <SettingItem
+                      key={index}
+                      title={item.title}
+                      subtitle={item.subtitle}
+                      icon={item.icon}
+                      rightElement={
+                        <Switch
+                          value={item.value}
+                          onValueChange={item.onValueChange}
+                          disabled={'disabled' in item ? item.disabled : false}
+                          trackColor={{ false: '#D1D5DB', true: '#3B82F6' }}
+                          thumbColor="#FFFFFF"
+                        />
+                      }
+                      showChevron={false}
+                    />
+                  ) : (
+                    <SettingItem
+                      key={index}
+                      title={item.title}
+                      subtitle={item.subtitle}
+                      icon={item.icon}
+                      onPress={'onPress' in item ? item.onPress : undefined}
+                    />
+                  ),
+                )}
+              </ProfileSection>
+            ),
+        )}
 
         {/* Security Settings */}
-        <ProfileSection title="Security" defaultExpanded={false}>
-          <SettingItem
-            title="App Lock"
-            subtitle="Use device PIN or biometric"
-            icon="lock-closed-outline"
-            rightElement={
-              <Switch
-                value={appLock}
-                onValueChange={toggleAppLock}
-                disabled={loading}
-                trackColor={{ false: '#D1D5DB', true: '#3B82F6' }}
-                thumbColor="#FFFFFF"
-              />
-            }
-            showChevron={false}
-          />
-          <SettingItem
-            title="Shake to Report Bug"
-            subtitle="Shake device to report issues"
-            icon="bug-outline"
-            rightElement={
-              <Switch
-                value={shakeToReport}
-                onValueChange={toggleShakeToReport}
-                trackColor={{ false: '#D1D5DB', true: '#3B82F6' }}
-                thumbColor="#FFFFFF"
-              />
-            }
-            showChevron={false}
-          />
-          <SettingItem
-            title="Send Diagnostic Data"
-            subtitle="Help improve app with crash reports"
-            icon="analytics-outline"
-            rightElement={
-              <Switch
-                value={sendDiagnosticData}
-                onValueChange={toggleSendDiagnosticData}
-                trackColor={{ false: '#D1D5DB', true: '#3B82F6' }}
-                thumbColor="#FFFFFF"
-              />
-            }
-            showChevron={false}
-          />
-          <SettingItem
-            title="Vibrations"
-            subtitle="Haptic feedback for interactions"
-            icon="phone-portrait-outline"
-            rightElement={
-              <Switch
-                value={vibrations}
-                onValueChange={toggleVibrations}
-                trackColor={{ false: '#D1D5DB', true: '#3B82F6' }}
-                thumbColor="#FFFFFF"
-              />
-            }
-            showChevron={false}
-          />
-          <SettingItem
-            title="Read Page Aloud"
-            subtitle="Automatically read aloud page names"
-            icon="volume-high-outline"
-            rightElement={
-              <Switch
-                value={readPageAloud}
-                onValueChange={toggleReadPageAloud}
-                trackColor={{ false: '#D1D5DB', true: '#3B82F6' }}
-                thumbColor="#FFFFFF"
-              />
-            }
-            showChevron={false}
-          />
-          <SettingItem
-            title="Prevent Screenshots"
-            subtitle="Block screenshots and screen recording"
-            icon="eye-off-outline"
-            rightElement={
-              <Switch
-                value={preventScreenCapture}
-                onValueChange={togglePreventScreenCapture}
-                trackColor={{ false: '#D1D5DB', true: '#3B82F6' }}
-                thumbColor="#FFFFFF"
-              />
-            }
-            showChevron={false}
-          />
-        </ProfileSection>
+        {filteredSections.map(
+          (section) =>
+            section.title === 'Security' && (
+              <ProfileSection key={section.title} title={section.title} defaultExpanded={false}>
+                {section.items.map((item, index) => (
+                  <SettingItem
+                    key={index}
+                    title={item.title}
+                    subtitle={item.subtitle}
+                    icon={item.icon}
+                    rightElement={
+                      'isSwitch' in item && item.isSwitch ? (
+                        <Switch
+                          value={item.value}
+                          onValueChange={item.onValueChange}
+                          disabled={'disabled' in item ? item.disabled : false}
+                          trackColor={{ false: '#D1D5DB', true: '#3B82F6' }}
+                          thumbColor="#FFFFFF"
+                        />
+                      ) : undefined
+                    }
+                    showChevron={
+                      !('isSwitch' in item && item.isSwitch) &&
+                      !!('onPress' in item && item.onPress)
+                    }
+                    onPress={'onPress' in item ? item.onPress : undefined}
+                  />
+                ))}
+              </ProfileSection>
+            ),
+        )}
 
         {/* Support & About */}
-        <ProfileSection title="Support & About" defaultExpanded={false}>
-          <SettingItem
-            title="Support"
-            subtitle="Get help and support"
-            icon="headset-outline"
-            onPress={() => router.push('/Support')}
-          />
-          <SettingItem
-            title="Terms of Service"
-            subtitle="Read our terms and conditions"
-            icon="document-text-outline"
-            onPress={() => router.push('/terms')}
-          />
-          <SettingItem
-            title="Privacy Policy"
-            subtitle="Learn about data protection"
-            icon="shield-checkmark-outline"
-            onPress={() => router.push('/privacy')}
-          />
-          <SettingItem
-            title="Contact Us"
-            subtitle="Get help or contact support"
-            icon="help-circle-outline"
-            onPress={handleContactUs}
-          />
-          <SettingItem
-            title="Credits"
-            subtitle="App contributors and technologies"
-            people-outline
-            icon="people-outline"
-            onPress={() => router.push('/credits')}
-          />
-          <SettingItem
-            title="About"
-            subtitle="App version and information"
-            icon="information-circle-outline"
-            onPress={handleAbout}
-          />
-        </ProfileSection>
+        {filteredSections.map(
+          (section) =>
+            section.title === 'Support & About' && (
+              <ProfileSection key={section.title} title={section.title} defaultExpanded={false}>
+                {section.items.map((item, index) => (
+                  <SettingItem
+                    key={index}
+                    title={item.title}
+                    subtitle={item.subtitle}
+                    icon={item.icon}
+                    onPress={'onPress' in item ? item.onPress : undefined}
+                  />
+                ))}
+              </ProfileSection>
+            ),
+        )}
 
         {/* Sign Out */}
         <TouchableOpacity

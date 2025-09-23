@@ -42,11 +42,11 @@ export default function PharmacyScreen() {
     );
 
     if (selectedState) {
-      result = result.filter(pharmacy => pharmacy['State Name'] === selectedState);
+      result = result.filter((pharmacy) => pharmacy['State Name'] === selectedState);
     }
 
     if (selectedDistrict) {
-      result = result.filter(pharmacy => pharmacy['District Name'] === selectedDistrict);
+      result = result.filter((pharmacy) => pharmacy['District Name'] === selectedDistrict);
     }
 
     setFilteredPharmacies(result);
@@ -89,8 +89,12 @@ export default function PharmacyScreen() {
       const allPharmacies = await pharmacyDB.getAllPharmacies();
       setPharmacies(allPharmacies);
 
-      const uniqueStates = [...new Set(allPharmacies.map(p => p['State Name']))].filter((s): s is string => typeof s === 'string');
-      const uniqueDistricts = [...new Set(allPharmacies.map(p => p['District Name']))].filter((d): d is string => typeof d === 'string');
+      const uniqueStates = [...new Set(allPharmacies.map((p) => p['State Name']))].filter(
+        (s): s is string => typeof s === 'string',
+      );
+      const uniqueDistricts = [...new Set(allPharmacies.map((p) => p['District Name']))].filter(
+        (d): d is string => typeof d === 'string',
+      );
       setStates(uniqueStates.sort());
       setDistricts(uniqueDistricts.sort());
 
@@ -210,8 +214,11 @@ export default function PharmacyScreen() {
           <Text style={styles.headerTitle}>Pharmacy Directory</Text>
           <Text style={styles.headerSubtitle}>Found {filteredPharmacies.length} pharmacies</Text>
         </View>
-        <TouchableOpacity onPress={() => setShowFilters(!showFilters)} style={[styles.filterButton, showFilters && styles.filterButtonActive]}>
-          <Ionicons name="filter" size={24} color={showFilters ? "#FFF" : "#007AFF"} />
+        <TouchableOpacity
+          onPress={() => setShowFilters(!showFilters)}
+          style={[styles.filterButton, showFilters && styles.filterButtonActive]}
+        >
+          <Ionicons name="filter" size={24} color={showFilters ? '#FFF' : '#007AFF'} />
           {(selectedState || selectedDistrict) && <View style={styles.filterBadge} />}
         </TouchableOpacity>
       </View>
@@ -234,13 +241,26 @@ export default function PharmacyScreen() {
               <Ionicons name="location-outline" size={16} color="#007AFF" />
               <Text style={styles.filterLabel}>States</Text>
             </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScrollContent}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.filterScrollContent}
+            >
               <TouchableOpacity
                 style={[styles.filterChip, selectedState === '' && styles.filterChipActive]}
                 onPress={() => setSelectedState('')}
               >
-                <Text style={[styles.filterChipText, selectedState === '' && styles.filterChipTextActive]}>All</Text>
-                {selectedState === '' && <Ionicons name="checkmark" size={14} color="#FFF" style={styles.checkIcon} />}
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    selectedState === '' && styles.filterChipTextActive,
+                  ]}
+                >
+                  All
+                </Text>
+                {selectedState === '' && (
+                  <Ionicons name="checkmark" size={14} color="#FFF" style={styles.checkIcon} />
+                )}
               </TouchableOpacity>
               {states.map((state) => (
                 <TouchableOpacity
@@ -248,8 +268,17 @@ export default function PharmacyScreen() {
                   style={[styles.filterChip, selectedState === state && styles.filterChipActive]}
                   onPress={() => setSelectedState(state)}
                 >
-                  <Text style={[styles.filterChipText, selectedState === state && styles.filterChipTextActive]}>{state}</Text>
-                  {selectedState === state && <Ionicons name="checkmark" size={14} color="#FFF" style={styles.checkIcon} />}
+                  <Text
+                    style={[
+                      styles.filterChipText,
+                      selectedState === state && styles.filterChipTextActive,
+                    ]}
+                  >
+                    {state}
+                  </Text>
+                  {selectedState === state && (
+                    <Ionicons name="checkmark" size={14} color="#FFF" style={styles.checkIcon} />
+                  )}
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -260,29 +289,54 @@ export default function PharmacyScreen() {
               <Ionicons name="business-outline" size={16} color="#007AFF" />
               <Text style={styles.filterLabel}>Districts</Text>
             </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScrollContent}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.filterScrollContent}
+            >
               <TouchableOpacity
                 style={[styles.filterChip, selectedDistrict === '' && styles.filterChipActive]}
                 onPress={() => setSelectedDistrict('')}
               >
-                <Text style={[styles.filterChipText, selectedDistrict === '' && styles.filterChipTextActive]}>All</Text>
-                {selectedDistrict === '' && <Ionicons name="checkmark" size={14} color="#FFF" style={styles.checkIcon} />}
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    selectedDistrict === '' && styles.filterChipTextActive,
+                  ]}
+                >
+                  All
+                </Text>
+                {selectedDistrict === '' && (
+                  <Ionicons name="checkmark" size={14} color="#FFF" style={styles.checkIcon} />
+                )}
               </TouchableOpacity>
               {districts.map((district) => (
                 <TouchableOpacity
                   key={district}
-                  style={[styles.filterChip, selectedDistrict === district && styles.filterChipActive]}
+                  style={[
+                    styles.filterChip,
+                    selectedDistrict === district && styles.filterChipActive,
+                  ]}
                   onPress={() => setSelectedDistrict(district)}
                 >
-                  <Text style={[styles.filterChipText, selectedDistrict === district && styles.filterChipTextActive]}>{district}</Text>
-                  {selectedDistrict === district && <Ionicons name="checkmark" size={14} color="#FFF" style={styles.checkIcon} />}
+                  <Text
+                    style={[
+                      styles.filterChipText,
+                      selectedDistrict === district && styles.filterChipTextActive,
+                    ]}
+                  >
+                    {district}
+                  </Text>
+                  {selectedDistrict === district && (
+                    <Ionicons name="checkmark" size={14} color="#FFF" style={styles.checkIcon} />
+                  )}
                 </TouchableOpacity>
               ))}
             </ScrollView>
           </View>
 
           {(selectedState || selectedDistrict) && (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.clearFiltersButton}
               onPress={() => {
                 setSelectedState('');
@@ -329,7 +383,9 @@ export default function PharmacyScreen() {
                     <View style={styles.actionButtonsRow}>
                       <TouchableOpacity
                         style={styles.copyButton}
-                        onPress={() => copyToClipboard(selectedPharmacy.Contact!.toString(), 'Phone number')}
+                        onPress={() =>
+                          copyToClipboard(selectedPharmacy.Contact!.toString(), 'Phone number')
+                        }
                       >
                         <Ionicons name="copy" size={14} color="#666" />
                       </TouchableOpacity>
@@ -356,7 +412,9 @@ export default function PharmacyScreen() {
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.mapsButton}
-                      onPress={() => handleOpenMaps(selectedPharmacy.Address || '', selectedPharmacy.Name || '')}
+                      onPress={() =>
+                        handleOpenMaps(selectedPharmacy.Address || '', selectedPharmacy.Name || '')
+                      }
                     >
                       <Ionicons name="location" size={14} color="#FFF" />
                       <Text style={styles.mapsButtonText}>Maps</Text>
