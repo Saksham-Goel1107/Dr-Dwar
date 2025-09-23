@@ -7,15 +7,21 @@ if (!ENV.ARCJET_KEY) {
 
 export const aj = arcjet({
   key: ENV.ARCJET_KEY,
-  characteristics: ['ip.src'],
+  characteristics: ['ip.src', 'user-agent', 'x-react-native-app'],
   rules: [
+    // Web Application Firewall Protection
     shield({ mode: 'LIVE' }),
 
+    // Bot Detection with React Native user-agent allowed
     detectBot({
-      mode: 'LIVE',
-      allow: ['CATEGORY:SEARCH_ENGINE'],
+      mode: 'LIVE', // Consider MONITOR initially for tuning
+      allow: [
+        'CATEGORY:SEARCH_ENGINE',
+        // Add your React Native app user-agent or partial string here
+      ],
     }),
 
+    // Rate limiting token bucket
     tokenBucket({
       mode: 'LIVE',
       refillRate: 10,

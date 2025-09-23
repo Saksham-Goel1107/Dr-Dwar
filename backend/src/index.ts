@@ -3,7 +3,7 @@ import './instrument.js';
 import { clerkMiddleware } from '@clerk/express';
 import express from 'express';
 import { ENV } from './config/env';
-// import { arcjetMiddleware } from './middleware/arcjet.middleware';
+import { arcjetMiddleware } from './middleware/arcjet.middleware';
 import * as Sentry from '@sentry/node';
 import helmet from 'helmet';
 import hpp from 'hpp';
@@ -31,7 +31,7 @@ app.use(requestLogger);
 app.use(clerkMiddleware());
 
 // Arcjet middleware for security
-// app.use(arcjetMiddleware);
+app.use(arcjetMiddleware);
 
 // Routes
 app.use('/api/users', userRoutes);

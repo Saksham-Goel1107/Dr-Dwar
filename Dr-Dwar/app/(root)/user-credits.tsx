@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import React, { useEffect, useState } from 'react';
 import { Alert, Animated, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { PanGestureHandler } from 'react-native-gesture-handler';
+import { GestureHandlerRootView, PanGestureHandler } from 'react-native-gesture-handler';
 import { WebView } from 'react-native-webview';
 
 export default function UserCreditsScreen() {
@@ -246,7 +246,8 @@ export default function UserCreditsScreen() {
 
   if (showPayment) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
         <View
           style={{
             flexDirection: 'row',
@@ -284,12 +285,14 @@ export default function UserCreditsScreen() {
           }}
           style={{ flex: 1 }}
         />
-      </View>
+        </View>
+      </GestureHandlerRootView>
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#f0fdf4' }}>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View style={{ flex: 1, backgroundColor: '#f0fdf4' }}>
       {/* Modern Header */}
       <View
         style={{
@@ -477,22 +480,6 @@ export default function UserCreditsScreen() {
                   <View style={{ alignItems: 'center', flex: 1 }}>
                     <View
                       style={{
-                        backgroundColor: '#dcfce7',
-                        padding: 8,
-                        borderRadius: 12,
-                        marginBottom: 6,
-                      }}
-                    >
-                      <MaterialCommunityIcons name="pill" size={20} color="#16a34a" />
-                    </View>
-                    <Text style={{ fontSize: 11, color: '#64748b', textAlign: 'center' }}>
-                      Medicines
-                    </Text>
-                  </View>
-
-                  <View style={{ alignItems: 'center', flex: 1 }}>
-                    <View
-                      style={{
                         backgroundColor: '#fef3c7',
                         padding: 8,
                         borderRadius: 12,
@@ -631,66 +618,69 @@ export default function UserCreditsScreen() {
                       <MaterialCommunityIcons name="minus" size={24} color="#dc2626" />
                     </TouchableOpacity>
 
-                    <View style={{ flex: 1, marginHorizontal: 10, paddingVertical: 10 }}>
-                      <TouchableOpacity
-                        style={{ height: 20, justifyContent: 'center' }}
+                    <View style={{ flex: 1, marginHorizontal: 10 }}>
+                      <View
+                        style={{ height: 20, justifyContent: 'center', position: 'relative' }}
                         onLayout={(event) => {
                           const { width } = event.nativeEvent.layout;
                           setSliderWidth(width);
                         }}
-                        onPress={(event) => {
-                          const { locationX } = event.nativeEvent;
-                          const percentage = Math.max(0, Math.min(1, locationX / sliderWidth));
-                          const newValue = Math.round(10 + percentage * (5000 - 10));
-                          setSelectedCredits(Math.max(10, Math.min(5000, newValue)));
-                        }}
                       >
-                        <View
-                          style={{
-                            height: 8,
-                            backgroundColor: '#e2e8f0',
-                            borderRadius: 4,
-                            position: 'relative',
+                        <TouchableOpacity
+                          style={{ height: 8, justifyContent: 'center' }}
+                          onPress={(event) => {
+                            const { locationX } = event.nativeEvent;
+                            const percentage = Math.max(0, Math.min(1, locationX / sliderWidth));
+                            const newValue = Math.round(10 + percentage * (5000 - 10));
+                            setSelectedCredits(Math.max(10, Math.min(5000, newValue)));
                           }}
                         >
                           <View
                             style={{
                               height: 8,
-                              backgroundColor: '#16a34a',
+                              backgroundColor: '#e2e8f0',
                               borderRadius: 4,
-                              width: `${((selectedCredits - 10) / (5000 - 10)) * 100}%`,
+                            }}
+                          >
+                            <View
+                              style={{
+                                height: 8,
+                                backgroundColor: '#16a34a',
+                                borderRadius: 4,
+                                width: `${((selectedCredits - 10) / (5000 - 10)) * 100}%`,
+                              }}
+                            />
+                          </View>
+                        </TouchableOpacity>
+
+                        <PanGestureHandler
+                          onGestureEvent={(event) => {
+                            const { x } = event.nativeEvent;
+                            const percentage = Math.max(0, Math.min(1, x / sliderWidth));
+                            const newValue = Math.round(10 + percentage * (5000 - 10));
+                            setSelectedCredits(Math.max(10, Math.min(5000, newValue)));
+                          }}
+                        >
+                          <Animated.View
+                            style={{
+                              position: 'absolute',
+                              left: Math.max(0, Math.min(sliderWidth - 20, ((selectedCredits - 10) / (5000 - 10)) * sliderWidth - 10)),
+                              top: -1,
+                              width: 20,
+                              height: 20,
+                              backgroundColor: '#16a34a',
+                              borderRadius: 10,
+                              borderWidth: 2,
+                              borderColor: '#ffffff',
+                              shadowColor: '#000',
+                              shadowOffset: { width: 0, height: 2 },
+                              shadowOpacity: 0.2,
+                              shadowRadius: 4,
+                              elevation: 4,
                             }}
                           />
-                        </View>
-                      </TouchableOpacity>
-
-                      <PanGestureHandler
-                        onGestureEvent={(event) => {
-                          const { x } = event.nativeEvent;
-                          const percentage = Math.max(0, Math.min(1, x / sliderWidth));
-                          const newValue = Math.round(10 + percentage * (5000 - 10));
-                          setSelectedCredits(Math.max(10, Math.min(5000, newValue)));
-                        }}
-                      >
-                        <Animated.View
-                          style={{
-                            position: 'absolute',
-                            left: ((selectedCredits - 10) / (5000 - 10)) * sliderWidth - 10,
-                            top: -6,
-                            width: 20,
-                            height: 20,
-                            backgroundColor: '#16a34a',
-                            borderRadius: 10,
-                            borderWidth: 2,
-                            borderColor: '#ffffff',
-                            shadowColor: '#000',
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowOpacity: 0.2,
-                            shadowRadius: 4,
-                            elevation: 4,
-                          }}
-                        />
-                      </PanGestureHandler>
+                        </PanGestureHandler>
+                      </View>
                     </View>
 
                     <TouchableOpacity
@@ -948,6 +938,7 @@ export default function UserCreditsScreen() {
           </View>
         </View>
       </View>
-    </View>
+      </View>
+    </GestureHandlerRootView>
   );
 }
