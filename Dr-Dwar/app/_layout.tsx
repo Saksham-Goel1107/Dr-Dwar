@@ -1,6 +1,7 @@
 import { ClerkProvider, useAuth, useUser } from '@clerk/clerk-expo';
 import { resourceCache } from '@clerk/clerk-expo/resource-cache';
 import { tokenCache } from '@clerk/clerk-expo/token-cache';
+import { exitApp } from '@logicwind/react-native-exit-app';
 import * as Sentry from '@sentry/react-native';
 import * as NavigationBar from 'expo-navigation-bar';
 import { Slot, useRouter, useSegments } from 'expo-router';
@@ -9,8 +10,9 @@ import * as SecureStore from 'expo-secure-store';
 import { Accelerometer } from 'expo-sensors';
 import * as Speech from 'expo-speech';
 import { StatusBar } from 'expo-status-bar';
+import { useFreeRasp } from 'freerasp-react-native';
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, SafeAreaView } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, SafeAreaView } from 'react-native';
 import { PaperProvider } from 'react-native-paper';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import '../global.css';
@@ -84,8 +86,62 @@ function InitialLayout() {
   const [shakeToReportEnabled, setShakeToReportEnabled] = useState(true);
   const [readPageAloud, setReadPageAloud] = useState(false);
 
+  // Security threat detection using FreeRASP
+  const block = (message: string) => {
+    Alert.alert(
+      'Security Warning',
+      `${message}\nFor security reasons, the app will now close.`,
+      [{ text: 'OK', onPress: () => exitApp() }],
+      { cancelable: false },
+    );
+  };
+
+  const freeRaspConfig = {
+    androidConfig: {
+      packageName: '',
+      certificateHashes: [],
+      supportedAlternativeStores: [],
+    },
+    iosConfig: {
+      appBundleId: '',
+      appTeamId: '',
+    },
+    watcherMail: '',
+    isProd: !__DEV__,
+    onRootDetected: () => block('Rooted/Jailbroken device detected.'),
+    onEmulatorDetected: () => block('Emulator detected.'),
+    onHookDetected: () => block('Hooking tool detected.'),
+    onTamperDetected: () => block('App tampering detected.'),
+    onPasscodeDisabled: () => block('Device passcode disabled.'),
+    onDeviceBindingDetected: () => block('Device binding detected.'),
+    onUntrustedInstallationDetected: () => block('Untrusted installation detected.'),
+    onJailbreakDetected: () => block('Jailbreak detected.'),
+    onSimulatorDetected: () => block('Simulator detected.'),
+    onDebuggerDetected: () => block('Debugger detected.'),
+    onAdbEnabled: () => block('ADB enabled on device.'),
+    onScreenshotDetected: () => block('Screenshot detected.'),
+    onScreenRecordingDetected: () => block('Screen recording detected.'),
+  };
+
+  useFreeRasp(freeRaspConfig, {});
+
   useEffect(() => {
-    ScreenCapture.preventScreenCaptureAsync();
+    const checkAndPreventScreenCapture = async () => {
+      try {
+        const preventSS = await SecureStore.getItemAsync('PREVENT_SCREEN_CAPTURE');
+        if (preventSS !== 'false') {
+          // Default to true
+          ScreenCapture.preventScreenCaptureAsync();
+        }
+      } catch (error) {
+        console.error('Error checking screen capture setting:', error);
+        // Default to prevent if can't load setting
+        ScreenCapture.preventScreenCaptureAsync();
+      }
+    };
+
+    checkAndPreventScreenCapture();
+
     return () => {
       ScreenCapture.allowScreenCaptureAsync();
     };
@@ -149,6 +205,8 @@ function InitialLayout() {
         'Home page: Your main dashboard showing health overview, quick access to features, and personalized health insights.',
       '(root)/hospitals':
         'Hospitals page: Find nearby hospitals, view their details, ratings, and get directions to reach them.',
+      '(root)/pharmacies':
+        'Pharmacies page: Find nearby pharmacies, view their details, phone numbers, and get address to reach them.',
       '(root)/(tabs)/pharmacy':
         'Pharmacy page: Browse a wide variety of medicines you can purchase. There is a cart icon at the top right corner where you can view and pay for your selected items.',
       '(root)/(tabs)/jan-news':

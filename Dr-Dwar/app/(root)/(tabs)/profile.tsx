@@ -95,6 +95,7 @@ export default function ProfileSettings() {
   const [sendDiagnosticData, setSendDiagnosticData] = useState(true);
   const [vibrations, setVibrations] = useState(true);
   const [readPageAloud, setReadPageAloud] = useState(false);
+  const [preventScreenCapture, setPreventScreenCapture] = useState(true);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -109,6 +110,7 @@ export default function ProfileSettings() {
       const diagnostic = await SecureStore.getItemAsync('SEND_DIAGNOSTIC_DATA');
       const vib = await SecureStore.getItemAsync('VIBRATIONS');
       const readAloud = await SecureStore.getItemAsync('READ_PAGE_ALOUD');
+      const preventSS = await SecureStore.getItemAsync('PREVENT_SCREEN_CAPTURE');
 
       setAppLock(lock === 'true');
       setNotifications(notif !== 'false'); // Default to true
@@ -116,6 +118,7 @@ export default function ProfileSettings() {
       setSendDiagnosticData(diagnostic !== 'false'); // Default to true
       setVibrations(vib !== 'false'); // Default to true
       setReadPageAloud(readAloud === 'true');
+      setPreventScreenCapture(preventSS !== 'false'); // Default to true
     } catch (error) {
       console.error('Error loading settings:', error);
     }
@@ -314,6 +317,21 @@ export default function ProfileSettings() {
     } catch (error) {
       console.error('Error toggling read page aloud:', error);
       Alert.alert('Error', 'Failed to update read page aloud setting. Please try again.');
+    }
+  };
+
+  const togglePreventScreenCapture = async (val: boolean) => {
+    try {
+      await SecureStore.setItemAsync('PREVENT_SCREEN_CAPTURE', val.toString());
+      setPreventScreenCapture(val);
+
+      Alert.alert(
+        'Success',
+        `Screen capture prevention has been ${val ? 'enabled' : 'disabled'}. Please refresh the app to put this into action.`,
+      );
+    } catch (error) {
+      console.error('Error toggling screen capture prevention:', error);
+      Alert.alert('Error', 'Failed to update screen capture prevention setting. Please try again.');
     }
   };
   const handleSignOut = () => {
@@ -523,6 +541,20 @@ export default function ProfileSettings() {
               <Switch
                 value={readPageAloud}
                 onValueChange={toggleReadPageAloud}
+                trackColor={{ false: '#D1D5DB', true: '#3B82F6' }}
+                thumbColor="#FFFFFF"
+              />
+            }
+            showChevron={false}
+          />
+          <SettingItem
+            title="Prevent Screenshots"
+            subtitle="Block screenshots and screen recording"
+            icon="eye-off-outline"
+            rightElement={
+              <Switch
+                value={preventScreenCapture}
+                onValueChange={togglePreventScreenCapture}
                 trackColor={{ false: '#D1D5DB', true: '#3B82F6' }}
                 thumbColor="#FFFFFF"
               />
