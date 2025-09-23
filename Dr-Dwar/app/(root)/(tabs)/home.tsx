@@ -88,11 +88,10 @@ export default function HomeScreen() {
             <View
               style={{
                 flexDirection: 'row',
-                justifyContent: 'space-between',
                 alignItems: 'center',
               }}
             >
-              <View>
+              <View style={{ flex: 1 }}>
                 <Text variant="titleLarge" style={{ fontWeight: '800', color: '#2C2419' }}>
                   Hi,{' '}
                   {user?.username
@@ -105,6 +104,24 @@ export default function HomeScreen() {
                 </Text>
               </View>
             </View>
+            <TouchableOpacity
+              style={{
+                position: 'absolute',
+                top: 18,
+                right: 15,
+                padding: 10,
+                borderRadius: 20,
+                backgroundColor: '#F3F4F6',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                elevation: 3,
+              }}
+              onPress={() => (router.push as any)('/(root)/user-credits')}
+            >
+              <MaterialCommunityIcons name="wallet-outline" size={20} color="#4B5563" />
+            </TouchableOpacity>
           </View>
 
           {/* Carousel */}

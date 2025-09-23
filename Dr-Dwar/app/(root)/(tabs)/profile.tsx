@@ -402,7 +402,7 @@ export default function ProfileSettings() {
   const handleAbout = () => {
     Alert.alert(
       'About Dr-Dwar',
-      'Dr-Dwar is your AI-powered health assistant.\n\nVersion: 1.0.0\n© 2025 Dr-Dwar Team',
+      'Dr-Dwar is your AI-powered health assistant.\n\nVersion: 1.0.0\nMADE WITH ❤️ IN INDIA By Saksham Goel\n© 2025 Dr-Dwar Team',
       [{ text: 'OK' }],
     );
   };
@@ -588,6 +588,13 @@ export default function ProfileSettings() {
             subtitle="Get help or contact support"
             icon="help-circle-outline"
             onPress={handleContactUs}
+          />
+          <SettingItem
+            title="Credits"
+            subtitle="App contributors and technologies"
+            people-outline
+            icon="people-outline"
+            onPress={() => router.push('/credits')}
           />
           <SettingItem
             title="About"

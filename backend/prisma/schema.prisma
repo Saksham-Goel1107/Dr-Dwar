@@ -20,6 +20,7 @@ model User {
   userName          String   @unique
   phoneNumber       String   @unique
   email             String?  @unique
+  role              String   @default("User")
   // Encrypted user profile data
   encryptedProfileData String?
   createdAt         DateTime @default(now())

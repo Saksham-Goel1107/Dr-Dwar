@@ -130,6 +130,7 @@ export default function BasicInfoScreen() {
       // Only store completion flag in Clerk (no actual data)
       const clerkData = {
         basicInfoCompleted: true,
+        role: "User",
       };
 
       // First update Clerk metadata with only completion flag

@@ -151,7 +151,7 @@ function InitialLayout() {
     if (!isLoaded) return;
 
     const inRoot = segments[0] === '(root)';
-    if (segments[0] === 'terms' || segments[0] === 'privacy' || segments[0] === 'Support') return;
+    if (segments[0] === 'terms' || segments[0] === 'privacy' || segments[0] === 'Support' || segments[0] === 'credits') return;
 
     if (isSignedIn) {
       const metadata = user?.unsafeMetadata as any;
@@ -227,6 +227,8 @@ function InitialLayout() {
         'Sign Up page: Create a new account to start using Dr-Dwar health services.',
       terms:
         'Terms of Service page: Read the terms and conditions for using the Dr-Dwar application.',
+      credits:
+        'Credits page: Know the technology stack and meet the contributors who developed the Dr-Dwar app.',
       privacy: 'Privacy Policy page: Learn about how we protect your data and privacy in the app.',
       Support: 'Support page: Get help, contact support, and access frequently asked questions.',
     };
