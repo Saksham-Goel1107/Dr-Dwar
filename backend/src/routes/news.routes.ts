@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { createNews, getAllNews, getNewsById } from '../controllers/news.controller';
-import { protectRoute } from '../middleware/auth.middleware';
+import { createNews, getAllNews, getNewsById } from '../controllers/news.controller.js';
+import { protectRoute } from '../middleware/auth.middleware.js';
 
 const router = Router();
 

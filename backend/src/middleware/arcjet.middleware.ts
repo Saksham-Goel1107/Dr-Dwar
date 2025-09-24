@@ -1,4 +1,4 @@
-import { aj } from '../config/arcjet';
+import { aj } from '../config/arcjet.js';
 
 import { NextFunction, Request, Response } from 'express';
 
@@ -6,6 +6,10 @@ export const arcjetMiddleware = async (req: Request, res: Response, next: NextFu
   try {
     const decision = await aj.protect(req, {
       requested: 1,
+      'user-agent': req.headers['user-agent'] || '',
+      'x-react-native-app': Array.isArray(req.headers['x-react-native-app'])
+        ? req.headers['x-react-native-app'].join(', ')
+        : req.headers['x-react-native-app'] || '',
     });
 
     if (decision.isDenied()) {

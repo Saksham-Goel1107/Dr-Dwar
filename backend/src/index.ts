@@ -2,20 +2,20 @@ import './instrument.js';
 
 import { clerkMiddleware } from '@clerk/express';
 import express from 'express';
-import { ENV } from './config/env';
-import { arcjetMiddleware } from './middleware/arcjet.middleware';
+import { ENV } from './config/env.js';
+import { arcjetMiddleware } from './middleware/arcjet.middleware.js';
 import * as Sentry from '@sentry/node';
 import helmet from 'helmet';
 import hpp from 'hpp';
-import { errorHandler, notFound } from './middleware/error.middleware';
-import { requestLogger } from './middleware/logger.middleware';
-import chatbotRoutes from './routes/chatbot.routes';
-import creditsRoutes from './routes/credits.routes';
-import healthRoutes from './routes/health.routes';
-import newsRoutes from './routes/news.routes';
-import orderRoutes from './routes/order.routes';
-import paymentRoutes from './routes/payment.routes';
-import userRoutes from './routes/user.routes';
+import { errorHandler, notFound } from './middleware/error.middleware.js';
+import { requestLogger } from './middleware/logger.middleware.js';
+import chatbotRoutes from './routes/chatbot.routes.js';
+import creditsRoutes from './routes/credits.routes.js';
+import healthRoutes from './routes/health.routes.js';
+import newsRoutes from './routes/news.routes.js';
+import orderRoutes from './routes/order.routes.js';
+import paymentRoutes from './routes/payment.routes.js';
+import userRoutes from './routes/user.routes.js';
 
 const app = express();
 

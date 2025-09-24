@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { prisma } from '../config/database';
-import { asyncHandler } from '../middleware/error.middleware';
+import { prisma } from '../config/database.js';
+import { asyncHandler } from '../middleware/error.middleware.js';
 
 export class CreditsController {
   // Get user's credit balance

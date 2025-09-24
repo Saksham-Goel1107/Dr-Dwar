@@ -1,8 +1,8 @@
 import CryptoJS from 'crypto-js';
 import { Request, Response } from 'express';
-import { prisma } from '../config/database';
-import { asyncHandler } from '../middleware/error.middleware';
-import { ENV } from '../config/env';
+import { prisma } from '../config/database.js';
+import { asyncHandler } from '../middleware/error.middleware.js';
+import { ENV } from '../config/env.js';
 
 // Production-ready encryption using AES
 const ENCRYPTION_KEY = ENV.ENCRYPTION_KEY || 'DrDwar2025SecureKey!@#DefaultKeyForDev';

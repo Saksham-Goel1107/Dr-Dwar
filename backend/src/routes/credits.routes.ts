@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { CreditsController } from '../controllers/credits.controller';
-import { protectRoute } from '../middleware/auth.middleware';
+import { CreditsController } from '../controllers/credits.controller.js';
+import { protectRoute } from '../middleware/auth.middleware.js';
 
 const router = Router();
 

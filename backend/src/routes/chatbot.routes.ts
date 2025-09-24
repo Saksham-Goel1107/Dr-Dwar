@@ -4,8 +4,8 @@ import {
   deleteConversation,
   getConversationHistory,
   handleChatMessage,
-} from '../controllers/chatbot.controller';
-import { protectRoute } from '../middleware/auth.middleware';
+} from '../controllers/chatbot.controller.js';
+import { protectRoute } from '../middleware/auth.middleware.js';
 
 const router = Router();
 

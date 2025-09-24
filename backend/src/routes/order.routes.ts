@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { OrderController } from '../controllers/order.controller';
-import { protectRoute } from '../middleware/auth.middleware';
+import { OrderController } from '../controllers/order.controller.js';
+import { protectRoute } from '../middleware/auth.middleware.js';
 import {
   validateOrderCreation,
   validateOrderId,
   validateOrderStatusUpdate,
-} from '../middleware/validation.middleware';
+} from '../middleware/validation.middleware.js';
 
 const router = Router();
 

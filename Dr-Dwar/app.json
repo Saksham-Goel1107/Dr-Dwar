@@ -60,7 +60,8 @@
         {
           "url": "https://sentry.io/",
           "project": "dr-dwar",
-          "organization": "saksham-vj"
+          "organization": "saksham-vj",
+          "uploadSourceMaps": false
         }
       ],
       "expo-sqlite"
