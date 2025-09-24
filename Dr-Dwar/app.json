@@ -58,9 +58,8 @@
       [
         "@sentry/react-native/expo",
         {
-          "url": "https://sentry.io/",
-          "project": "dr-dwar",
           "organization": "saksham-vj",
+          "project": "dr-dwar",
           "uploadSourceMaps": false
         }
       ],

@@ -156,7 +156,7 @@ export class PaymentController {
     }
 
     // Flatten payments from all orders
-    const payments = user.orders.flatMap((order) => order.payments);
+    const payments = user.orders.flatMap((order: any) => order.payments);
 
     res.json({
       success: true,

@@ -16,6 +16,7 @@ import newsRoutes from './routes/news.routes.js';
 import orderRoutes from './routes/order.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
 import userRoutes from './routes/user.routes.js';
+import client from 'prom-client';
 
 const app = express();
 
@@ -26,6 +27,8 @@ app.set('trust proxy', 1);
 app.use(hpp());
 app.use(helmet());
 app.use(requestLogger);
+const collectDefaultMetrics = client.collectDefaultMetrics;
+collectDefaultMetrics({register: client.register});
 
 // Clerk middleware for authentication
 app.use(clerkMiddleware());
@@ -41,6 +44,11 @@ app.use('/api/credits', creditsRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/', healthRoutes);
+app.get('/metrics', async (_, res) => {
+  res.setHeader('Content-Type', client.register.contentType);
+  const metrics = await client.register.metrics();
+  res.send(metrics);
+});
 
 // The error handler must be registered before any other error middleware and after all controllers
 Sentry.setupExpressErrorHandler(app);
