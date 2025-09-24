@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "drdwar",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "owner": "saksham-goel1107",
     "ios": {
       "supportsTablet": true
     },
@@ -19,13 +19,20 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.sakshamgoel1107.DrDwar"
     },
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
     "assetBundlePatterns": ["**/*"],
+    "updates": {
+      "url": "https://u.expo.dev/049aa9bf-46e2-4a23-8c30-ee483472aafb",
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    },
     "plugins": [
       "expo-router",
       [
@@ -33,8 +40,7 @@
         {
           "icon": "./assets/images/icon.png",
           "color": "#059669",
-          "defaultChannel": "default",
-          "sounds": ["./assets/sounds/notification.wav"]
+          "defaultChannel": "default"
         }
       ],
       [
@@ -62,6 +68,15 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "049aa9bf-46e2-4a23-8c30-ee483472aafb"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }

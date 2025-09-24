@@ -1,5 +1,6 @@
 import { useClerk, useUser } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as Notifications from 'expo-notifications';
@@ -11,6 +12,7 @@ import {
   Alert,
   Image,
   Linking,
+  Modal,
   Platform,
   ScrollView,
   Switch,
@@ -19,6 +21,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import QRCode from 'react-native-qrcode-svg';
 
 interface ProfileSectionProps {
   title: string;
@@ -98,11 +101,25 @@ export default function ProfileSettings() {
   const [readPageAloud, setReadPageAloud] = useState(false);
   const [preventScreenCapture, setPreventScreenCapture] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [mfaEnabled, setMfaEnabled] = useState(false);
+  const [mfaSetupMode, setMfaSetupMode] = useState(false);
+  const [totpUri, setTotpUri] = useState('');
+  const [totpSecret, setTotpSecret] = useState('');
+  const [setupCode, setSetupCode] = useState('');
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
+  const [showBackupModal, setShowBackupModal] = useState(false);
+  const [backupCodesSaved, setBackupCodesSaved] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     loadSettings();
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      setMfaEnabled(user.twoFactorEnabled || false);
+    }
+  }, [user]);
 
   const loadSettings = async () => {
     try {
@@ -336,6 +353,128 @@ export default function ProfileSettings() {
       Alert.alert('Error', 'Failed to update screen capture prevention setting. Please try again.');
     }
   };
+
+  const toggleMFA = async (val: boolean) => {
+    if (val) {
+      await enableMFA();
+    } else {
+      await disableMFA();
+    }
+  };
+
+  const enableMFA = async () => {
+    try {
+      if (!user) return;
+      const totpResource = await user.createTOTP();
+      setTotpUri(totpResource.uri || '');
+      setTotpSecret(totpResource.secret || '');
+      setMfaSetupMode(true);
+    } catch (error) {
+      console.error('Error enabling MFA:', error);
+      Alert.alert('Error', 'Failed to enable MFA. Please try again.');
+    }
+  };
+
+  const verifyMFASetup = async () => {
+    try {
+      if (!user || !setupCode) return;
+      await user.verifyTOTP({ code: setupCode });
+      // Create backup codes
+      const backupResource = await user.createBackupCode();
+      setBackupCodes(backupResource.codes);
+      setMfaEnabled(true);
+      setMfaSetupMode(false);
+      setSetupCode('');
+      setTotpUri('');
+      setTotpSecret('');
+      setShowBackupModal(true);
+    } catch (error) {
+      console.error('Error verifying MFA setup:', error);
+      Alert.alert('Error', 'Invalid code. Please try again.');
+    }
+  };
+
+  const cancelMFASetup = () => {
+    setMfaSetupMode(false);
+    setTotpUri('');
+    setTotpSecret('');
+    setSetupCode('');
+  };
+
+  const copySecretKey = async () => {
+    if (totpSecret) {
+      await Clipboard.setStringAsync(totpSecret);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      Alert.alert('Copied', 'Secret key copied to clipboard');
+    }
+  };
+
+  const copyBackupCodes = async () => {
+    try {
+      const codesText = backupCodes.join('\n');
+      await Clipboard.setStringAsync(codesText);
+      Alert.alert('Copied', 'Recovery codes copied to clipboard');
+    } catch {
+      Alert.alert('Error', 'Failed to copy recovery codes');
+    }
+  };
+
+  const disableMFA = async () => {
+    // If app lock is enabled, require biometric/PIN verification before disabling
+    if (appLock) {
+      try {
+        // Verify device supports authentication
+        const hasHardware = await LocalAuthentication.hasHardwareAsync();
+        const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+
+        if (!hasHardware || !isEnrolled) {
+          Alert.alert(
+            'Biometric Required',
+            'Please set up biometric authentication or PIN in your device settings to disable MFA.',
+            [{ text: 'OK' }],
+          );
+          return;
+        }
+
+        // Request biometric authentication before disabling MFA
+        const authResult = await LocalAuthentication.authenticateAsync({
+          promptMessage: 'Authenticate to disable MFA',
+          fallbackLabel: 'Use PIN',
+          cancelLabel: 'Cancel',
+          disableDeviceFallback: false,
+        });
+
+        if (!authResult.success) {
+          Alert.alert(
+            'Authentication Failed',
+            'Authentication is required to disable MFA. Please try again.',
+            [{ text: 'OK' }],
+          );
+          return;
+        }
+
+        // Proceed with disabling MFA after successful authentication
+        await proceedWithMFADisable();
+      } catch (error) {
+        console.error('Error with biometric authentication:', error);
+        Alert.alert('Error', 'Failed to authenticate. Please try again.');
+      }
+    } else {
+      await proceedWithMFADisable();
+    }
+  };
+
+  const proceedWithMFADisable = async () => {
+    try {
+      if (!user) return;
+      await user.disableTOTP();
+      setMfaEnabled(false);
+      Alert.alert('Success', 'MFA has been disabled.');
+    } catch (error) {
+      console.error('Error disabling MFA:', error);
+      Alert.alert('Error', 'Failed to disable MFA. Please try again.');
+    }
+  };
   const handleSignOut = () => {
     Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
       { text: 'Cancel', style: 'cancel' },
@@ -493,6 +632,14 @@ export default function ProfileSettings() {
           isSwitch: true,
           value: preventScreenCapture,
           onValueChange: togglePreventScreenCapture,
+        },
+        {
+          title: 'Multi-Factor Authentication',
+          subtitle: 'Add an extra layer of security',
+          icon: 'shield-checkmark-outline',
+          isSwitch: true,
+          value: mfaEnabled,
+          onValueChange: toggleMFA,
         },
       ],
     },
@@ -671,6 +818,73 @@ export default function ProfileSettings() {
             ),
         )}
 
+        {/* MFA Setup */}
+        {mfaSetupMode && (
+          <View className="mb-6 rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+            <Text className="mb-4 text-lg font-semibold text-gray-800">
+              Set up Multi-Factor Authentication
+            </Text>
+            <Text className="mb-4 text-sm text-gray-600">
+              Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.), or
+              manually enter the secret key below.
+            </Text>
+            {totpUri && (
+              <View className="mb-4 items-center">
+                <QRCode value={totpUri} size={200} />
+              </View>
+            )}
+            {totpSecret && (
+              <View className="mb-4 rounded-lg bg-gray-50 p-3">
+                <View className="mb-1 flex-row items-center justify-between">
+                  <Text className="text-xs text-gray-500">Secret Key (manual entry):</Text>
+                  <TouchableOpacity
+                    onPress={copySecretKey}
+                    className="flex-row items-center rounded bg-blue-100 px-2 py-1"
+                  >
+                    <Ionicons name="copy-outline" size={12} color="#3B82F6" />
+                    <Text className="ml-1 text-xs font-medium text-blue-600">Copy</Text>
+                  </TouchableOpacity>
+                </View>
+                <Text className="break-all font-mono text-sm text-gray-800">{totpSecret}</Text>
+              </View>
+            )}
+            <Text className="mb-2 text-sm text-gray-600">
+              Enter the 6-digit code from your app:
+            </Text>
+            <TextInput
+              value={setupCode}
+              onChangeText={setSetupCode}
+              maxLength={6}
+              keyboardType="numeric"
+              className="mb-4 rounded-lg border border-gray-300 p-3 text-center text-lg"
+              placeholder="000000"
+            />
+            <View className="flex-row justify-between">
+              <TouchableOpacity
+                onPress={cancelMFASetup}
+                className="rounded-lg bg-gray-300 px-4 py-2"
+              >
+                <Text className="font-medium text-gray-700">Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={verifyMFASetup}
+                disabled={!setupCode || setupCode.length !== 6}
+                className={`rounded-lg px-4 py-2 ${
+                  setupCode && setupCode.length === 6 ? 'bg-blue-500' : 'bg-gray-300'
+                }`}
+              >
+                <Text
+                  className={`font-medium ${
+                    setupCode && setupCode.length === 6 ? 'text-white' : 'text-gray-500'
+                  }`}
+                >
+                  Verify & Enable
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
         {/* Support & About */}
         {filteredSections.map(
           (section) =>
@@ -697,6 +911,59 @@ export default function ProfileSettings() {
           <Text className="text-base font-semibold text-white">Sign Out</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Backup Codes Modal */}
+      <Modal
+        visible={showBackupModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => {}}
+      >
+        <View className="flex-1 items-center justify-center bg-black/50">
+          <View className="mx-4 max-h-96 w-full max-w-md rounded-xl bg-white p-6">
+            <Text className="mb-4 text-xl font-bold text-gray-800">Recovery Codes</Text>
+            <Text className="mb-4 text-sm text-gray-600">
+              Save these recovery codes in a safe place. Each code can be used only once to sign in
+              if you lose access to your authenticator app.
+            </Text>
+            <ScrollView className="max-h-40 rounded-lg bg-gray-50 p-3">
+              {backupCodes.map((code, index) => (
+                <Text key={index} className="mb-2 font-mono text-sm text-gray-800">
+                  {index + 1}. {code}
+                </Text>
+              ))}
+            </ScrollView>
+            <TouchableOpacity onPress={copyBackupCodes} className="mt-4 rounded-lg bg-blue-500 p-3">
+              <Text className="text-center font-medium text-white">Copy Codes</Text>
+            </TouchableOpacity>
+            <View className="mt-4 flex-row items-center">
+              <TouchableOpacity
+                onPress={() => setBackupCodesSaved(!backupCodesSaved)}
+                className="mr-3 h-5 w-5 items-center justify-center rounded border-2 border-gray-300"
+              >
+                {backupCodesSaved && <Ionicons name="checkmark" size={16} color="#3B82F6" />}
+              </TouchableOpacity>
+              <Text className="flex-1 text-sm text-gray-700">I have saved the recovery codes</Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => {
+                setShowBackupModal(false);
+                setBackupCodesSaved(false);
+              }}
+              disabled={!backupCodesSaved}
+              className={`mt-4 rounded-lg p-3 ${backupCodesSaved ? 'bg-green-500' : 'bg-gray-300'}`}
+            >
+              <Text
+                className={`text-center font-medium ${
+                  backupCodesSaved ? 'text-white' : 'text-gray-500'
+                }`}
+              >
+                Close
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }

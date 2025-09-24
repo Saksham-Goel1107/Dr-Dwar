@@ -20,6 +20,8 @@ export default function SignInScreen() {
   const [pendingVerification, setPendingVerification] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [needsSecondFactor, setNeedsSecondFactor] = useState(false);
+  const [mfaCode, setMfaCode] = useState('');
 
   // Animation
   const opacity = useSharedValue(0);
@@ -106,9 +108,52 @@ export default function SignInScreen() {
         await setActive({ session: completeSignIn.createdSessionId });
         router.replace('/(root)/(tabs)/home');
         setError(null);
+      } else if (completeSignIn.status === 'needs_second_factor') {
+        setNeedsSecondFactor(true);
+        setPendingVerification(false);
+        setError(null);
       }
     } catch (err: any) {
       setError(err.errors?.[0]?.message || 'Invalid verification code.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onPressVerifyMFA = async () => {
+    if (!isLoaded) return;
+
+    if (!mfaCode.trim()) {
+      setError('Enter your authenticator code or recovery code.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      let completeSignIn;
+
+      // Check if it's a 6-digit TOTP code or recovery code
+      if (mfaCode.length === 6 && /^\d{6}$/.test(mfaCode)) {
+        // TOTP code
+        completeSignIn = await signIn.attemptSecondFactor({
+          strategy: 'totp',
+          code: mfaCode,
+        });
+      } else {
+        // Recovery code
+        completeSignIn = await signIn.attemptSecondFactor({
+          strategy: 'backup_code',
+          code: mfaCode,
+        });
+      }
+
+      if (completeSignIn.status === 'complete') {
+        await setActive({ session: completeSignIn.createdSessionId });
+        router.replace('/(root)/(tabs)/home');
+        setError(null);
+      }
+    } catch (err: any) {
+      setError(err.errors?.[0]?.message || 'Invalid code. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -170,7 +215,7 @@ export default function SignInScreen() {
               </View>
             )}
 
-            {!pendingVerification ? (
+            {!pendingVerification && !needsSecondFactor ? (
               <>
                 <Text
                   style={{ fontSize: 14, color: '#374151', marginBottom: 8, fontWeight: '600' }}
@@ -216,7 +261,7 @@ export default function SignInScreen() {
                   Send OTP
                 </Button>
               </>
-            ) : (
+            ) : pendingVerification && !needsSecondFactor ? (
               <>
                 <Text
                   style={{ fontSize: 14, color: '#374151', marginBottom: 8, fontWeight: '600' }}
@@ -263,10 +308,58 @@ export default function SignInScreen() {
                   labelStyle={{ fontSize: 16, fontWeight: '600' }}
                   textColor="white"
                 >
-                  Verify & Sign In
+                  Verify Code
                 </Button>
               </>
-            )}
+            ) : needsSecondFactor ? (
+              <>
+                <Text
+                  style={{ fontSize: 14, color: '#374151', marginBottom: 8, fontWeight: '600' }}
+                >
+                  Multi-Factor Authentication
+                </Text>
+                <Text style={{ fontSize: 12, color: '#6b7280', marginBottom: 12 }}>
+                  Enter your 6-digit authenticator code or a recovery code
+                </Text>
+                <TextInput
+                  value={mfaCode}
+                  onChangeText={(text) => {
+                    setError(null);
+                    setMfaCode(text);
+                  }}
+                  mode="outlined"
+                  placeholder="Enter authenticator code or recovery code"
+                  left={<TextInput.Icon icon="shield-checkmark" color="#059669" />}
+                  style={{ backgroundColor: '#f9fafb', marginBottom: 24 }}
+                  textColor="#1f2937"
+                  outlineColor="#d1d5db"
+                  activeOutlineColor="#059669"
+                  theme={{
+                    colors: {
+                      placeholder: '#9ca3af',
+                      onSurfaceVariant: '#6b7280',
+                    },
+                  }}
+                />
+
+                <Button
+                  mode="contained"
+                  onPress={onPressVerifyMFA}
+                  loading={loading}
+                  disabled={!mfaCode || loading}
+                  style={{
+                    borderRadius: 12,
+                    paddingVertical: 8,
+                    backgroundColor: loading || !mfaCode ? '#9ca3af' : '#059669',
+                    elevation: 2,
+                  }}
+                  labelStyle={{ fontSize: 16, fontWeight: '600' }}
+                  textColor="white"
+                >
+                  Verify
+                </Button>
+              </>
+            ) : null}
 
             {/* Footer */}
             <View className="mt-8 flex-row justify-center">
