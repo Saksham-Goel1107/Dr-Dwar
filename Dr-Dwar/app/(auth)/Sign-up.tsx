@@ -10,6 +10,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import NetInfo from '@react-native-community/netinfo';
 
 const logo = require('@/assets/images/logo.png');
 
@@ -22,6 +23,28 @@ export default function SignUpScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [networkStatus, setNetworkStatus] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      const isConnected = state.isConnected && state.isInternetReachable;
+      setNetworkStatus(isConnected);
+      console.log('NetInfo status:', {
+        isConnected: state.isConnected,
+        isInternetReachable: state.isInternetReachable,
+        type: state.type,
+        isOnline: isConnected,
+      });
+    });
+
+    // Initial check
+    NetInfo.fetch().then((state) => {
+      const isConnected = state.isConnected && state.isInternetReachable;
+      setNetworkStatus(isConnected);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   // Animation
   const opacity = useSharedValue(0);
@@ -294,12 +317,12 @@ export default function SignUpScreen() {
                   mode="contained"
                   onPress={onSignUpPress}
                   loading={loading}
-                  disabled={!username || !phoneNumber || !agreeToTerms || loading}
+                  disabled={!username || !phoneNumber || !agreeToTerms || loading || !networkStatus}
                   style={{
                     borderRadius: 12,
                     paddingVertical: 8,
                     backgroundColor:
-                      loading || !username || !phoneNumber || !agreeToTerms ? '#9ca3af' : '#059669',
+                      loading || !username || !phoneNumber || !agreeToTerms || !networkStatus ? '#9ca3af' : '#059669',
                     elevation: 2,
                   }}
                   labelStyle={{ fontSize: 16, fontWeight: '600' }}

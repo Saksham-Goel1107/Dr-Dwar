@@ -10,6 +10,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import NetInfo from '@react-native-community/netinfo';
 
 const logo = require('@/assets/images/logo.png');
 
@@ -22,6 +23,28 @@ export default function SignInScreen() {
   const [error, setError] = useState<string | null>(null);
   const [needsSecondFactor, setNeedsSecondFactor] = useState(false);
   const [mfaCode, setMfaCode] = useState('');
+  const [networkStatus, setNetworkStatus] = useState<boolean | null>(null);
+
+      useEffect(() => {
+      const unsubscribe = NetInfo.addEventListener((state) => {
+        const isConnected = state.isConnected && state.isInternetReachable;
+        setNetworkStatus(isConnected);
+        console.log('NetInfo status:', {
+          isConnected: state.isConnected,
+          isInternetReachable: state.isInternetReachable,
+          type: state.type,
+          isOnline: isConnected,
+        });
+      });
+
+      // Initial check
+      NetInfo.fetch().then((state) => {
+        const isConnected = state.isConnected && state.isInternetReachable;
+        setNetworkStatus(isConnected);
+      });
+
+      return () => unsubscribe();
+    }, []);
 
   // Animation
   const opacity = useSharedValue(0);
@@ -248,11 +271,11 @@ export default function SignInScreen() {
                   mode="contained"
                   onPress={onSignInPress}
                   loading={loading}
-                  disabled={!phoneNumber || loading}
+                  disabled={!phoneNumber || loading || !networkStatus}
                   style={{
                     borderRadius: 12,
                     paddingVertical: 8,
-                    backgroundColor: loading || !phoneNumber ? '#9ca3af' : '#059669',
+                    backgroundColor: loading || !phoneNumber || !networkStatus ? '#9ca3af' : '#059669',
                     elevation: 2,
                   }}
                   labelStyle={{ fontSize: 16, fontWeight: '600' }}

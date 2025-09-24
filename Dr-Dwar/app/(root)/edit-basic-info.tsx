@@ -199,6 +199,12 @@ export default function EditBasicInfoScreen() {
   const handleSubmit = async () => {
     setError(null);
 
+    // Check network status before submission
+    if (!networkStatus) {
+      setError('No internet connection. Please check your network settings.');
+      return;
+    }
+
     // Validate required fields before submission
     if (
       !firstName.trim() ||

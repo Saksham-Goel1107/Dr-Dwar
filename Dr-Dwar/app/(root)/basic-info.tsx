@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { Platform, ScrollView, TouchableOpacity, View } from 'react-native';
 import { Button, Text, TextInput } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import NetInfo from '@react-native-community/netinfo';
 
 export default function BasicInfoScreen() {
   const { user } = useUser();
@@ -32,6 +33,28 @@ export default function BasicInfoScreen() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [networkStatus, setNetworkStatus] = useState<boolean | null>(null);
+
+      useEffect(() => {
+      const unsubscribe = NetInfo.addEventListener((state) => {
+        const isConnected = state.isConnected && state.isInternetReachable;
+        setNetworkStatus(isConnected);
+        console.log('NetInfo status:', {
+          isConnected: state.isConnected,
+          isInternetReachable: state.isInternetReachable,
+          type: state.type,
+          isOnline: isConnected,
+        });
+      });
+
+      // Initial check
+      NetInfo.fetch().then((state) => {
+        const isConnected = state.isConnected && state.isInternetReachable;
+        setNetworkStatus(isConnected);
+      });
+
+      return () => unsubscribe();
+    }, []);
 
   useEffect(() => {
     // Redirect if already completed
@@ -92,6 +115,11 @@ export default function BasicInfoScreen() {
 
   const handleSubmit = async () => {
     setError(null);
+
+    if (!networkStatus) {
+      setError('No internet connection. Please check your network settings.');
+      return;
+    }
 
     if (!isFormValid()) {
       setError('Please fill all required fields correctly.');
@@ -673,7 +701,7 @@ export default function BasicInfoScreen() {
             mode="contained"
             onPress={handleSubmit}
             loading={loading}
-            disabled={loading || !isFormValid()}
+            disabled={loading || !isFormValid() || !networkStatus}
             style={{
               borderRadius: 25,
               paddingVertical: 12,

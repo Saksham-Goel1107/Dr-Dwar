@@ -4,6 +4,7 @@ import * as Haptics from 'expo-haptics';
 import * as SecureStore from 'expo-secure-store';
 import * as Speech from 'expo-speech';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import NetInfo from '@react-native-community/netinfo';
 import {
   Alert,
   Animated,
@@ -51,11 +52,33 @@ function ChatBotModal({ visible, onClose }: ChatBotModalProps) {
   const [showMessageOverlay, setShowMessageOverlay] = useState(false);
   const [currentlySpeakingMessageId, setCurrentlySpeakingMessageId] = useState<string | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [networkStatus, setNetworkStatus] = useState<boolean | null>(null);
   const [vibrationsEnabled, setVibrationsEnabled] = useState(true);
   const slideAnim = useRef(new Animated.Value(400)).current;
   const overlayScaleAnim = useRef(new Animated.Value(0.8)).current;
   const overlayOpacityAnim = useRef(new Animated.Value(0)).current;
   const scrollViewRef = useRef<ScrollView>(null);
+
+    useEffect(() => {
+      const unsubscribe = NetInfo.addEventListener((state) => {
+        const isConnected = state.isConnected && state.isInternetReachable;
+        setNetworkStatus(isConnected);
+        console.log('NetInfo status:', {
+          isConnected: state.isConnected,
+          isInternetReachable: state.isInternetReachable,
+          type: state.type,
+          isOnline: isConnected,
+        });
+      });
+
+      // Initial check
+      NetInfo.fetch().then((state) => {
+        const isConnected = state.isConnected && state.isInternetReachable;
+        setNetworkStatus(isConnected);
+      });
+
+      return () => unsubscribe();
+    }, []);
 
   const createNewConversation = useCallback(async () => {
     try {
@@ -118,7 +141,7 @@ function ChatBotModal({ visible, onClose }: ChatBotModalProps) {
   }, []);
 
   const handleSendMessage = async () => {
-    if (!message.trim() || isLoading) return;
+    if (!message.trim() || isLoading || !networkStatus) return;
 
     const newMessage: Message = {
       id: Date.now().toString(),
@@ -535,7 +558,7 @@ function ChatBotModal({ visible, onClose }: ChatBotModalProps) {
                   isLoading ? 'bg-gray-400' : 'bg-blue-500'
                 }`}
                 onPress={handleSendMessage}
-                disabled={isLoading || !message.trim()}
+                disabled={isLoading || !message.trim() || !networkStatus}
               >
                 <Ionicons name="send" size={20} color="#fff" />
               </TouchableOpacity>
