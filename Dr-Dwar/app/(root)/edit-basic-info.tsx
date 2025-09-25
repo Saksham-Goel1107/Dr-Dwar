@@ -1,6 +1,6 @@
 import '@/global.css';
 import { useAuth, useUser } from '@clerk/clerk-expo';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import NetInfo from '@react-native-community/netinfo';
 import { router } from 'expo-router';
@@ -13,24 +13,35 @@ export default function EditBasicInfoScreen() {
   const { user } = useUser();
   const { getToken } = useAuth();
 
+  // Step management
+  const [step, setStep] = useState(1); // 1..3
+
+  // Personal
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [gender, setGender] = useState('');
+
+  // Address
   const [addressLine1, setAddressLine1] = useState('');
   const [addressLine2, setAddressLine2] = useState('');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
   const [pincode, setPincode] = useState('');
+
+  // Emergency
   const [emergencyName, setEmergencyName] = useState('');
   const [emergencyRelation, setEmergencyRelation] = useState('');
   const [emergencyPhone, setEmergencyPhone] = useState('');
+
+  // Medical (optional)
   const [diseases, setDiseases] = useState('');
   const [allergies, setAllergies] = useState('');
   const [medicalNote, setMedicalNote] = useState('');
   const [email, setEmail] = useState('');
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [networkStatus, setNetworkStatus] = React.useState<boolean | null>(null);
@@ -162,23 +173,42 @@ export default function EditBasicInfoScreen() {
   const validatePincode = (pin: string) => /^\d{6}$/.test(pin);
   const validatePhone = (phone: string) => /^\d{10}$/.test(phone);
 
-  const isFormValid = () => {
-    return (
-      firstName &&
-      lastName &&
-      dateOfBirth &&
-      gender &&
-      addressLine1 &&
-      city &&
-      state &&
-      pincode &&
-      emergencyName &&
-      emergencyRelation &&
-      emergencyPhone &&
-      validateDateOfBirth(dateOfBirth) &&
-      validatePincode(pincode) &&
-      validatePhone(emergencyPhone)
-    );
+  // Step-level validators
+  const isStep1Valid = () =>
+    firstName.trim() &&
+    lastName.trim() &&
+    dateOfBirth &&
+    gender &&
+    validateDateOfBirth(dateOfBirth);
+  const isStep2Valid = () =>
+    addressLine1.trim() &&
+    city.trim() &&
+    state.trim() &&
+    validatePincode(pincode.trim()) &&
+    emergencyName.trim() &&
+    emergencyRelation.trim() &&
+    validatePhone(emergencyPhone.trim());
+  // Step 3 is mostly optional; always valid
+
+  const handleNext = () => {
+    setError(null);
+    if (step === 1) {
+      if (!isStep1Valid()) return setError('Please complete personal information correctly.');
+      setStep(2);
+      return;
+    }
+    if (step === 2) {
+      if (!isStep2Valid())
+        return setError('Please complete address & emergency contact correctly.');
+      setStep(3);
+      return;
+    }
+  };
+
+  const handleBack = () => {
+    setError(null);
+    if (step > 1) setStep((s) => s - 1);
+    else router.back();
   };
 
   // Date picker handlers
@@ -198,48 +228,11 @@ export default function EditBasicInfoScreen() {
 
   const handleSubmit = async () => {
     setError(null);
+    if (!networkStatus) return setError('No internet connection.');
 
-    // Check network status before submission
-    if (!networkStatus) {
-      setError('No internet connection. Please check your network settings.');
-      return;
-    }
-
-    // Validate required fields before submission
-    if (
-      !firstName.trim() ||
-      !lastName.trim() ||
-      !dateOfBirth ||
-      !gender ||
-      !addressLine1.trim() ||
-      !city.trim() ||
-      !state.trim() ||
-      !pincode.trim() ||
-      !emergencyName.trim() ||
-      !emergencyRelation.trim() ||
-      !emergencyPhone.trim()
-    ) {
-      setError('Please fill all required fields.');
-      return;
-    }
-
-    // Validate date of birth
-    if (!validateDateOfBirth(dateOfBirth)) {
-      setError('Please enter a valid date of birth (between 18 and 100 years old).');
-      return;
-    }
-
-    // Validate pincode
-    if (!validatePincode(pincode.trim())) {
-      setError('Please enter a valid 6-digit pincode.');
-      return;
-    }
-
-    // Validate emergency phone
-    if (!validatePhone(emergencyPhone.trim())) {
-      setError('Please enter a valid 10-digit emergency phone number.');
-      return;
-    }
+    // final validation: ensure step1 and step2 are valid (user might have jumped)
+    if (!isStep1Valid() || !isStep2Valid())
+      return setError('Please complete required fields before submitting.');
 
     setLoading(true);
     try {
@@ -305,107 +298,124 @@ export default function EditBasicInfoScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: '#f7fafc' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, padding: 20 }}
         showsVerticalScrollIndicator={false}
       >
-        <View className="flex-1 pt-8">
-          {/* Header */}
-          <View className="mb-8 items-center">
-            <View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-green-600">
-              <Ionicons name="create" size={32} color="white" />
+        <View style={{ paddingTop: 12, paddingBottom: 40 }}>
+          <View style={{ alignItems: 'center', marginBottom: 8 }}>
+            <View
+              style={{
+                height: 72,
+                width: 72,
+                borderRadius: 36,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#f0f7ff',
+              }}
+            >
+              <Ionicons name="create" size={34} color="#2563eb" />
             </View>
-            <Text className="mb-2 text-2xl font-bold" style={{ color: '#1a202c' }}>
-              Edit Profile
+            <Text style={{ fontSize: 22, fontWeight: '700', marginTop: 12, color: '#0f172a' }}>
+              Edit your profile
             </Text>
-            <Text className="text-center opacity-80" style={{ color: '#4a5568' }}>
-              Update your personal information
+            <Text style={{ color: '#334155', marginTop: 6, textAlign: 'center' }}>
+              We&apos;ll update your details across 3 steps. You can go back and edit at any time.
             </Text>
           </View>
 
-          {/* Error Message */}
-          {error && (
-            <View className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4">
-              <View className="flex-row items-center">
-                <Ionicons name="warning" size={20} color="#e53e3e" />
-                <Text className="ml-2 font-medium" style={{ color: '#e53e3e' }}>
-                  {error}
-                </Text>
-              </View>
-            </View>
-          )}
+          {/* Progress */}
+          <View style={{ flexDirection: 'row', gap: 8, marginBottom: 18 }}>
+            {[1, 2, 3].map((i) => (
+              <View
+                key={i}
+                style={{
+                  flex: 1,
+                  height: 6,
+                  borderRadius: 6,
+                  backgroundColor: i <= step ? '#2563eb' : '#e6eefc',
+                }}
+              />
+            ))}
+          </View>
 
-          {/* Personal Info */}
-          <View className="mb-6">
-            <View className="mb-4 flex-row items-center">
-              <View className="mr-3 h-8 w-8 items-center justify-center rounded-full bg-blue-600">
-                <Ionicons name="person" size={16} color="white" />
+          {/* Error */}
+          {error ? (
+            <View
+              style={{
+                backgroundColor: '#fee2e2',
+                padding: 12,
+                borderRadius: 10,
+                marginBottom: 12,
+              }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Ionicons name="warning" size={20} color="#b91c1c" />
+                <Text style={{ color: '#b91c1c', marginLeft: 8, fontWeight: '600' }}>{error}</Text>
               </View>
-              <Text className="text-lg font-semibold" style={{ color: '#1a202c' }}>
-                Personal Information
-              </Text>
             </View>
-            <View className="rounded-2xl bg-white p-6 shadow-lg">
+          ) : null}
+
+          {/* Step content */}
+          {step === 1 && (
+            <View
+              style={{
+                backgroundColor: '#fff',
+                borderRadius: 12,
+                padding: 16,
+                shadowColor: '#000',
+                shadowOpacity: 0.05,
+                shadowRadius: 8,
+              }}
+            >
+              <Text style={{ fontSize: 18, fontWeight: '700', marginBottom: 12, color: '#0f172a' }}>
+                Personal information
+              </Text>
               <TextInput
-                label="First Name"
+                label="First name"
                 value={firstName}
                 onChangeText={setFirstName}
                 mode="outlined"
-                style={{ marginBottom: 16, backgroundColor: '#f8fafc' }}
-                outlineColor="#e2e8f0"
-                activeOutlineColor="#4a5568"
+                style={{ marginBottom: 12, backgroundColor: '#ffffff' }}
                 textColor="#1a202c"
-                placeholderTextColor="#a0aec0"
                 left={
                   <TextInput.Icon
-                    icon={() => <Ionicons name="person" size={20} color="#4a5568" />}
+                    icon={() => <Ionicons name="person" size={20} color="#2563eb" />}
                   />
                 }
               />
               <TextInput
-                label="Last Name"
+                label="Last name"
                 value={lastName}
                 onChangeText={setLastName}
                 mode="outlined"
-                style={{ marginBottom: 16, backgroundColor: '#f8fafc' }}
-                outlineColor="#e2e8f0"
-                activeOutlineColor="#4a5568"
+                style={{ marginBottom: 12, backgroundColor: '#ffffff' }}
                 textColor="#1a202c"
-                placeholderTextColor="#a0aec0"
                 left={
                   <TextInput.Icon
-                    icon={() => <Ionicons name="person-outline" size={20} color="#4a5568" />}
+                    icon={() => <Ionicons name="person-outline" size={20} color="#2563eb" />}
                   />
                 }
               />
+
               <TouchableOpacity
                 onPress={showDatePickerModal}
                 style={{
-                  marginBottom: 16,
-                  backgroundColor: '#f8fafc',
-                  borderRadius: 4,
+                  marginBottom: 12,
+                  padding: 12,
+                  borderRadius: 8,
                   borderWidth: 1,
-                  borderColor: '#e2e8f0',
-                  paddingHorizontal: 16,
-                  paddingVertical: 16,
+                  borderColor: '#e6eefc',
                   flexDirection: 'row',
                   alignItems: 'center',
                 }}
               >
-                <Ionicons name="calendar" size={20} color="#4a5568" style={{ marginRight: 12 }} />
-                <Text
-                  style={{
-                    flex: 1,
-                    color: dateOfBirth ? '#1a202c' : '#a0aec0',
-                    fontSize: 16,
-                  }}
-                >
-                  {dateOfBirth || 'Select Date of Birth'}
+                <Ionicons name="calendar" size={18} color="#2563eb" style={{ marginRight: 10 }} />
+                <Text style={{ color: dateOfBirth ? '#0f172a' : '#94a3b8' }}>
+                  {dateOfBirth || 'Select date of birth'}
                 </Text>
-                <Ionicons name="chevron-down" size={20} color="#4a5568" />
               </TouchableOpacity>
-
               {showDatePicker && (
                 <DateTimePicker
                   value={selectedDate}
@@ -422,242 +432,118 @@ export default function EditBasicInfoScreen() {
                   minimumDate={new Date(new Date().getFullYear() - 100, 0, 1)}
                 />
               )}
-              <Text style={{ color: '#1a202c', marginBottom: 12, fontSize: 18, fontWeight: '600' }}>
-                Gender
-              </Text>
-              <View className="mb-4 flex-row justify-around">
-                <TouchableOpacity
-                  onPress={() => setGender('male')}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    backgroundColor: gender === 'male' ? '#008000' : '#f8fafc',
-                    borderColor: gender === 'male' ? '#008000' : '#e2e8f0',
-                    borderWidth: 2,
-                    borderRadius: 12,
-                    paddingHorizontal: 20,
-                    paddingVertical: 12,
-                    minWidth: 100,
-                    justifyContent: 'center',
-                    shadowColor: gender === 'male' ? '#008000' : '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: gender === 'male' ? 0.3 : 0.1,
-                    shadowRadius: 4,
-                    elevation: gender === 'male' ? 4 : 2,
-                  }}
-                >
-                  <Ionicons
-                    name={gender === 'male' ? 'male' : 'male-outline'}
-                    size={20}
-                    color={gender === 'male' ? 'white' : '#4a5568'}
-                    style={{ marginRight: 8 }}
-                  />
-                  <Text
-                    style={{
-                      color: gender === 'male' ? 'white' : '#1a202c',
-                      fontSize: 16,
-                      fontWeight: '600',
-                    }}
-                  >
-                    Male
-                  </Text>
-                </TouchableOpacity>
 
-                <TouchableOpacity
-                  onPress={() => setGender('female')}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    backgroundColor: gender === 'female' ? '#008000' : '#f8fafc',
-                    borderColor: gender === 'female' ? '#008000' : '#e2e8f0',
-                    borderWidth: 2,
-                    borderRadius: 12,
-                    paddingHorizontal: 20,
-                    paddingVertical: 12,
-                    minWidth: 100,
-                    justifyContent: 'center',
-                    shadowColor: gender === 'female' ? '#008000' : '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: gender === 'female' ? 0.3 : 0.1,
-                    shadowRadius: 4,
-                    elevation: gender === 'female' ? 4 : 2,
-                  }}
-                >
-                  <Ionicons
-                    name={gender === 'female' ? 'female' : 'female-outline'}
-                    size={20}
-                    color={gender === 'female' ? 'white' : '#4a5568'}
-                    style={{ marginRight: 8 }}
-                  />
-                  <Text
-                    style={{
-                      color: gender === 'female' ? 'white' : '#1a202c',
-                      fontSize: 16,
-                      fontWeight: '600',
-                    }}
-                  >
-                    Female
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Other Gender Option */}
-              <TouchableOpacity
-                onPress={() => setGender('other')}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  backgroundColor: gender === 'other' ? '#008000' : '#f8fafc',
-                  borderColor: gender === 'other' ? '#008000' : '#e2e8f0',
-                  borderWidth: 2,
-                  borderRadius: 12,
-                  paddingHorizontal: 20,
-                  paddingVertical: 12,
-                  justifyContent: 'center',
-                  shadowColor: gender === 'other' ? '#008000' : '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: gender === 'other' ? 0.3 : 0.1,
-                  shadowRadius: 4,
-                  elevation: gender === 'other' ? 4 : 2,
-                }}
+              <Text style={{ marginBottom: 8, fontWeight: '600', color: '#0f172a' }}>Gender</Text>
+              <View
+                style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}
               >
-                <Ionicons
-                  name={gender === 'other' ? 'person' : 'person-outline'}
-                  size={20}
-                  color={gender === 'other' ? 'white' : '#4a5568'}
-                  style={{ marginRight: 8 }}
-                />
-                <Text
-                  style={{
-                    color: gender === 'other' ? 'white' : '#1a202c',
-                    fontSize: 16,
-                    fontWeight: '600',
-                  }}
-                >
-                  Other
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Address Info */}
-          <View className="mb-6">
-            <View className="mb-4 flex-row items-center">
-              <View className="mr-3 h-8 w-8 items-center justify-center rounded-full bg-green-600">
-                <Ionicons name="home" size={16} color="white" />
+                {['male', 'female', 'other'].map((g) => (
+                  <TouchableOpacity
+                    key={g}
+                    onPress={() => setGender(g)}
+                    style={{
+                      flex: 1,
+                      marginHorizontal: 4,
+                      padding: 10,
+                      borderRadius: 10,
+                      borderWidth: 1,
+                      borderColor: gender === g ? '#2563eb' : '#e6eefc',
+                      backgroundColor: gender === g ? '#eff6ff' : '#fff',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Text
+                      style={{ color: '#0f172a', fontWeight: '600', textTransform: 'capitalize' }}
+                    >
+                      {g}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
-              <Text className="text-lg font-semibold" style={{ color: '#1a202c' }}>
-                Address Information
-              </Text>
             </View>
-            <View className="rounded-2xl bg-white p-6 shadow-lg">
+          )}
+
+          {step === 2 && (
+            <View
+              style={{
+                backgroundColor: '#fff',
+                borderRadius: 12,
+                padding: 16,
+                shadowColor: '#000',
+                shadowOpacity: 0.05,
+                shadowRadius: 8,
+              }}
+            >
+              <Text style={{ fontSize: 18, fontWeight: '700', marginBottom: 12, color: '#0f172a' }}>
+                Address & Emergency
+              </Text>
               <TextInput
-                label="Address Line 1"
+                label="Address line 1"
                 value={addressLine1}
                 onChangeText={setAddressLine1}
                 mode="outlined"
-                style={{ marginBottom: 16, backgroundColor: '#f8fafc' }}
-                outlineColor="#e2e8f0"
-                activeOutlineColor="#4a5568"
+                style={{ marginBottom: 12, backgroundColor: '#ffffff' }}
                 textColor="#1a202c"
-                placeholderTextColor="#a0aec0"
                 left={
-                  <TextInput.Icon icon={() => <Ionicons name="home" size={20} color="#4a5568" />} />
+                  <TextInput.Icon icon={() => <Ionicons name="home" size={20} color="#0ea5e9" />} />
                 }
               />
               <TextInput
-                label="Address Line 2 (Optional)"
+                label="Address line 2 (optional)"
                 value={addressLine2}
                 onChangeText={setAddressLine2}
                 mode="outlined"
-                style={{ marginBottom: 16, backgroundColor: '#f8fafc' }}
-                outlineColor="#e2e8f0"
-                activeOutlineColor="#4a5568"
+                style={{ marginBottom: 12, backgroundColor: '#ffffff' }}
                 textColor="#1a202c"
-                placeholderTextColor="#a0aec0"
-                left={
-                  <TextInput.Icon
-                    icon={() => <Ionicons name="home-outline" size={20} color="#4a5568" />}
-                  />
-                }
               />
-              <View className="flex-row space-x-4">
-                <TextInput
-                  label="City"
-                  value={city}
-                  onChangeText={setCity}
-                  mode="outlined"
-                  style={{ flex: 1, marginRight: 8, backgroundColor: '#f8fafc' }}
-                  outlineColor="#e2e8f0"
-                  activeOutlineColor="#4a5568"
-                  textColor="#1a202c"
-                  placeholderTextColor="#a0aec0"
-                  left={
-                    <TextInput.Icon
-                      icon={() => <Ionicons name="location" size={20} color="#4a5568" />}
-                    />
-                  }
-                />
-                <TextInput
-                  label="State"
-                  value={state}
-                  onChangeText={setState}
-                  mode="outlined"
-                  style={{ flex: 1, marginLeft: 8, backgroundColor: '#f8fafc' }}
-                  outlineColor="#e2e8f0"
-                  activeOutlineColor="#4a5568"
-                  textColor="#1a202c"
-                  placeholderTextColor="#a0aec0"
-                  left={
-                    <TextInput.Icon
-                      icon={() => <Ionicons name="map" size={20} color="#4a5568" />}
-                    />
-                  }
-                />
+              <View style={{ flexDirection: 'row' }}>
+                <View style={{ flex: 1, marginRight: 8 }}>
+                  <TextInput
+                    label="City"
+                    value={city}
+                    onChangeText={setCity}
+                    mode="outlined"
+                    style={{ backgroundColor: '#ffffff' }}
+                    textColor="#1a202c"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <TextInput
+                    label="State"
+                    value={state}
+                    onChangeText={setState}
+                    mode="outlined"
+                    style={{ backgroundColor: '#ffffff' }}
+                    textColor="#1a202c"
+                  />
+                </View>
               </View>
               <TextInput
                 label="Pincode"
                 value={pincode}
                 onChangeText={setPincode}
-                mode="outlined"
                 keyboardType="numeric"
                 maxLength={6}
-                style={{ marginTop: 16, backgroundColor: '#f8fafc' }}
-                outlineColor="#e2e8f0"
-                activeOutlineColor="#4a5568"
+                mode="outlined"
+                style={{ marginTop: 12, backgroundColor: '#ffffff' }}
                 textColor="#1a202c"
-                placeholderTextColor="#a0aec0"
-                left={
-                  <TextInput.Icon icon={() => <Ionicons name="pin" size={20} color="#4a5568" />} />
-                }
               />
-            </View>
-          </View>
 
-          {/* Emergency Contact */}
-          <View className="mb-8">
-            <View className="mb-4 flex-row items-center">
-              <View className="mr-3 h-8 w-8 items-center justify-center rounded-full bg-red-600">
-                <Ionicons name="call" size={16} color="white" />
-              </View>
-              <Text className="text-lg font-semibold" style={{ color: '#1a202c' }}>
-                Emergency Contact
+              <View style={{ height: 1, backgroundColor: '#f1f5f9', marginVertical: 14 }} />
+
+              <Text style={{ fontSize: 16, fontWeight: '700', marginBottom: 10, color: '#0f172a' }}>
+                Emergency contact
               </Text>
-            </View>
-            <View className="rounded-2xl bg-white p-6 shadow-lg">
               <TextInput
-                label="Full Name"
+                label="Full name"
                 value={emergencyName}
                 onChangeText={setEmergencyName}
                 mode="outlined"
-                style={{ marginBottom: 16, backgroundColor: '#f8fafc' }}
-                outlineColor="#e2e8f0"
-                activeOutlineColor="#4a5568"
+                style={{ marginBottom: 12, backgroundColor: '#ffffff' }}
                 textColor="#1a202c"
-                placeholderTextColor="#a0aec0"
                 left={
                   <TextInput.Icon
-                    icon={() => <Ionicons name="person-circle" size={20} color="#4a5568" />}
+                    icon={() => <Ionicons name="person-circle" size={20} color="#ef4444" />}
                   />
                 }
               />
@@ -666,184 +552,147 @@ export default function EditBasicInfoScreen() {
                 value={emergencyRelation}
                 onChangeText={setEmergencyRelation}
                 mode="outlined"
-                style={{ marginBottom: 16, backgroundColor: '#f8fafc' }}
-                outlineColor="#e2e8f0"
-                activeOutlineColor="#4a5568"
+                style={{ marginBottom: 12, backgroundColor: '#ffffff' }}
                 textColor="#1a202c"
-                placeholderTextColor="#a0aec0"
-                left={
-                  <TextInput.Icon
-                    icon={() => <Ionicons name="people" size={20} color="#4a5568" />}
-                  />
-                }
               />
               <TextInput
-                label="Phone Number"
+                label="Phone"
                 value={emergencyPhone}
                 onChangeText={setEmergencyPhone}
-                mode="outlined"
                 keyboardType="phone-pad"
                 maxLength={10}
-                style={{ backgroundColor: '#f8fafc' }}
-                outlineColor="#e2e8f0"
-                activeOutlineColor="#4a5568"
+                mode="outlined"
+                style={{ backgroundColor: '#ffffff' }}
                 textColor="#1a202c"
-                placeholderTextColor="#a0aec0"
-                left={
-                  <TextInput.Icon icon={() => <Ionicons name="call" size={20} color="#4a5568" />} />
-                }
               />
             </View>
-          </View>
+          )}
 
-          {/* Medical Info (Optional) */}
-          <View className="mb-8">
-            <View className="mb-4 flex-row items-center">
-              <View className="mr-3 h-8 w-8 items-center justify-center rounded-full bg-blue-600">
-                <MaterialCommunityIcons name="medical-bag" size={16} color="white" />
-              </View>
-              <Text className="text-lg font-semibold" style={{ color: '#1a202c' }}>
-                Medical Information (Optional)
+          {step === 3 && (
+            <View
+              style={{
+                backgroundColor: '#fff',
+                borderRadius: 12,
+                padding: 16,
+                shadowColor: '#000',
+                shadowOpacity: 0.05,
+                shadowRadius: 8,
+              }}
+            >
+              <Text style={{ fontSize: 18, fontWeight: '700', marginBottom: 12, color: '#0f172a' }}>
+                Medical (optional) & Review
               </Text>
-            </View>
-            <View className="rounded-2xl bg-white p-6 shadow-lg">
               <TextInput
-                label="Diseases (Optional)"
+                label="Diseases (optional)"
                 value={diseases}
                 onChangeText={setDiseases}
                 mode="outlined"
-                style={{ marginBottom: 16, backgroundColor: '#f8fafc' }}
-                outlineColor="#e2e8f0"
-                activeOutlineColor="#4a5568"
+                style={{ marginBottom: 12, backgroundColor: '#ffffff' }}
                 textColor="#1a202c"
-                placeholderTextColor="#a0aec0"
-                left={
-                  <TextInput.Icon
-                    icon={() => <MaterialCommunityIcons name="virus" size={20} color="#4a5568" />}
-                  />
-                }
               />
               <TextInput
-                label="Allergies (Optional)"
+                label="Allergies (optional)"
                 value={allergies}
                 onChangeText={setAllergies}
                 mode="outlined"
-                style={{ marginBottom: 16, backgroundColor: '#f8fafc' }}
-                outlineColor="#e2e8f0"
-                activeOutlineColor="#4a5568"
+                style={{ marginBottom: 12, backgroundColor: '#ffffff' }}
                 textColor="#1a202c"
-                placeholderTextColor="#a0aec0"
-                left={
-                  <TextInput.Icon
-                    icon={() => <MaterialCommunityIcons name="allergy" size={20} color="#4a5568" />}
-                  />
-                }
               />
               <TextInput
-                label="Medical History / Note (Optional)"
+                label="Medical note (optional)"
                 value={medicalNote}
                 onChangeText={setMedicalNote}
                 mode="outlined"
-                style={{ marginBottom: 16, backgroundColor: '#f8fafc' }}
-                outlineColor="#e2e8f0"
-                activeOutlineColor="#4a5568"
-                textColor="#1a202c"
-                placeholderTextColor="#a0aec0"
-                left={
-                  <TextInput.Icon
-                    icon={() => (
-                      <MaterialCommunityIcons name="note-text" size={20} color="#4a5568" />
-                    )}
-                  />
-                }
                 multiline
                 numberOfLines={3}
+                style={{ marginBottom: 12, backgroundColor: '#ffffff' }}
+                textColor="#1a202c"
               />
               <TextInput
-                label="Email (Optional)"
+                label="Email (optional)"
                 value={email}
                 onChangeText={setEmail}
                 mode="outlined"
-                autoCapitalize="none"
-                style={{ marginBottom: 16, backgroundColor: '#f8fafc' }}
-                outlineColor="#e2e8f0"
-                activeOutlineColor="#4a5568"
-                textColor="#1a202c"
-                placeholderTextColor="#a0aec0"
                 keyboardType="email-address"
-                left={
-                  <TextInput.Icon
-                    icon={() => <MaterialCommunityIcons name="email" size={20} color="#4a5568" />}
-                  />
-                }
+                style={{ backgroundColor: '#ffffff' }}
+                textColor="#1a202c"
               />
+
+              <View style={{ height: 1, backgroundColor: '#f1f5f9', marginVertical: 14 }} />
+              <Text style={{ fontWeight: '600', marginBottom: 8, color: '#0f172a' }}>Summary</Text>
+              <Text style={{ color: '#334155', marginBottom: 6 }}>
+                {firstName} {lastName} • {gender}
+              </Text>
+              <Text style={{ color: '#334155', marginBottom: 6 }}>
+                {addressLine1}
+                {addressLine2 ? ', ' + addressLine2 : ''} • {city}, {state} • {pincode}
+              </Text>
+              <Text style={{ color: '#334155', marginBottom: 6 }}>
+                Emergency: {emergencyName} ({emergencyRelation}) • {emergencyPhone}
+              </Text>
             </View>
-          </View>
+          )}
 
-          {/* Action Buttons */}
-          <View className="mb-6 flex-row space-x-4">
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={{
-                flex: 1,
-                backgroundColor: '#f8fafc',
-                borderRadius: 12,
-                paddingVertical: 14,
-                borderWidth: 1,
-                borderColor: '#e2e8f0',
-                alignItems: 'center',
-              }}
-            >
-              <Text style={{ color: '#4a5568', fontSize: 16, fontWeight: '600' }}>Cancel</Text>
-            </TouchableOpacity>
+          {/* Navigation */}
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: step === 1 ? 'flex-end' : 'space-between',
+              marginTop: 18,
+            }}
+          >
+            {step > 1 && (
+              <TouchableOpacity
+                onPress={handleBack}
+                disabled={loading}
+                style={{
+                  borderColor: '#cbd5e1',
+                  borderWidth: 1,
+                  borderRadius: 12,
+                  paddingVertical: 12,
+                  paddingHorizontal: 24,
+                  alignItems: 'center',
+                }}
+              >
+                <Text style={{ color: '#334155', fontSize: 16, fontWeight: '600' }}>Back</Text>
+              </TouchableOpacity>
+            )}
 
-            {networkStatus ? (
+            {step < 3 ? (
+              <TouchableOpacity
+                onPress={handleNext}
+                disabled={loading}
+                style={{
+                  backgroundColor: '#2563eb',
+                  borderRadius: 12,
+                  paddingVertical: 12,
+                  paddingHorizontal: 24,
+                  alignItems: 'center',
+                }}
+              >
+                <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>Next</Text>
+              </TouchableOpacity>
+            ) : (
               <TouchableOpacity
                 onPress={handleSubmit}
                 disabled={loading}
                 style={{
-                  flex: 1,
-                  backgroundColor: isFormValid() ? '#008000' : '#cbd5e0',
+                  backgroundColor: '#0ea5e9',
                   borderRadius: 12,
-                  paddingVertical: 14,
-                  alignItems: 'center',
-                  shadowColor: '#008000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.3,
-                  shadowRadius: 4,
-                  elevation: 4,
-                }}
-              >
-                {loading ? (
-                  <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>Saving...</Text>
-                ) : (
-                  <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>
-                    Save Changes
-                  </Text>
-                )}
-              </TouchableOpacity>
-            ) : (
-              <View
-                style={{
-                  flex: 1,
-                  backgroundColor: '#e2e8f0',
-                  borderRadius: 12,
-                  paddingVertical: 14,
+                  paddingVertical: 12,
+                  paddingHorizontal: 24,
                   alignItems: 'center',
                 }}
               >
-                <Text style={{ color: '#4a5568', fontSize: 16, fontWeight: '600' }}>
-                  You are offline
+                <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>
+                  {loading ? 'Saving...' : 'Save & Finish'}
                 </Text>
-              </View>
+              </TouchableOpacity>
             )}
           </View>
 
-          <Text
-            className="text-center opacity-80"
-            style={{ color: '#4a5568', textAlign: 'center' }}
-          >
-            🔒 Your information is securely stored and protected
+          <Text style={{ marginTop: 14, textAlign: 'center', color: '#94a3b8' }}>
+            🔒 Your information is securely stored
           </Text>
         </View>
       </ScrollView>
