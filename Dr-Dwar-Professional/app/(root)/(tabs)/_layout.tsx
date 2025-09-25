@@ -23,17 +23,11 @@ export default function TabsLayout() {
             case 'home':
               iconName = focused ? 'home' : 'home-outline';
               break;
-            case 'pharmacy':
-              iconName = focused ? 'medkit' : 'medkit-outline';
-              break;
             case 'appointment':
               iconName = focused ? 'calendar' : 'calendar-outline';
               break;
             case 'profile':
               iconName = focused ? 'person' : 'person-outline';
-              break;
-            case 'jan-news':
-              iconName = focused ? 'newspaper' : 'newspaper-outline';
               break;
             default:
               iconName = 'ellipse-outline';
@@ -47,9 +41,7 @@ export default function TabsLayout() {
       })}
     >
       <Tabs.Screen name="home" options={{ title: 'Home' }} />
-      <Tabs.Screen name="pharmacy" options={{ title: 'Pharmacy' }} />
       <Tabs.Screen name="appointment" options={{ title: 'Appointment' }} />
-      <Tabs.Screen name="jan-news" options={{ title: 'Jan News' }} />
       <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
     </Tabs>
   );

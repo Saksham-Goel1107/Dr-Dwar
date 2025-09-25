@@ -209,20 +209,8 @@ function InitialLayout() {
     const pageDescriptions: { [key: string]: string } = {
       '(root)/(tabs)/home':
         'Home page: Your main dashboard showing health overview, quick access to features, and personalized health insights.',
-      '(root)/hospitals':
-        'Hospitals page: Find nearby hospitals, view their details, ratings, and get directions to reach them.',
-      '(root)/pharmacies':
-        'Pharmacies page: Find nearby pharmacies, view their details, phone numbers, and get address to reach them.',
-      '(root)/(tabs)/pharmacy':
-        'Pharmacy page: Browse a wide variety of medicines you can purchase. There is a cart icon at the top right corner where you can view and pay for your selected items.',
-      '(root)/(tabs)/jan-news':
-        'Jan News page: Stay updated with the latest health news and information. Pull down to refresh for the newest articles.',
-      '(root)/orders':
-        'Orders page: View your medication order history, track deliveries, and manage your purchases.',
       '(root)/user-credits':
         'User Credits page: View and manage your available credits for using Dr-Dwar-Professional services. Buy credits at just 1 INR per credit.',
-      '(root)/reminders':
-        'Reminders page: Set and manage health reminders for medications, appointments, and wellness activities.',
       '(root)/(tabs)/profile':
         'Profile page: Manage your account settings, update personal information, and configure app preferences.',
       '(root)/basic-info':

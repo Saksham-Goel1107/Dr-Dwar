@@ -65,7 +65,7 @@ export default function OnboardingScreen() {
     loadReadPageAloudSetting();
     if (readPageAloud) {
       Speech.speak(
-        'Home page: The Dr-Dwar Home page which tells the features of the app and has Sign-in and Sign-up buttons.',
+        'Home page: The Dr-Dwar-Professional-Professional Home page which tells the features of the app and has Sign-in and Sign-up buttons.',
         {
           language: 'en',
           pitch: 1,

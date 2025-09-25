@@ -272,7 +272,7 @@ export default function UserCreditsScreen() {
           </View>
           <WebView
             source={{
-              uri: `https://api.razorpay.com/v1/checkout/embedded?key_id=${process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID}&amount=${selectedCredits * 100}&currency=INR&name=${encodeURIComponent('Dr-Dwar Credits')}&description=${encodeURIComponent(`${selectedCredits} Credits Purchase`)}&prefill[contact]=${encodeURIComponent(userPhone)}&prefill[email]=${encodeURIComponent(userEmail)}&prefill[name]=${encodeURIComponent(userName)}&theme[color]=%23059669&callback_url=https://success&redirect_url=https://failure`,
+              uri: `https://api.razorpay.com/v1/checkout/embedded?key_id=${process.env.EXPO_PUBLIC_RAZORPAY_KEY_ID}&amount=${selectedCredits * 100}&currency=INR&name=${encodeURIComponent('Dr-Dwar-Professional-Professional Credits')}&description=${encodeURIComponent(`${selectedCredits} Credits Purchase`)}&prefill[contact]=${encodeURIComponent(userPhone)}&prefill[email]=${encodeURIComponent(userEmail)}&prefill[name]=${encodeURIComponent(userName)}&theme[color]=%23059669&callback_url=https://success&redirect_url=https://failure`,
             }}
             onNavigationStateChange={(navState) => {
               if (navState.url.startsWith('https://success')) {
