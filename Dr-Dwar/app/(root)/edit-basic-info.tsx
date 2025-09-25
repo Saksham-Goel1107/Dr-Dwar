@@ -7,7 +7,6 @@ import { router } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Platform, ScrollView, TouchableOpacity, View } from 'react-native';
 import { Text, TextInput } from 'react-native-paper';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function EditBasicInfoScreen() {
   const { user } = useUser();
@@ -111,12 +110,6 @@ export default function EditBasicInfoScreen() {
     const unsubscribe = NetInfo.addEventListener((state) => {
       const isConnected = state.isConnected && state.isInternetReachable;
       setNetworkStatus(isConnected);
-      console.log('NetInfo status:', {
-        isConnected: state.isConnected,
-        isInternetReachable: state.isInternetReachable,
-        type: state.type,
-        isOnline: isConnected,
-      });
     });
 
     // Initial check
@@ -298,7 +291,7 @@ export default function EditBasicInfoScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
+    <>
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, padding: 20 }}
         showsVerticalScrollIndicator={false}
@@ -696,6 +689,6 @@ export default function EditBasicInfoScreen() {
           </Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </>
   );
 }

@@ -1,7 +1,6 @@
 import { ClerkProvider, useAuth, useUser } from '@clerk/clerk-expo';
 import { resourceCache } from '@clerk/clerk-expo/resource-cache';
 import { tokenCache } from '@clerk/clerk-expo/token-cache';
-import { exitApp } from '@logicwind/react-native-exit-app';
 import * as Sentry from '@sentry/react-native';
 import * as NavigationBar from 'expo-navigation-bar';
 import { Slot, useRouter, useSegments } from 'expo-router';
@@ -12,7 +11,7 @@ import * as Speech from 'expo-speech';
 import { StatusBar } from 'expo-status-bar';
 import { useFreeRasp } from 'freerasp-react-native';
 import { useEffect, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, SafeAreaView } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, SafeAreaView, BackHandler } from 'react-native';
 import { PaperProvider } from 'react-native-paper';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import '../global.css';
@@ -91,7 +90,7 @@ function InitialLayout() {
     Alert.alert(
       'Security Warning',
       `${message}\nFor security reasons, the app will now close.`,
-      [{ text: 'OK', onPress: () => exitApp() }],
+      [{ text: 'OK', onPress: () => BackHandler.exitApp() }],
       { cancelable: false },
     );
   };
@@ -162,6 +161,15 @@ function InitialLayout() {
     if (isSignedIn) {
       const metadata = user?.unsafeMetadata as any;
       const hasCompletedProfile = metadata?.basicInfoCompleted === true;
+      const isProfessional = metadata?.role === 'Doctor' || metadata?.role === 'PharmaCist';
+      if (!isProfessional) {
+        Alert.alert(
+          'Access Denied',
+          'You do not have access to this app. Please contact support for more information.',
+          [{ text: 'OK', onPress: () => BackHandler.exitApp() }],
+          { cancelable: false },
+        );
+      }
       if (!hasCompletedProfile && inRoot && segments[1] !== 'basic-info') {
         router.replace('/(root)/basic-info');
       } else if (hasCompletedProfile && !inRoot) {

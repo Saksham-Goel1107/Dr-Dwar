@@ -7,7 +7,6 @@ import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Platform, ScrollView, TouchableOpacity, View } from 'react-native';
 import { Button, Text, TextInput } from 'react-native-paper';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function BasicInfoScreen() {
   const { user } = useUser();
@@ -208,7 +207,7 @@ export default function BasicInfoScreen() {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
+    <>
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, padding: 20 }}
         showsVerticalScrollIndicator={false}
@@ -575,6 +574,6 @@ export default function BasicInfoScreen() {
           </Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </>
   );
 }

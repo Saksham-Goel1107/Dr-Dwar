@@ -63,12 +63,6 @@ function ChatBotModal({ visible, onClose }: ChatBotModalProps) {
       const unsubscribe = NetInfo.addEventListener((state) => {
         const isConnected = state.isConnected && state.isInternetReachable;
         setNetworkStatus(isConnected);
-        console.log('NetInfo status:', {
-          isConnected: state.isConnected,
-          isInternetReachable: state.isInternetReachable,
-          type: state.type,
-          isOnline: isConnected,
-        });
       });
 
       // Initial check

@@ -170,12 +170,6 @@ export default function OrdersScreen() {
       const isConnected = state.isConnected && state.isInternetReachable;
       setNetworkStatus(isConnected);
       setIsOffline(!isConnected);
-      console.log('NetInfo status:', {
-        isConnected: state.isConnected,
-        isInternetReachable: state.isInternetReachable,
-        type: state.type,
-        isOnline: isConnected,
-      });
     });
 
     // Initial check
