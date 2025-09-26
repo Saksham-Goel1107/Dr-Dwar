@@ -1411,11 +1411,11 @@ export default function EditProfessionalInfoScreen() {
           <View className="mb-6 rounded-xl bg-blue-50 p-4 shadow-lg">
             <View className="flex-row items-center">
               <Ionicons name="information-circle" size={24} color="#3b82f6" />
-              <Text style={{ color:'#000000',fontWeight:'bold' }} className="ml-2">
+              <Text style={{ color: '#000000', fontWeight: 'bold' }} className="ml-2">
                 Need to update your information?
               </Text>
             </View>
-            <Text style={{ color:'#000000' }} className="mt-2">
+            <Text style={{ color: '#000000' }} className="mt-2">
               Please contact our support team to make changes to your professional information.
             </Text>
           </View>

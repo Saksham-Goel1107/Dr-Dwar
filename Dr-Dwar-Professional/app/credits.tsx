@@ -53,8 +53,7 @@ export default function CreditsScreen() {
             Credits
           </Text>
           <Text style={{ fontSize: 16, color: '#6B7280', textAlign: 'center' }}>
-            Meet the team behind Dr-Dwar-Professional and the technologies that power
-            our app
+            Meet the team behind Dr-Dwar-Professional and the technologies that power our app
           </Text>
         </View>
       </View>

@@ -25,20 +25,20 @@ export default function SignInScreen() {
   const [mfaCode, setMfaCode] = useState('');
   const [networkStatus, setNetworkStatus] = useState<boolean | null>(null);
 
-      useEffect(() => {
-      const unsubscribe = NetInfo.addEventListener((state) => {
-        const isConnected = state.isConnected && state.isInternetReachable;
-        setNetworkStatus(isConnected);
-      });
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      const isConnected = state.isConnected && state.isInternetReachable;
+      setNetworkStatus(isConnected);
+    });
 
-      // Initial check
-      NetInfo.fetch().then((state) => {
-        const isConnected = state.isConnected && state.isInternetReachable;
-        setNetworkStatus(isConnected);
-      });
+    // Initial check
+    NetInfo.fetch().then((state) => {
+      const isConnected = state.isConnected && state.isInternetReachable;
+      setNetworkStatus(isConnected);
+    });
 
-      return () => unsubscribe();
-    }, []);
+    return () => unsubscribe();
+  }, []);
 
   // Animation
   const opacity = useSharedValue(0);
@@ -269,7 +269,8 @@ export default function SignInScreen() {
                   style={{
                     borderRadius: 12,
                     paddingVertical: 8,
-                    backgroundColor: loading || !phoneNumber || !networkStatus ? '#9ca3af' : '#059669',
+                    backgroundColor:
+                      loading || !phoneNumber || !networkStatus ? '#9ca3af' : '#059669',
                     elevation: 2,
                   }}
                   labelStyle={{ fontSize: 16, fontWeight: '600' }}

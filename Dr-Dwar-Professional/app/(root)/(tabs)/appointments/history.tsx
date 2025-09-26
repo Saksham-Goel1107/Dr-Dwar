@@ -1,11 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import {
-    FlatList,
-    Text,
-    TouchableOpacity,
-    View,
-} from 'react-native';
+import { FlatList, Text, TouchableOpacity, View } from 'react-native';
 
 interface AppointmentHistoryItem {
   id: string;
@@ -91,19 +86,15 @@ function HistoryItem({ item }: { item: AppointmentHistoryItem }) {
   };
 
   const formatStatus = (status: string) => {
-    return status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+    return status.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
   return (
     <View className="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-      <View className="flex-row items-start justify-between mb-3">
+      <View className="mb-3 flex-row items-start justify-between">
         <View className="flex-1">
-          <Text className="text-lg font-bold text-gray-900 mb-1">
-            {item.patientName}
-          </Text>
-          <Text className="text-sm text-gray-600 mb-2">
-            {item.appointmentType}
-          </Text>
+          <Text className="mb-1 text-lg font-bold text-gray-900">{item.patientName}</Text>
+          <Text className="mb-2 text-sm text-gray-600">{item.appointmentType}</Text>
         </View>
 
         <View className={`rounded-full px-3 py-1 ${getStatusColor(item.status)}`}>
@@ -111,27 +102,30 @@ function HistoryItem({ item }: { item: AppointmentHistoryItem }) {
             <Ionicons
               name={getStatusIcon(item.status) as any}
               size={14}
-              color={getStatusColor(item.status).split(' ')[0].replace('text-', '').replace('-600', '')}
+              color={getStatusColor(item.status)
+                .split(' ')[0]
+                .replace('text-', '')
+                .replace('-600', '')}
             />
-            <Text className={`text-xs font-medium ml-1 ${getStatusColor(item.status).split(' ')[0]}`}>
+            <Text
+              className={`ml-1 text-xs font-medium ${getStatusColor(item.status).split(' ')[0]}`}
+            >
               {formatStatus(item.status)}
             </Text>
           </View>
         </View>
       </View>
 
-      <View className="flex-row items-center justify-between mb-3">
+      <View className="mb-3 flex-row items-center justify-between">
         <View className="flex-row items-center">
           <Ionicons name="calendar-outline" size={16} color="#6B7280" />
-          <Text className="text-sm text-gray-600 ml-2">
+          <Text className="ml-2 text-sm text-gray-600">
             {new Date(item.date).toLocaleDateString()}
           </Text>
         </View>
         <View className="flex-row items-center">
           <Ionicons name="time-outline" size={16} color="#6B7280" />
-          <Text className="text-sm text-gray-600 ml-2">
-            {item.time}
-          </Text>
+          <Text className="ml-2 text-sm text-gray-600">{item.time}</Text>
         </View>
       </View>
 
@@ -145,7 +139,7 @@ function HistoryItem({ item }: { item: AppointmentHistoryItem }) {
       {item.notes && (
         <View>
           <Text className="text-sm font-medium text-gray-700">Notes:</Text>
-          <Text className="text-sm text-gray-600 italic">&quot;{item.notes}&quot;</Text>
+          <Text className="text-sm italic text-gray-600">&quot;{item.notes}&quot;</Text>
         </View>
       )}
     </View>
@@ -153,22 +147,21 @@ function HistoryItem({ item }: { item: AppointmentHistoryItem }) {
 }
 
 export default function AppointmentHistoryScreen() {
-  const [filter, setFilter] = useState<'all' | 'completed' | 'cancelled' | 'no_show' | 'upcoming'>('all');
+  const [filter, setFilter] = useState<'all' | 'completed' | 'cancelled' | 'no_show' | 'upcoming'>(
+    'all',
+  );
 
-  const filteredData = filter === 'all'
-    ? mockAppointmentData
-    : mockAppointmentData.filter(item => item.status === filter);
+  const filteredData =
+    filter === 'all'
+      ? mockAppointmentData
+      : mockAppointmentData.filter((item) => item.status === filter);
 
   const FilterButton = ({ title, value }: { title: string; value: typeof filter }) => (
     <TouchableOpacity
-      className={`mr-3 rounded-full px-4 py-2 ${
-        filter === value ? 'bg-green-600' : 'bg-gray-200'
-      }`}
+      className={`mr-3 rounded-full px-4 py-2 ${filter === value ? 'bg-green-600' : 'bg-gray-200'}`}
       onPress={() => setFilter(value)}
     >
-      <Text className={`text-sm font-medium ${
-        filter === value ? 'text-white' : 'text-gray-700'
-      }`}>
+      <Text className={`text-sm font-medium ${filter === value ? 'text-white' : 'text-gray-700'}`}>
         {title}
       </Text>
     </TouchableOpacity>
@@ -180,7 +173,7 @@ export default function AppointmentHistoryScreen() {
         <Text className="mb-6 text-2xl font-bold text-gray-900">Appointment History</Text>
 
         {/* Filter Buttons */}
-        <View className="flex-row mb-6">
+        <View className="mb-6 flex-row">
           <FilterButton title="All" value="all" />
           <FilterButton title="Completed" value="completed" />
           <FilterButton title="Upcoming" value="upcoming" />
@@ -199,14 +192,11 @@ export default function AppointmentHistoryScreen() {
         ) : (
           <View className="items-center justify-center py-12">
             <Ionicons name="document-text-outline" size={64} color="#9CA3AF" />
-            <Text className="mt-4 text-lg font-medium text-gray-500">
-              No appointments found
-            </Text>
+            <Text className="mt-4 text-lg font-medium text-gray-500">No appointments found</Text>
             <Text className="mt-2 text-center text-sm text-gray-400">
               {filter === 'all'
                 ? 'No appointment history available yet.'
-                : `No ${filter} appointments found.`
-              }
+                : `No ${filter} appointments found.`}
             </Text>
           </View>
         )}

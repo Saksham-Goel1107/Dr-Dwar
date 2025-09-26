@@ -59,20 +59,20 @@ function ChatBotModal({ visible, onClose }: ChatBotModalProps) {
   const overlayOpacityAnim = useRef(new Animated.Value(0)).current;
   const scrollViewRef = useRef<ScrollView>(null);
 
-    useEffect(() => {
-      const unsubscribe = NetInfo.addEventListener((state) => {
-        const isConnected = state.isConnected && state.isInternetReachable;
-        setNetworkStatus(isConnected);
-      });
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      const isConnected = state.isConnected && state.isInternetReachable;
+      setNetworkStatus(isConnected);
+    });
 
-      // Initial check
-      NetInfo.fetch().then((state) => {
-        const isConnected = state.isConnected && state.isInternetReachable;
-        setNetworkStatus(isConnected);
-      });
+    // Initial check
+    NetInfo.fetch().then((state) => {
+      const isConnected = state.isConnected && state.isInternetReachable;
+      setNetworkStatus(isConnected);
+    });
 
-      return () => unsubscribe();
-    }, []);
+    return () => unsubscribe();
+  }, []);
 
   const createNewConversation = useCallback(async () => {
     try {

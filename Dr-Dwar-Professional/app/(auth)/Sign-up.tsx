@@ -316,7 +316,9 @@ export default function SignUpScreen() {
                     borderRadius: 12,
                     paddingVertical: 8,
                     backgroundColor:
-                      loading || !username || !phoneNumber || !agreeToTerms || !networkStatus ? '#9ca3af' : '#059669',
+                      loading || !username || !phoneNumber || !agreeToTerms || !networkStatus
+                        ? '#9ca3af'
+                        : '#059669',
                     elevation: 2,
                   }}
                   labelStyle={{ fontSize: 16, fontWeight: '600' }}

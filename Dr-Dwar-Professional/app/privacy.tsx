@@ -74,10 +74,10 @@ export default function PrivacyPolicy() {
               marginBottom: 16,
             }}
           >
-            At Dr-Dwar-Professional-Professional (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;), we are committed to
-            protecting your privacy and personal information. This Privacy Policy explains how we
-            collect, use, disclose, and safeguard your information when you use our mobile
-            application and services.
+            At Dr-Dwar-Professional-Professional (&quot;we,&quot; &quot;our,&quot; or
+            &quot;us&quot;), we are committed to protecting your privacy and personal information.
+            This Privacy Policy explains how we collect, use, disclose, and safeguard your
+            information when you use our mobile application and services.
           </Text>
           <Text
             style={{
@@ -86,8 +86,8 @@ export default function PrivacyPolicy() {
               lineHeight: 24,
             }}
           >
-            By using Dr-Dwar-Professional-Professional, you consent to the collection and use of information in accordance
-            with this Privacy Policy.
+            By using Dr-Dwar-Professional-Professional, you consent to the collection and use of
+            information in accordance with this Privacy Policy.
           </Text>
         </View>
 
@@ -708,8 +708,8 @@ export default function PrivacyPolicy() {
               marginBottom: 16,
             }}
           >
-            Dr-Dwar-Professional-Professional is not intended for children under 13 years of age. We do not knowingly collect
-            personal information from children under 13.
+            Dr-Dwar-Professional-Professional is not intended for children under 13 years of age. We
+            do not knowingly collect personal information from children under 13.
           </Text>
           <Text
             style={{
@@ -877,8 +877,8 @@ export default function PrivacyPolicy() {
               lineHeight: 24,
             }}
           >
-            Your continued use of Dr-Dwar-Professional-Professional after changes constitutes acceptance of the updated
-            Privacy Policy.
+            Your continued use of Dr-Dwar-Professional-Professional after changes constitutes
+            acceptance of the updated Privacy Policy.
           </Text>
         </View>
 
