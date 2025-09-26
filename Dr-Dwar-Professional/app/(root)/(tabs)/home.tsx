@@ -57,7 +57,7 @@ export default function HomeScreen() {
   }
   const router = useRouter();
 
-  const isVerified = user.unsafeMetadata?.isverified ?? false;
+  const isVerified = user.unsafeMetadata?.isVerified ?? false;
   const userRole = user.unsafeMetadata?.role;
 
   return (
@@ -101,7 +101,7 @@ export default function HomeScreen() {
                 shadowRadius: 4,
                 elevation: 3,
               }}
-              onPress={() => (router.push as any)('/(root)/user-credits')}
+              onPress={() => (router.push as any)('/(root)/professional-credits')}
             >
               <MaterialCommunityIcons name="wallet-outline" size={20} color="#4B5563" />
             </TouchableOpacity>

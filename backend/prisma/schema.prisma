@@ -28,6 +28,8 @@ model User {
 
   orders            Orders[]
   creditsPayments   creditsPayments[]
+  bankAccount       BankAccount?
+  withdrawalRequests WithdrawalRequest[]
 
   @@index([userId])
 }
@@ -179,6 +181,11 @@ model Professional {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
+  // === RELATIONS ===
+  bankAccount         ProfessionalBankAccount?
+  earnings            ProfessionalEarning[]
+  withdrawals         ProfessionalWithdrawal[]
+
   @@index([userId])
   @@index([isVerified])
   @@index([verificationStatus])
@@ -265,4 +272,120 @@ model creditsPayments {
   user        User     @relation(fields: [userId], references: [id])
 
   @@index([userId])
+}
+
+model BankAccount {
+  id                String   @id @default(cuid())
+  userId           String   @unique
+  accountHolderName String
+  accountNumber     String   // Encrypted
+  bankName          String
+  ifscCode          String
+  accountType       String   @default("savings") // savings, current
+  isVerified        Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user              User                @relation(fields: [userId], references: [id])
+  withdrawals       WithdrawalRequest[]
+
+  @@index([userId])
+}
+
+model WithdrawalRequest {
+  id                String            @id @default(cuid())
+  userId            String
+  amount            Float
+  credits           Int
+  status            WithdrawalStatus  @default(PENDING)
+  bankAccountId     String
+  adminNotes        String?
+  processedAt       DateTime?
+  processedBy       String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  user              User              @relation(fields: [userId], references: [id])
+  bankAccount       BankAccount       @relation(fields: [bankAccountId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([bankAccountId])
+}
+
+model ProfessionalBankAccount {
+  id                String   @id @default(cuid())
+  professionalId    String   @unique
+  accountHolderName String
+  accountNumber     String   // Encrypted
+  bankName          String
+  ifscCode          String
+  accountType       String   @default("savings") // savings, current
+  isVerified        Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  professional      Professional            @relation(fields: [professionalId], references: [id])
+  withdrawals       ProfessionalWithdrawal[]
+
+  @@index([professionalId])
+}
+
+model ProfessionalEarning {
+  id                String          @id @default(cuid())
+  professionalId    String
+  amount            Float
+  credits           Int
+  source            EarningSource
+  sourceId          String?         // ID of the order, consultation, etc.
+  description       String
+  transactionId     String?         @unique
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  professional      Professional    @relation(fields: [professionalId], references: [id])
+
+  @@index([professionalId])
+  @@index([source])
+  @@index([createdAt])
+}
+
+model ProfessionalWithdrawal {
+  id                String                    @id @default(cuid())
+  professionalId    String
+  amount            Float
+  credits           Int
+  status            WithdrawalStatus          @default(PENDING)
+  bankAccountId     String
+  adminNotes        String?
+  processedAt       DateTime?
+  processedBy       String?
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+
+  professional      Professional              @relation(fields: [professionalId], references: [id])
+  bankAccount       ProfessionalBankAccount   @relation(fields: [bankAccountId], references: [id])
+
+  @@index([professionalId])
+  @@index([status])
+  @@index([bankAccountId])
+}
+
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  PROCESSING
+  COMPLETED
+  REJECTED
+  CANCELLED
+}
+
+enum EarningSource {
+  CONSULTATION
+  PRESCRIPTION_REVIEW
+  PHARMACY_ORDER
+  TELEMEDICINE
+  BONUS
+  REFERRAL
+  OTHER
 }

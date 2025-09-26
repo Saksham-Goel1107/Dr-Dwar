@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "nodemon --exec tsx src/index.ts",
     "build": "prisma generate && tsc",
+    "typecheck": "tsc --noEmit",
     "postbuild": "prisma generate",
     "start": "node dist/index.js",
     "postinstall": "prisma generate"

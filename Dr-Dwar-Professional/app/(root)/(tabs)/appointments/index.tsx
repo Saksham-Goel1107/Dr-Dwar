@@ -43,7 +43,7 @@ export default function AppointmentsScreen() {
     throw new Error('User not found');
   }
 
-  const isVerified = user.unsafeMetadata?.isverified ?? false;
+  const isVerified = user.unsafeMetadata?.isVerified ?? false;
   const userRole = user.unsafeMetadata?.role ?? 'user';
 
   if (!isVerified) {
