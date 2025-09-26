@@ -499,6 +499,71 @@ export class ProfessionalController {
         credits: true,
         createdAt: true,
         updatedAt: true,
+        // Personal Information
+        firstName: true,
+        lastName: true,
+        dateOfBirth: true,
+        gender: true,
+        bloodGroup: true,
+        maritalStatus: true,
+        nationality: true,
+        aadharNumber: true,
+        panNumber: true,
+        // Address Information
+        permanentAddressLine1: true,
+        permanentAddressLine2: true,
+        permanentCity: true,
+        permanentState: true,
+        permanentPincode: true,
+        currentAddressLine1: true,
+        currentAddressLine2: true,
+        currentCity: true,
+        currentState: true,
+        currentPincode: true,
+        // Family & Emergency Contact
+        fatherName: true,
+        motherName: true,
+        spouseName: true,
+        emergencyName: true,
+        emergencyRelation: true,
+        emergencyPhone: true,
+        emergencyEmail: true,
+        // Educational Qualifications
+        educationalQualifications: true,
+        // Professional Details - Doctors
+        medicalLicenseNumber: true,
+        licenseIssuingAuthority: true,
+        licenseIssueDate: true,
+        licenseExpiryDate: true,
+        specialization: true,
+        subSpecialization: true,
+        yearsOfExperience: true,
+        medicalCouncil: true,
+        councilRegistrationNumber: true,
+        hospitalAffiliation: true,
+        currentPosition: true,
+        // Professional Details - Pharmacists
+        pharmacyLicenseNumber: true,
+        pharmacyLicenseIssuingAuthority: true,
+        pharmacyLicenseIssueDate: true,
+        pharmacyLicenseExpiryDate: true,
+        pharmacyName: true,
+        pharmacyAddress: true,
+        pharmacyOwnershipType: true,
+        yearsOfPharmacyExperience: true,
+        pharmacyCouncil: true,
+        pharmacyCouncilRegistrationNumber: true,
+        // Work Experience
+        workExperience: true,
+        // Professional Memberships
+        professionalMemberships: true,
+        // Background Check
+        criminalRecord: true,
+        criminalRecordDetails: true,
+        malpracticeHistory: true,
+        malpracticeDetails: true,
+        // References
+        professionalReferences: true,
       },
     });
 
@@ -509,9 +574,39 @@ export class ProfessionalController {
       });
     }
 
+    // Format the response data
+    const formattedProfessional = {
+      ...professional,
+      dateOfBirth: professional.dateOfBirth
+        ? professional.dateOfBirth.toISOString().split('T')[0]
+        : null,
+      licenseIssueDate: professional.licenseIssueDate
+        ? professional.licenseIssueDate.toISOString().split('T')[0]
+        : null,
+      licenseExpiryDate: professional.licenseExpiryDate
+        ? professional.licenseExpiryDate.toISOString().split('T')[0]
+        : null,
+      pharmacyLicenseIssueDate: professional.pharmacyLicenseIssueDate
+        ? professional.pharmacyLicenseIssueDate.toISOString().split('T')[0]
+        : null,
+      pharmacyLicenseExpiryDate: professional.pharmacyLicenseExpiryDate
+        ? professional.pharmacyLicenseExpiryDate.toISOString().split('T')[0]
+        : null,
+      educationalQualifications: professional.educationalQualifications
+        ? JSON.parse(professional.educationalQualifications)
+        : [],
+      workExperience: professional.workExperience ? JSON.parse(professional.workExperience) : [],
+      professionalMemberships: professional.professionalMemberships
+        ? JSON.parse(professional.professionalMemberships)
+        : [],
+      professionalReferences: professional.professionalReferences
+        ? JSON.parse(professional.professionalReferences)
+        : [],
+    };
+
     res.json({
       success: true,
-      data: professional,
+      data: formattedProfessional,
     });
   });
 

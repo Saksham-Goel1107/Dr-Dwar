@@ -565,12 +565,11 @@ export default function ProfileSettings() {
           icon: 'create-outline',
           onPress: () => router.push('../edit-basic-info'),
         },
-        {
-          title: 'View Orders',
-          subtitle: 'Check your order history',
-          icon: 'bag-handle-outline',
-          onPress: () => router.push('/orders'),
-        },
+      ],
+    },
+    {
+      title: 'Notifications & Preferences',
+      items: [
         {
           title: 'Notifications',
           subtitle: 'Receive app notifications',
@@ -578,36 +577,6 @@ export default function ProfileSettings() {
           isSwitch: true,
           value: notifications,
           onValueChange: toggleNotifications,
-        },
-      ],
-    },
-    {
-      title: 'Security',
-      items: [
-        {
-          title: 'App Lock',
-          subtitle: 'Use device PIN or biometric',
-          icon: 'lock-closed-outline',
-          isSwitch: true,
-          value: appLock,
-          onValueChange: toggleAppLock,
-          disabled: loading,
-        },
-        {
-          title: 'Shake to Report Bug',
-          subtitle: 'Shake device to report issues',
-          icon: 'bug-outline',
-          isSwitch: true,
-          value: shakeToReport,
-          onValueChange: toggleShakeToReport,
-        },
-        {
-          title: 'Send Diagnostic Data',
-          subtitle: 'Help improve app with crash reports',
-          icon: 'analytics-outline',
-          isSwitch: true,
-          value: sendDiagnosticData,
-          onValueChange: toggleSendDiagnosticData,
         },
         {
           title: 'Vibrations',
@@ -626,12 +595,34 @@ export default function ProfileSettings() {
           onValueChange: toggleReadPageAloud,
         },
         {
-          title: 'Prevent Screenshots',
-          subtitle: 'Block screenshots and screen recording',
-          icon: 'eye-off-outline',
+          title: 'Shake to Report Bug',
+          subtitle: 'Shake device to report issues',
+          icon: 'bug-outline',
           isSwitch: true,
-          value: preventScreenCapture,
-          onValueChange: togglePreventScreenCapture,
+          value: shakeToReport,
+          onValueChange: toggleShakeToReport,
+        },
+        {
+          title: 'Send Diagnostic Data',
+          subtitle: 'Help improve app with crash reports',
+          icon: 'analytics-outline',
+          isSwitch: true,
+          value: sendDiagnosticData,
+          onValueChange: toggleSendDiagnosticData,
+        },
+      ],
+    },
+    {
+      title: 'Security & Privacy',
+      items: [
+        {
+          title: 'App Lock',
+          subtitle: 'Use device PIN or biometric',
+          icon: 'lock-closed-outline',
+          isSwitch: true,
+          value: appLock,
+          onValueChange: toggleAppLock,
+          disabled: loading,
         },
         {
           title: 'Multi-Factor Authentication',
@@ -641,16 +632,31 @@ export default function ProfileSettings() {
           value: mfaEnabled,
           onValueChange: toggleMFA,
         },
+        {
+          title: 'Prevent Screenshots',
+          subtitle: 'Block screenshots and screen recording',
+          icon: 'eye-off-outline',
+          isSwitch: true,
+          value: preventScreenCapture,
+          onValueChange: togglePreventScreenCapture,
+        },
       ],
     },
+
     {
-      title: 'Support & About',
+      title: 'Support & Legal',
       items: [
         {
           title: 'Support',
           subtitle: 'Get help and support',
           icon: 'headset-outline',
           onPress: () => router.push('/Support'),
+        },
+        {
+          title: 'Contact Us',
+          subtitle: 'Get help or contact support',
+          icon: 'help-circle-outline',
+          onPress: handleContactUs,
         },
         {
           title: 'Terms of Service',
@@ -661,26 +667,25 @@ export default function ProfileSettings() {
         {
           title: 'Privacy Policy',
           subtitle: 'Learn about data protection',
-          icon: 'shield-checkmark-outline',
+          icon: 'shield-outline',
           onPress: () => router.push('/privacy'),
         },
+      ],
+    },
+    {
+      title: 'About',
+      items: [
         {
-          title: 'Contact Us',
-          subtitle: 'Get help or contact support',
-          icon: 'help-circle-outline',
-          onPress: handleContactUs,
+          title: 'App Information',
+          subtitle: 'Version and app details',
+          icon: 'information-circle-outline',
+          onPress: handleAbout,
         },
         {
           title: 'Credits',
           subtitle: 'App contributors and technologies',
           icon: 'people-outline',
           onPress: () => router.push('/credits'),
-        },
-        {
-          title: 'About',
-          subtitle: 'App version and information',
-          icon: 'information-circle-outline',
-          onPress: handleAbout,
         },
       ],
     },
@@ -723,8 +728,14 @@ export default function ProfileSettings() {
               {user?.primaryEmailAddress?.emailAddress}
             </Text>
             <View className="mt-2 flex-row items-center space-x-2">
-              <Ionicons name="shield-checkmark" size={16} color="#3B82F6" />
-              <Text className="text-xs font-medium text-blue-600">Verified Account</Text>
+              {user?.unsafeMetadata.isVerified ? (
+                <>
+                  <Ionicons name="shield-checkmark" size={16} color="#3B82F6" />
+                  <Text className="text-xs font-medium text-blue-600">Verified Account</Text>
+                </>
+              ) : (
+                <Text className="text-xs font-medium text-blue-600">Unverified Account</Text>
+              )}
             </View>
           </View>
         </View>
@@ -748,75 +759,34 @@ export default function ProfileSettings() {
           </View>
         </View>
 
-        {/* Account Settings */}
-        {filteredSections.map(
-          (section) =>
-            section.title === 'Account' && (
-              <ProfileSection key={section.title} title={section.title} defaultExpanded={false}>
-                {section.items.map((item, index) =>
+        {/* Dynamic Sections Rendering */}
+        {filteredSections.map((section) => (
+          <ProfileSection key={section.title} title={section.title} defaultExpanded={false}>
+            {section.items.map((item, index) => (
+              <SettingItem
+                key={index}
+                title={item.title}
+                subtitle={item.subtitle}
+                icon={item.icon}
+                rightElement={
                   'isSwitch' in item && item.isSwitch ? (
-                    <SettingItem
-                      key={index}
-                      title={item.title}
-                      subtitle={item.subtitle}
-                      icon={item.icon}
-                      rightElement={
-                        <Switch
-                          value={item.value}
-                          onValueChange={item.onValueChange}
-                          disabled={'disabled' in item ? item.disabled : false}
-                          trackColor={{ false: '#D1D5DB', true: '#3B82F6' }}
-                          thumbColor="#FFFFFF"
-                        />
-                      }
-                      showChevron={false}
+                    <Switch
+                      value={item.value}
+                      onValueChange={item.onValueChange}
+                      disabled={'disabled' in item ? item.disabled : false}
+                      trackColor={{ false: '#D1D5DB', true: '#3B82F6' }}
+                      thumbColor="#FFFFFF"
                     />
-                  ) : (
-                    <SettingItem
-                      key={index}
-                      title={item.title}
-                      subtitle={item.subtitle}
-                      icon={item.icon}
-                      onPress={'onPress' in item ? item.onPress : undefined}
-                    />
-                  ),
-                )}
-              </ProfileSection>
-            ),
-        )}
-
-        {/* Security Settings */}
-        {filteredSections.map(
-          (section) =>
-            section.title === 'Security' && (
-              <ProfileSection key={section.title} title={section.title} defaultExpanded={false}>
-                {section.items.map((item, index) => (
-                  <SettingItem
-                    key={index}
-                    title={item.title}
-                    subtitle={item.subtitle}
-                    icon={item.icon}
-                    rightElement={
-                      'isSwitch' in item && item.isSwitch ? (
-                        <Switch
-                          value={item.value}
-                          onValueChange={item.onValueChange}
-                          disabled={'disabled' in item ? item.disabled : false}
-                          trackColor={{ false: '#D1D5DB', true: '#3B82F6' }}
-                          thumbColor="#FFFFFF"
-                        />
-                      ) : undefined
-                    }
-                    showChevron={
-                      !('isSwitch' in item && item.isSwitch) &&
-                      !!('onPress' in item && item.onPress)
-                    }
-                    onPress={'onPress' in item ? item.onPress : undefined}
-                  />
-                ))}
-              </ProfileSection>
-            ),
-        )}
+                  ) : undefined
+                }
+                showChevron={
+                  !('isSwitch' in item && item.isSwitch) && !!('onPress' in item && item.onPress)
+                }
+                onPress={'onPress' in item ? item.onPress : undefined}
+              />
+            ))}
+          </ProfileSection>
+        ))}
 
         {/* MFA Setup */}
         {mfaSetupMode && (
@@ -883,24 +853,6 @@ export default function ProfileSettings() {
               </TouchableOpacity>
             </View>
           </View>
-        )}
-
-        {/* Support & About */}
-        {filteredSections.map(
-          (section) =>
-            section.title === 'Support & About' && (
-              <ProfileSection key={section.title} title={section.title} defaultExpanded={false}>
-                {section.items.map((item, index) => (
-                  <SettingItem
-                    key={index}
-                    title={item.title}
-                    subtitle={item.subtitle}
-                    icon={item.icon}
-                    onPress={'onPress' in item ? item.onPress : undefined}
-                  />
-                ))}
-              </ProfileSection>
-            ),
         )}
 
         {/* Sign Out */}
