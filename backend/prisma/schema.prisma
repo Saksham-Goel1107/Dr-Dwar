@@ -32,6 +32,160 @@ model User {
   @@index([userId])
 }
 
+model Professional {
+  id                String   @id @default(cuid())
+  userId           String   @unique
+  userName          String   @unique
+  phoneNumber       String   @unique
+  email             String?  @unique
+  role              String   // Doctor or PharmaCist
+  credits          Int      @default(0)
+  isVerified       Boolean  @default(false)
+  verificationStatus String  @default("pending") // pending, under_review, verified, rejected
+
+  // === PERSONAL INFORMATION ===
+  firstName         String
+  lastName          String
+  dateOfBirth       DateTime
+  gender            String
+  bloodGroup        String?
+  maritalStatus     String?
+  nationality       String   @default("Indian")
+  aadharNumber      String?  // Encrypted
+  panNumber         String?  // Encrypted
+
+  // === ADDRESS INFORMATION ===
+  permanentAddressLine1 String
+  permanentAddressLine2 String?
+  permanentCity       String
+  permanentState      String
+  permanentPincode    String
+  permanentCountry    String @default("India")
+
+  currentAddressLine1  String
+  currentAddressLine2  String?
+  currentCity         String
+  currentState        String
+  currentPincode      String
+  currentCountry      String @default("India")
+
+  // === EMERGENCY CONTACT ===
+  emergencyName      String
+  emergencyRelation  String
+  emergencyPhone     String
+  emergencyEmail     String?
+
+  // === FAMILY INFORMATION ===
+  fatherName         String?
+  motherName         String?
+  spouseName         String?
+
+  // === EDUCATIONAL QUALIFICATIONS ===
+  // JSON string containing array of educational qualifications
+  educationalQualifications String? // Encrypted JSON
+
+  // === PROFESSIONAL DETAILS - DOCTORS ===
+  medicalLicenseNumber    String?
+  licenseIssuingAuthority String?
+  licenseIssueDate       DateTime?
+  licenseExpiryDate      DateTime?
+  specialization         String?
+  subSpecialization      String?
+  yearsOfExperience      Int?
+  medicalCouncil         String?
+  councilRegistrationNumber String?
+  hospitalAffiliation    String?
+  currentPosition        String?
+  previousPositions      String? // Encrypted JSON array
+
+  // Medical Education Details
+  mbbsDegreeFrom        String?
+  mbbsCompletionYear    Int?
+  mdDegreeFrom          String?
+  mdCompletionYear      Int?
+  msDegreeFrom          String?
+  msCompletionYear      Int?
+  otherDegrees          String? // Encrypted JSON array
+
+  // === PROFESSIONAL DETAILS - PHARMACISTS ===
+  pharmacyLicenseNumber String?
+  pharmacyLicenseIssuingAuthority String?
+  pharmacyLicenseIssueDate      DateTime?
+  pharmacyLicenseExpiryDate     DateTime?
+  pharmacyName          String?
+  pharmacyAddress       String?
+  pharmacyOwnershipType String? // owned, managed, employed
+  yearsOfPharmacyExperience Int?
+  pharmacyCouncil       String?
+  pharmacyCouncilRegistrationNumber String?
+
+  // Pharmacy Education Details
+  bpharmDegreeFrom      String?
+  bpharmCompletionYear  Int?
+  mpharmDegreeFrom      String?
+  mpharmCompletionYear  Int?
+  pharmdDegreeFrom      String?
+  pharmdCompletionYear  Int?
+  otherPharmacyDegrees  String? // Encrypted JSON array
+
+  // === PROFESSIONAL MEMBERSHIPS ===
+  professionalMemberships String? // Encrypted JSON array
+
+  // === CONTINUING EDUCATION ===
+  continuingEducationCredits String? // Encrypted JSON array
+
+  // === WORK EXPERIENCE ===
+  workExperience       String? // Encrypted JSON array of work history
+
+  // === CRIMINAL BACKGROUND ===
+  criminalRecord       Boolean @default(false)
+  criminalRecordDetails String? // Encrypted
+
+  // === MEDICAL MALPRACTICE (Doctors only) ===
+  malpracticeHistory   Boolean @default(false)
+  malpracticeDetails   String? // Encrypted
+
+  // === REFERENCES ===
+  professionalReferences String? // Encrypted JSON array
+
+  // === VERIFICATION DOCUMENTS ===
+  // Government ID Proofs
+  aadharCardProof      String? // File path/URL
+  panCardProof         String? // File path/URL
+  passportProof        String? // File path/URL
+  voterIdProof         String? // File path/URL
+
+  // Professional Documents
+  professionalLicenseProof String? // File path/URL
+  degreeCertificatesProof String? // File path/URL (multiple files)
+  councilRegistrationProof String? // File path/URL
+  experienceCertificatesProof String? // File path/URL
+
+  // Other Documents
+  passportSizePhoto    String? // File path/URL
+  signatureProof       String? // File path/URL
+  addressProof         String? // File path/URL
+
+  // === VERIFICATION METADATA ===
+  submittedAt          DateTime?
+  verifiedAt           DateTime?
+  verifiedBy           String?
+  rejectionReason      String?
+  reviewNotes          String? // Encrypted
+
+  // === SYSTEM FIELDS ===
+  // Encrypted additional profile data
+  encryptedProfileData String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([userId])
+  @@index([isVerified])
+  @@index([verificationStatus])
+  @@index([role])
+  @@index([licenseExpiryDate])
+}
+
 model Orders {
   id          String   @id @default(cuid())
   userId      String

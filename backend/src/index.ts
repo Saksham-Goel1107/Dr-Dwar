@@ -1,12 +1,13 @@
 import './instrument.js';
 
 import { clerkMiddleware } from '@clerk/express';
-import express from 'express';
-import { ENV } from './config/env.js';
-import { arcjetMiddleware } from './middleware/arcjet.middleware.js';
 import * as Sentry from '@sentry/node';
+import express from 'express';
 import helmet from 'helmet';
 import hpp from 'hpp';
+import client from 'prom-client';
+import { ENV } from './config/env.js';
+import { arcjetMiddleware } from './middleware/arcjet.middleware.js';
 import { errorHandler, notFound } from './middleware/error.middleware.js';
 import { requestLogger } from './middleware/logger.middleware.js';
 import chatbotRoutes from './routes/chatbot.routes.js';
@@ -15,8 +16,8 @@ import healthRoutes from './routes/health.routes.js';
 import newsRoutes from './routes/news.routes.js';
 import orderRoutes from './routes/order.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
+import professionalRoutes from './routes/professional.routes.js';
 import userRoutes from './routes/user.routes.js';
-import client from 'prom-client';
 
 const app = express();
 
@@ -28,7 +29,7 @@ app.use(hpp());
 app.use(helmet());
 app.use(requestLogger);
 const collectDefaultMetrics = client.collectDefaultMetrics;
-collectDefaultMetrics({register: client.register});
+collectDefaultMetrics({ register: client.register });
 
 // Clerk middleware for authentication
 app.use(clerkMiddleware());
@@ -38,6 +39,7 @@ app.use(arcjetMiddleware);
 
 // Routes
 app.use('/api/users', userRoutes);
+app.use('/api/professionals', professionalRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/credits', creditsRoutes);
