@@ -396,6 +396,7 @@ export default function ProfessionalRegistrationScreen() {
   const validatePhone = (phone: string) => /^\d{10}$/.test(phone.replace(/\D/g, ''));
   const validateAadhar = (aadhar: string) => /^\d{12}$/.test(aadhar.replace(/\D/g, ''));
   const validatePAN = (pan: string) => /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan.toUpperCase());
+  const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const isStepValid = (step: number) => {
     switch (step) {
@@ -421,7 +422,12 @@ export default function ProfessionalRegistrationScreen() {
           validatePincode(currentPincode)
         );
       case 3: // Family & Emergency Contact
-        return emergencyName.trim() && emergencyRelation.trim() && validatePhone(emergencyPhone);
+        return (
+          emergencyName.trim() &&
+          emergencyRelation.trim() &&
+          validatePhone(emergencyPhone) &&
+          validateEmail(emergencyEmail)
+        );
       case 4: // Educational Qualifications
         return educationalQualifications.every(
           (edu) =>
@@ -527,6 +533,8 @@ export default function ProfessionalRegistrationScreen() {
         if (!emergencyRelation.trim()) return 'Please enter emergency contact relation.';
         if (!validatePhone(emergencyPhone))
           return 'Please enter a valid 10-digit emergency contact phone number.';
+        if (!validateEmail(emergencyEmail))
+          return 'Please enter a valid emergency contact email address.';
         return 'Please fill all emergency contact fields.';
       case 4:
         const invalidEduIndex = educationalQualifications.findIndex(
@@ -1200,14 +1208,18 @@ export default function ProfessionalRegistrationScreen() {
           textColor="#1a202c"
         />
         <TextInput
-          label="Email"
+          label="Email *"
           value={emergencyEmail}
           onChangeText={setEmergencyEmail}
           mode="outlined"
           keyboardType="email-address"
           style={{ backgroundColor: '#ffffff' }}
-          outlineColor="#e2e8f0"
-          activeOutlineColor="#4a5568"
+          outlineColor={
+            emergencyEmail ? (validateEmail(emergencyEmail) ? '#10b981' : '#ef4444') : '#e2e8f0'
+          }
+          activeOutlineColor={
+            emergencyEmail ? (validateEmail(emergencyEmail) ? '#10b981' : '#ef4444') : '#4a5568'
+          }
           textColor="#1a202c"
         />
       </View>

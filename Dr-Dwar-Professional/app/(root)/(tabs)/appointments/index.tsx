@@ -1,0 +1,105 @@
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import React from 'react';
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+
+interface AppointmentCardProps {
+  title: string;
+  subtitle: string;
+  icon: string;
+  onPress: () => void;
+  badge?: string;
+}
+
+function AppointmentCard({ title, subtitle, icon, onPress, badge }: AppointmentCardProps) {
+  return (
+    <TouchableOpacity
+      className="mb-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm active:bg-gray-50"
+      onPress={onPress}
+    >
+      <View className="flex-row items-center">
+        <View className="mr-4 h-12 w-12 items-center justify-center rounded-full bg-green-100">
+          <Ionicons name={icon as any} size={24} color="#059669" />
+        </View>
+        <View className="flex-1">
+          <Text className="text-lg font-semibold text-gray-900">{title}</Text>
+          <Text className="mt-1 text-sm text-gray-500">{subtitle}</Text>
+        </View>
+        {badge && (
+          <View className="mr-3 rounded-full bg-red-500 px-2 py-1">
+            <Text className="text-xs font-bold text-white">{badge}</Text>
+          </View>
+        )}
+        <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+export default function AppointmentsScreen() {
+  return (
+    <ScrollView className="flex-1 bg-gray-50">
+      <View className="p-6">
+        <Text className="mb-6 text-2xl font-bold text-gray-900">Appointments</Text>
+        <Text className="mb-8 text-gray-600">
+          Manage your medical appointments and patient schedules.
+        </Text>
+
+        <View className="space-y-2">
+          <AppointmentCard
+            title="Today's Appointments"
+            subtitle="View and manage today's schedule"
+            icon="today-outline"
+            badge="3"
+            onPress={() => {
+              // Navigate to today's appointments
+              console.log("Navigate to today's appointments");
+            }}
+          />
+
+          <AppointmentCard
+            title="Schedule New Appointment"
+            subtitle="Book a new appointment for a patient"
+            icon="add-circle-outline"
+            onPress={() => router.push('/appointments/schedule')}
+          />
+
+          <AppointmentCard
+            title="Appointment History"
+            subtitle="View past appointments and records"
+            icon="time-outline"
+            onPress={() => router.push('/appointments/history')}
+          />
+
+          <AppointmentCard
+            title="Calendar View"
+            subtitle="View appointments in calendar format"
+            icon="calendar-outline"
+            onPress={() => router.push('/appointments/calendar')}
+          />
+
+          <AppointmentCard
+            title="Pending Confirmations"
+            subtitle="Appointments waiting for confirmation"
+            icon="hourglass-outline"
+            badge="2"
+            onPress={() => {
+              // Navigate to pending confirmations
+              console.log('Navigate to pending confirmations');
+            }}
+          />
+
+          <AppointmentCard
+            title="Patient Records"
+            subtitle="Access patient medical records"
+            icon="document-text-outline"
+            onPress={() => {
+              // Navigate to patient records
+              console.log('Navigate to patient records');
+            }}
+          />
+        </View>
+      </View>
+    </ScrollView>
+  );
+}
