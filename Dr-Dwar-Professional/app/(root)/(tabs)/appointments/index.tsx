@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { useUser } from '@clerk/clerk-expo';
 
 interface AppointmentCardProps {
   title: string;
@@ -37,6 +38,43 @@ function AppointmentCard({ title, subtitle, icon, onPress, badge }: AppointmentC
 }
 
 export default function AppointmentsScreen() {
+   const { user } = useUser();
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  const isVerified = user.unsafeMetadata?.isverified ?? false;
+  const userRole = user.unsafeMetadata?.role ?? 'user';
+
+  if (!isVerified) {
+    return (
+      <View className="flex-1 items-center justify-center bg-gray-50 p-6">
+        <View className="items-center rounded-xl bg-white p-8 shadow-sm">
+          <Ionicons name="shield-checkmark-outline" size={64} color="#EF4444" />
+          <Text className="mt-4 text-center text-xl font-bold text-gray-900">
+            Verification Required
+          </Text>
+          <Text className="mt-2 text-center text-gray-600">
+            You are not verified. Please wait until you get verified by the Team.
+          </Text>
+          <TouchableOpacity
+            className="mt-6 rounded-lg bg-blue-600 px-6 py-3"
+            onPress={() => {
+              if (userRole === 'Doctor') {
+                router.push('../guide-doctor');
+              } else if (userRole === 'PharmaCist') {
+                router.push('../guide-pharma');
+              } else {
+                router.push('../guide-doctor');
+              }
+            }}
+          >
+            <Text className="text-white font-semibold">View Verification Guide</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
   return (
     <ScrollView className="flex-1 bg-gray-50">
       <View className="p-6">

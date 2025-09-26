@@ -57,6 +57,9 @@ export default function HomeScreen() {
   }
   const router = useRouter();
 
+  const isVerified = user.unsafeMetadata?.isverified ?? false;
+  const userRole = user.unsafeMetadata?.role;
+
   return (
     <FlatList
       data={[]} // Empty data since we're using ListHeaderComponent
@@ -103,6 +106,50 @@ export default function HomeScreen() {
               <MaterialCommunityIcons name="wallet-outline" size={20} color="#4B5563" />
             </TouchableOpacity>
           </View>
+
+          {/* Verification Warning */}
+          {!isVerified && (
+            <View
+              style={{
+                backgroundColor: '#FEF3C7',
+                padding: 16,
+                marginHorizontal: 20,
+                marginBottom: 10,
+                borderRadius: 8,
+                borderLeftWidth: 4,
+                borderLeftColor: '#F59E0B',
+              }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                <MaterialCommunityIcons name="alert-circle" size={20} color="#F59E0B" />
+                <Text style={{ fontWeight: '700', color: '#92400E', marginLeft: 8 }}>
+                  Verification Required
+                </Text>
+              </View>
+              <Text style={{ color: '#92400E', marginBottom: 12 }}>
+                You are yet not verified. You will not be able to access all features of this app
+                till then. Look at our guide.
+              </Text>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: '#F59E0B',
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  borderRadius: 6,
+                  alignSelf: 'flex-start',
+                }}
+                onPress={() => {
+                  if (userRole === 'Doctor') {
+                    router.replace('/(root)/guide-doctor');
+                  } else if (userRole === 'PharmaCist') {
+                    router.replace('/(root)/guide-pharma');
+                  }
+                }}
+              >
+                <Text style={{ color: '#92400E', fontWeight: '600' }}>View Guide</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* Carousel */}
           <View style={{ paddingHorizontal: 16, paddingTop: 10 }}>
