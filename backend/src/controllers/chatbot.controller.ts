@@ -1,4 +1,5 @@
 import { clerkClient } from '@clerk/express';
+import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import axios from 'axios';
 import { Request, Response } from 'express';
 import { BufferMemory } from 'langchain/memory';
@@ -254,10 +255,10 @@ async function getBasicAIResponse(
   const runId = uuidv4();
 
   try {
-    // Start LangSmith run for basic AI response
+    // Start LangSmith run for Gemini AI response
     await langsmithClient.createRun({
       id: runId,
-      name: 'basic_ai_response',
+      name: 'gemini_ai_response',
       run_type: 'llm',
       inputs: {
         messages: userMessage,
@@ -284,65 +285,86 @@ async function getBasicAIResponse(
       }
     }
 
-    // Basic AI responses based on common health queries
-    const message = userMessage.toLowerCase();
+    // Initialize Gemini AI model
+    const geminiApiKey = process.env.GOOGLE_AI_API_KEY;
 
-    let response = '';
-
-    if (message.includes('hello') || message.includes('hi') || message.includes('hey')) {
-      response = `Hello ${userName}! I'm your AI health assistant. I can help you with general health information, medication reminders, and wellness tips. How can I help you today?`;
-    } else if (message.includes('medicine') || message.includes('medication')) {
-      response = `${userName}, I can help you manage your medications and set up reminders. For medication questions, I can provide information about common medications, their uses, and general guidelines. What would you like to know about medications?`;
-    } else if (message.includes('reminder') || message.includes('remind')) {
-      response = `I can help you set up medication reminders and health check reminders. You can create reminders for specific times, frequencies, and types. This helps ensure you stay on track with your health routine. What kind of reminder would you like to set up?`;
-    } else if (message.includes('health') || message.includes('wellness')) {
-      response = `I'm here to support your health journey, ${userName}. I can provide guidance on nutrition, exercise, stress management, sleep hygiene, and preventive care. I can also help with general wellness questions and healthy lifestyle tips. What specific health topic interests you?`;
-    } else if (message.includes('appointment') || message.includes('doctor')) {
-      response = `For scheduling appointments and consultations, I recommend contacting your healthcare provider directly. I can help you prepare for appointments by suggesting what information to bring and questions to ask. Would you like tips for getting the most out of your doctor visits?`;
-    } else if (message.includes('emergency') || message.includes('urgent')) {
-      response = `If this is a medical emergency, please call emergency services immediately (911 in the US) or go to the nearest emergency room. For urgent but non-emergency situations, contact your healthcare provider or visit an urgent care center. I'm here for general health information but cannot provide emergency medical care.`;
-    } else if (message.includes('pain') || message.includes('hurt')) {
-      response = `${userName}, pain can have many causes. For mild pain, rest, ice/heat, over-the-counter pain relievers like acetaminophen or ibuprofen, and gentle stretching often help. However, if pain is severe, persistent, or accompanied by other symptoms, please consult a healthcare provider for proper evaluation.`;
-    } else if (
-      message.includes('diet') ||
-      message.includes('nutrition') ||
-      message.includes('food')
-    ) {
-      response = `Nutrition plays a crucial role in health! I can provide guidance on balanced diets, healthy eating patterns, nutritional needs for different life stages, and tips for managing various dietary requirements. A healthy diet typically includes plenty of fruits, vegetables, whole grains, lean proteins, and healthy fats. What specific nutrition question do you have?`;
-    } else if (
-      message.includes('exercise') ||
-      message.includes('workout') ||
-      message.includes('fitness')
-    ) {
-      response = `Regular physical activity is essential for good health! I can help with exercise recommendations, workout plans, tips for staying motivated, and guidance on different types of exercise for various fitness levels and health conditions. The key is finding activities you enjoy and can maintain consistently. What are your fitness goals?`;
-    } else if (message.includes('sleep') || message.includes('insomnia')) {
-      response = `Quality sleep is fundamental to health and well-being. Good sleep hygiene includes maintaining a consistent sleep schedule, creating a relaxing bedtime routine, keeping your bedroom cool and dark, avoiding screens before bed, and limiting caffeine. If sleep problems persist, establishing healthy sleep habits can make a big difference.`;
-    } else if (
-      message.includes('stress') ||
-      message.includes('anxiety') ||
-      message.includes('mental')
-    ) {
-      response = `Mental health is just as important as physical health. Stress management techniques include deep breathing exercises, meditation, regular physical activity, maintaining social connections, and practicing mindfulness. For persistent mental health concerns, professional support can be very beneficial.`;
-    } else {
-      response = `I'm your health assistant, ${userName}. I can help with a wide range of health topics including nutrition, exercise, stress management, medication information, wellness tips, and general health guidance. For specific medical conditions or personalized advice, it's always best to consult with healthcare professionals. What health topic would you like to explore?`;
+    if (!geminiApiKey) {
+      throw new Error('Google AI API key not configured');
     }
 
+    const model = new ChatGoogleGenerativeAI({
+      apiKey: geminiApiKey,
+      modelName: 'gemini-2.5-flash',
+      temperature: 0.4,
+    });
+
+    // Get conversation history from LangChain memory
+    const chatHistory = await memory.chatHistory.getMessages();
+    const recentMessages = chatHistory.slice(-5); // Get last 5 messages
+
+    // Prepare messages for Gemini
+    const systemPrompt = `You are an expert AI health assistant with extensive medical knowledge. You provide helpful, accurate, and compassionate health information and guidance.
+
+INSTRUCTIONS FOR RESPONSES:
+- Provide comprehensive, evidence-based health information
+- Give practical advice and actionable recommendations
+- Explain medical concepts clearly and accessibly
+- Suggest lifestyle modifications and preventive measures
+- Recommend over-the-counter solutions when appropriate
+- Discuss treatment options and their pros/cons
+- Explain symptoms, causes, and management strategies
+- Provide nutritional and wellness guidance
+- Answer medication-related questions informatively
+
+IMPORTANT GUIDELINES:
+- Only recommend consulting a doctor for serious symptoms, emergencies, or complex conditions
+- For common ailments, provide detailed self-care advice
+- Include preventive measures and when to seek professional help
+- Be encouraging and supportive while being medically accurate
+- Personalize responses using the user's name when available
+- Keep responses focused on general health information and wellness
+- Do not provide diagnoses or prescribe medications
+
+The user is ${userName}${userEmail ? ` (${userEmail})` : ''}.
+Focus on being helpful, informative, and empowering the user to make informed health decisions.`;
+
+    // Create messages array for Gemini
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      // Include recent conversation history for context
+      ...recentMessages.map((msg: any) => ({
+        role: msg._getType() === 'human' ? 'user' : 'assistant',
+        content: msg.content,
+      })),
+      { role: 'user', content: userMessage },
+    ];
+
+    const startTime = Date.now();
+
+    // Get response from Gemini
+    const aiResponse = await model.invoke(messages);
+
     const endTime = Date.now();
+    const responseText = aiResponse.content as string;
+
+    if (!responseText) {
+      throw new Error('No response from Gemini AI');
+    }
 
     // Log to LangSmith
     await langsmithClient.updateRun(runId, {
       outputs: {
-        response: response,
+        response: responseText,
         timing: {
-          start_time: Date.now(),
+          start_time: startTime,
           end_time: endTime,
-          duration_ms: endTime - Date.now(),
+          duration_ms: endTime - startTime,
         },
       },
       end_time: Date.now(),
     });
 
-    return response;
+    return responseText;
   } catch (error: any) {
     // Log error to LangSmith
     await langsmithClient.updateRun(runId, {
@@ -350,7 +372,14 @@ async function getBasicAIResponse(
       end_time: Date.now(),
     });
 
-    console.error('Basic AI response error:', error);
+    console.error('Gemini AI response error:', error);
+
+    if (error.message.includes('API key')) {
+      throw new Error('Gemini AI API key not configured');
+    } else if (error.message.includes('quota') || error.message.includes('rate limit')) {
+      throw new Error('Gemini AI service temporarily unavailable');
+    }
+
     throw new Error('Failed to generate AI response');
   }
 }

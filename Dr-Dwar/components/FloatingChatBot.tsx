@@ -1,10 +1,10 @@
 import { useAuth, useUser } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
+import NetInfo from '@react-native-community/netinfo';
 import * as Haptics from 'expo-haptics';
 import * as SecureStore from 'expo-secure-store';
 import * as Speech from 'expo-speech';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import NetInfo from '@react-native-community/netinfo';
 import {
   Alert,
   Animated,
@@ -82,6 +82,8 @@ function ChatBotModal({ visible, onClose }: ChatBotModalProps) {
         headers: {
           'Content-Type': 'application/json',
           'ngrok-skip-browser-warning': 'true',
+          'x-react-native-app': 'DrDwar',
+          'User-Agent': 'DrDwar-Mobile-App/1.0',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
@@ -148,20 +150,6 @@ function ChatBotModal({ visible, onClose }: ChatBotModalProps) {
     setMessage('');
     setIsLoading(true);
 
-    if (!useWebSearch) {
-      setTimeout(() => {
-        const comingSoonResponse: Message = {
-          id: (Date.now() + 1).toString(),
-          text: '🚀 Advanced AI responses with web search are coming soon! For now, I can help with basic health information and medication reminders. Please enable web search (🌐) for comprehensive answers.',
-          isBot: true,
-          timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, comingSoonResponse]);
-        setIsLoading(false);
-      }, 1000);
-      return;
-    }
-
     try {
       const token = await getToken();
       const controller = new AbortController();
@@ -172,6 +160,8 @@ function ChatBotModal({ visible, onClose }: ChatBotModalProps) {
         headers: {
           'Content-Type': 'application/json',
           'ngrok-skip-browser-warning': 'true',
+          'x-react-native-app': 'DrDwar',
+          'User-Agent': 'DrDwar-Mobile-App/1.0',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
@@ -399,20 +389,20 @@ function ChatBotModal({ visible, onClose }: ChatBotModalProps) {
                 <TouchableOpacity
                   onPress={toggleWebSearch}
                   className={`flex-row items-center rounded-full px-3 py-1 ${
-                    useWebSearch ? 'bg-blue-100' : 'bg-gray-100'
+                    useWebSearch ? 'bg-blue-100' : 'bg-green-100'
                   }`}
                 >
                   <Ionicons
                     name="globe-outline"
                     size={16}
-                    color={useWebSearch ? '#3B82F6' : '#6B7280'}
+                    color={useWebSearch ? '#3B82F6' : '#059669'}
                   />
                   <Text
                     className={`ml-1 text-xs font-medium ${
-                      useWebSearch ? 'text-blue-600' : 'text-gray-600'
+                      useWebSearch ? 'text-blue-600' : 'text-green-600'
                     }`}
                   >
-                    {useWebSearch ? 'Web' : 'Local'}
+                    {useWebSearch ? 'Web Search' : 'Local Search'}
                   </Text>
                 </TouchableOpacity>
 

@@ -17,7 +17,7 @@ The Dr-Dwar Backend is a robust Node.js/Express API server that powers the compl
 - **📈 Monitoring**: Prometheus metrics collection
 - **🔒 Security**: Helmet, HPP, and Arcjet middleware
 - **📝 Logging**: Winston logging with Sentry error tracking
-- **🤖 AI Integration**: LangChain and OpenAI for chatbot functionality
+- **🤖 AI Integration**: Gemini AI (local) and Perplexity AI (web search) via LangChain
 - **💳 Payments**: Secure payment processing
 - **📱 Real-time**: WebSocket support for live updates
 
@@ -30,8 +30,32 @@ The Dr-Dwar Backend is a robust Node.js/Express API server that powers the compl
 - **Authentication**: Clerk Auth
 - **Monitoring**: Prometheus + Grafana
 - **Error Tracking**: Sentry
-- **AI/ML**: LangChain + OpenAI GPT
+- **AI/ML**: Gemini AI (local) + Perplexity AI (web search) via LangChain
 - **Security**: Helmet, HPP, Arcjet
+
+## 🤖 AI Integration
+
+The backend integrates multiple AI models for intelligent chatbot responses:
+
+### Gemini AI (Local Mode)
+
+- **Model**: Google Gemini 1.5 Flash
+- **Use Case**: General health information, wellness advice, medication guidance
+- **Features**: Context-aware conversations, personalized responses, medical knowledge
+- **Integration**: LangChain ChatGoogleGenerativeAI
+
+### Perplexity AI (Web Search Mode)
+
+- **Model**: Perplexity Sonar
+- **Use Case**: Real-time web search, current medical information, research-backed answers
+- **Features**: Access to latest medical research, web sources, comprehensive analysis
+- **Integration**: Direct API calls with LangChain orchestration
+
+### LangSmith Monitoring
+
+- **Tracing**: Complete AI conversation tracing
+- **Metrics**: Response times, token usage, error rates
+- **Debugging**: AI model performance monitoring
 
 ## 🚀 Quick Start
 
