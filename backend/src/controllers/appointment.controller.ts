@@ -964,6 +964,227 @@ export class AppointmentController {
     });
   });
 
+  // Reschedule appointment (doctor)
+  static rescheduleAppointment = asyncHandler(async (req: Request, res: Response) => {
+    const auth = req.auth();
+    if (!auth || !auth.userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required',
+      });
+    }
+
+    const { appointmentId } = req.params;
+    const { newDate, newTime, duration } = req.body;
+
+    // === VALIDATION ===
+
+    // 1. Validate required fields
+    if (!newDate || !newTime) {
+      return res.status(400).json({
+        success: false,
+        message: 'New date and time are required',
+      });
+    }
+
+    // 2. Validate date format
+    const appointmentDateObj = new Date(newDate);
+    if (isNaN(appointmentDateObj.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid date format. Please provide a valid date.',
+      });
+    }
+
+    // 3. Date range validation
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() + 90); // Max 90 days in advance
+
+    if (appointmentDateObj < today) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot reschedule to a past date',
+      });
+    }
+
+    if (appointmentDateObj > maxDate) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot reschedule more than 90 days in advance',
+      });
+    }
+
+    // 4. Validate time format
+    const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!timeRegex.test(newTime)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid time format. Please use HH:MM format (24-hour).',
+      });
+    }
+
+    // === DOCTOR VALIDATION ===
+
+    // 5. Get doctor info
+    const professional = await prisma.professional.findUnique({
+      where: { userId: auth.userId },
+      select: { id: true, firstName: true, lastName: true },
+    });
+
+    if (!professional) {
+      return res.status(404).json({
+        success: false,
+        message: 'Professional not found',
+      });
+    }
+
+    // === APPOINTMENT VALIDATION ===
+
+    // 6. Find the appointment
+    const appointment = await prisma.appointment.findFirst({
+      where: {
+        id: appointmentId,
+        professionalId: professional.id,
+        status: { in: ['PENDING', 'CONFIRMED'] },
+      },
+    });
+
+    if (!appointment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Appointment not found or cannot be rescheduled',
+      });
+    }
+
+    // 7. Check if rescheduling to same date/time
+    if (
+      appointment.scheduledDate.toISOString().split('T')[0] === newDate &&
+      appointment.startTime === newTime
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'New date and time are the same as current appointment',
+      });
+    }
+
+    // === TIME AND AVAILABILITY VALIDATION ===
+
+    // 8. Check doctor's availability for the new date and time
+    const dayOfWeek = appointmentDateObj.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const doctorAvailability = await prisma.doctorAvailability.findFirst({
+      where: {
+        professionalId: professional.id,
+        dayOfWeek: dayOfWeek,
+        isActive: true,
+      },
+    });
+
+    if (!doctorAvailability) {
+      return res.status(400).json({
+        success: false,
+        message: `You are not available on ${appointmentDateObj.toLocaleDateString('en-US', { weekday: 'long' })}`,
+      });
+    }
+
+    // 9. Check if new time is within doctor's working hours
+    const [appointmentHour, appointmentMinute] = newTime.split(':').map(Number);
+    const appointmentTimeMinutes = appointmentHour * 60 + appointmentMinute;
+
+    const [startHour, startMinute] = doctorAvailability.startTime.split(':').map(Number);
+    const startTimeMinutes = startHour * 60 + startMinute;
+
+    const [endHour, endMinute] = doctorAvailability.endTime.split(':').map(Number);
+    const endTimeMinutes = endHour * 60 + endMinute;
+
+    if (appointmentTimeMinutes < startTimeMinutes || appointmentTimeMinutes >= endTimeMinutes) {
+      return res.status(400).json({
+        success: false,
+        message: `New time must be between ${doctorAvailability.startTime} and ${doctorAvailability.endTime}`,
+      });
+    }
+
+    // 10. Calculate end time based on duration
+    const appointmentDuration = duration || 30; // Default 30 minutes
+    const endTimeMinutesTotal = appointmentTimeMinutes + appointmentDuration;
+    if (endTimeMinutesTotal > endTimeMinutes) {
+      return res.status(400).json({
+        success: false,
+        message: `Appointment would end after your available time. Please choose an earlier slot.`,
+      });
+    }
+
+    const endHourCalc = Math.floor(endTimeMinutesTotal / 60);
+    const endMinuteCalc = endTimeMinutesTotal % 60;
+    const endTime = `${endHourCalc.toString().padStart(2, '0')}:${endMinuteCalc.toString().padStart(2, '0')}`;
+
+    // === SLOT AVAILABILITY CHECK ===
+
+    // 11. Check for conflicting appointments (including buffer time)
+    const bufferMinutes = 5; // 5-minute buffer between appointments
+    const appointmentStartWithBuffer = new Date(appointmentDateObj);
+    appointmentStartWithBuffer.setHours(appointmentHour, appointmentMinute - bufferMinutes, 0, 0);
+
+    const appointmentEndWithBuffer = new Date(appointmentDateObj);
+    appointmentEndWithBuffer.setHours(endHourCalc, endMinuteCalc + bufferMinutes, 0, 0);
+
+    const conflictingAppointment = await prisma.appointment.findFirst({
+      where: {
+        professionalId: professional.id,
+        scheduledDate: appointmentDateObj,
+        OR: [
+          {
+            AND: [{ startTime: { lte: newTime } }, { endTime: { gt: newTime } }],
+          },
+          {
+            AND: [{ startTime: { lt: endTime } }, { endTime: { gte: endTime } }],
+          },
+          {
+            AND: [{ startTime: { gte: newTime } }, { startTime: { lt: endTime } }],
+          },
+        ],
+        status: {
+          in: ['PENDING', 'CONFIRMED'],
+        },
+        id: { not: appointmentId }, // Exclude current appointment
+      },
+    });
+
+    if (conflictingAppointment) {
+      return res.status(400).json({
+        success: false,
+        message: 'This time slot is already booked. Please choose a different time.',
+      });
+    }
+
+    // === RESCHEDULE APPOINTMENT ===
+
+    // 12. Update the appointment
+    await prisma.appointment.update({
+      where: { id: appointmentId },
+      data: {
+        scheduledDate: appointmentDateObj,
+        startTime: newTime,
+        endTime: endTime,
+        notes: appointment.notes
+          ? `${appointment.notes}\nRescheduled from ${appointment.scheduledDate.toISOString().split('T')[0]} ${appointment.startTime}`
+          : `Rescheduled from ${appointment.scheduledDate.toISOString().split('T')[0]} ${appointment.startTime}`,
+      },
+    });
+
+    res.json({
+      success: true,
+      message: 'Appointment rescheduled successfully',
+      data: {
+        appointmentId: appointment.id,
+        newDate: appointmentDateObj.toISOString().split('T')[0],
+        newTime: newTime,
+        endTime: endTime,
+      },
+    });
+  });
+
   // Set doctor availability
   static setDoctorAvailability = asyncHandler(async (req: Request, res: Response) => {
     const auth = req.auth();

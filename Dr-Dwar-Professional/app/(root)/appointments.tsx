@@ -5,6 +5,7 @@ import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 
 interface DoctorStats {
   totalAppointments: number;
@@ -19,6 +20,7 @@ export default function AppointmentsIndexScreen() {
   const { user } = useUser();
   const [isLoading, setIsLoading] = useState(true);
   const [networkStatus, setNetworkStatus] = useState<boolean | null>(null);
+  const [vibrationsEnabled, setVibrationsEnabled] = useState(true);
   const [stats, setStats] = useState<DoctorStats>({
     totalAppointments: 0,
     todayAppointments: 0,
@@ -30,8 +32,19 @@ export default function AppointmentsIndexScreen() {
   const dataLoadedRef = useRef(false);
   const prevNetworkStatusRef = useRef<boolean | null>(null);
 
-  // Haptics setting
-  const vibrationsEnabled = true;
+    useEffect(() => {
+    const loadVibrationSettings = async () => {
+      try {
+        const vib = await SecureStore.getItemAsync('VIBRATIONS');
+        setVibrationsEnabled(vib !== 'false'); // Default to true
+      } catch (error) {
+        console.error('Error loading vibration settings:', error);
+        setVibrationsEnabled(true); // Default to true on error
+      }
+    };
+
+    loadVibrationSettings();
+  }, []);
 
   const isVerified = user?.publicMetadata?.isverified ?? false;
 

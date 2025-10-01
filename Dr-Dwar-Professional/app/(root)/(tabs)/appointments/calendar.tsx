@@ -2,20 +2,35 @@ import { useAuth } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
 import NetInfo from '@react-native-community/netinfo';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  Modal,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 interface CalendarAppointment {
   id: string;
   patientName: string;
+  patientPhone: string;
+  patientEmail?: string;
   time: string;
   type: string;
   status: 'confirmed' | 'pending' | 'cancelled';
+  duration: number;
+  fee: number;
+  notes?: string;
 }
 
 export default function CalendarViewScreen() {
   const { getToken } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedAppointment, setSelectedAppointment] = useState<CalendarAppointment | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
   const [appointments, setAppointments] = useState<Record<string, CalendarAppointment[]>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [networkStatus, setNetworkStatus] = useState<boolean | null>(null);
@@ -66,9 +81,14 @@ export default function CalendarViewScreen() {
           appointmentsByDate[dateKey].push({
             id: appointment.id,
             patientName: appointment.patientName,
+            patientPhone: appointment.patientPhone,
+            patientEmail: appointment.patientEmail,
             time: appointment.appointmentTime,
             type: appointment.appointmentType,
             status: appointment.status,
+            duration: appointment.duration,
+            fee: appointment.fee,
+            notes: appointment.notes,
           });
         });
         setAppointments(appointmentsByDate);
@@ -125,7 +145,13 @@ export default function CalendarViewScreen() {
     );
   }
 
-  function AppointmentItem({ appointment }: { appointment: CalendarAppointment }) {
+  function AppointmentItem({
+    appointment,
+    onPress,
+  }: {
+    appointment: CalendarAppointment;
+    onPress: () => void;
+  }) {
     const getStatusColor = (status: string) => {
       switch (status) {
         case 'confirmed':
@@ -140,7 +166,10 @@ export default function CalendarViewScreen() {
     };
 
     return (
-      <View className="mb-3 rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
+      <TouchableOpacity
+        className="mb-3 rounded-lg border border-gray-200 bg-white p-3 shadow-sm"
+        onPress={onPress}
+      >
         <View className="flex-row items-center justify-between">
           <View className="flex-1">
             <Text className="font-semibold text-gray-900">{appointment.patientName}</Text>
@@ -153,7 +182,7 @@ export default function CalendarViewScreen() {
             </Text>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   }
 
@@ -309,7 +338,14 @@ export default function CalendarViewScreen() {
             {selectedDateAppointments.length > 0 ? (
               <ScrollView showsVerticalScrollIndicator={false}>
                 {selectedDateAppointments.map((appointment) => (
-                  <AppointmentItem key={appointment.id} appointment={appointment} />
+                  <AppointmentItem
+                    key={appointment.id}
+                    appointment={appointment}
+                    onPress={() => {
+                      setSelectedAppointment(appointment);
+                      setModalVisible(true);
+                    }}
+                  />
                 ))}
               </ScrollView>
             ) : (
@@ -321,6 +357,140 @@ export default function CalendarViewScreen() {
           </View>
         </View>
       </ScrollView>
+
+      {/* Appointment Details Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View className="flex-1 justify-end bg-black/50">
+          <View className="rounded-t-3xl bg-white p-6">
+            <View className="mb-4 flex-row items-center justify-between">
+              <Text className="text-xl font-bold text-gray-900">Appointment Details</Text>
+              <TouchableOpacity
+                onPress={() => setModalVisible(false)}
+                className="rounded-full bg-gray-100 p-2"
+              >
+                <Ionicons name="close" size={20} color="#374151" />
+              </TouchableOpacity>
+            </View>
+
+            {selectedAppointment && (
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {/* Patient Information */}
+                <View className="mb-6 rounded-lg bg-gray-50 p-4">
+                  <Text className="mb-3 text-lg font-semibold text-gray-900">
+                    {selectedAppointment.patientName}
+                  </Text>
+
+                  <View className="space-y-2">
+                    <View className="flex-row items-center">
+                      <Ionicons name="call-outline" size={16} color="#6B7280" />
+                      <Text className="ml-2 text-sm text-gray-600">
+                        {selectedAppointment.patientPhone}
+                      </Text>
+                    </View>
+
+                    {selectedAppointment.patientEmail && (
+                      <View className="flex-row items-center">
+                        <Ionicons name="mail-outline" size={16} color="#6B7280" />
+                        <Text className="ml-2 text-sm text-gray-600">
+                          {selectedAppointment.patientEmail}
+                        </Text>
+                      </View>
+                    )}
+
+                    <View className="mt-2 flex-row items-center">
+                      <View
+                        className={`rounded-full px-3 py-1 ${
+                          selectedAppointment.status === 'confirmed'
+                            ? 'bg-green-100'
+                            : selectedAppointment.status === 'pending'
+                              ? 'bg-yellow-100'
+                              : 'bg-red-100'
+                        }`}
+                      >
+                        <Text
+                          className={`text-xs font-medium capitalize ${
+                            selectedAppointment.status === 'confirmed'
+                              ? 'text-green-700'
+                              : selectedAppointment.status === 'pending'
+                                ? 'text-yellow-700'
+                                : 'text-red-700'
+                          }`}
+                        >
+                          {selectedAppointment.status}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Appointment Details */}
+                <View className="mb-6 rounded-lg bg-blue-50 p-4">
+                  <Text className="mb-3 text-sm font-semibold text-gray-700">
+                    Appointment Details
+                  </Text>
+
+                  <View className="space-y-3">
+                    <View className="flex-row items-center justify-between">
+                      <View className="flex-row items-center">
+                        <Ionicons name="time-outline" size={16} color="#6B7280" />
+                        <Text className="ml-2 text-sm text-gray-600">Time</Text>
+                      </View>
+                      <Text className="text-sm font-medium text-gray-900">
+                        {selectedAppointment.time} ({selectedAppointment.duration} min)
+                      </Text>
+                    </View>
+
+                    <View className="flex-row items-center justify-between">
+                      <View className="flex-row items-center">
+                        <Ionicons name="medical-outline" size={16} color="#6B7280" />
+                        <Text className="ml-2 text-sm text-gray-600">Type</Text>
+                      </View>
+                      <Text className="text-sm font-medium capitalize text-gray-900">
+                        {selectedAppointment.type.replace('_', ' ')}
+                      </Text>
+                    </View>
+
+                    <View className="flex-row items-center justify-between">
+                      <View className="flex-row items-center">
+                        <Ionicons name="cash-outline" size={16} color="#6B7280" />
+                        <Text className="ml-2 text-sm text-gray-600">Fee</Text>
+                      </View>
+                      <Text className="text-sm font-bold text-green-600">
+                        ₹{selectedAppointment.fee}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Notes */}
+                {selectedAppointment.notes && (
+                  <View className="mb-6 rounded-lg bg-yellow-50 p-4">
+                    <View className="mb-2 flex-row items-center">
+                      <Ionicons name="document-text-outline" size={16} color="#6B7280" />
+                      <Text className="ml-2 text-sm font-semibold text-gray-700">Notes</Text>
+                    </View>
+                    <Text className="text-sm italic text-gray-600">
+                      &ldquo;{selectedAppointment.notes}&rdquo;
+                    </Text>
+                  </View>
+                )}
+
+                <TouchableOpacity
+                  className="mt-4 rounded-lg bg-green-600 py-3"
+                  onPress={() => setModalVisible(false)}
+                >
+                  <Text className="text-center font-semibold text-white">Close</Text>
+                </TouchableOpacity>
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

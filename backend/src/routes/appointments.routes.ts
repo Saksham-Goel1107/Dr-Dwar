@@ -34,6 +34,12 @@ router.patch(
   AppointmentController.updateAppointmentStatus,
 );
 
+// Alias route for frontend compatibility
+router.put('/:appointmentId/status', protectRoute, AppointmentController.updateAppointmentStatus);
+
+// Reschedule appointment (doctor)
+router.put('/:appointmentId/reschedule', protectRoute, AppointmentController.rescheduleAppointment);
+
 // Get doctor stats
 router.get('/doctor/stats', protectRoute, AppointmentController.getDoctorStats);
 

@@ -8,9 +8,10 @@ interface AppointmentHistoryItem {
   id: string;
   patientName: string;
   patientPhone: string;
+  patientEmail?: string;
   appointmentDate: string;
   appointmentTime: string;
-  consultationType: string;
+  appointmentType: string;
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
   fee: number;
   duration: number;
@@ -54,58 +55,104 @@ function HistoryItem({ item }: { item: AppointmentHistoryItem }) {
 
   return (
     <View className="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-      <View className="mb-3 flex-row items-start justify-between">
+      {/* Header with Patient Name and Status */}
+      <View className="mb-4 flex-row items-start justify-between">
         <View className="flex-1">
           <Text className="mb-1 text-lg font-bold text-gray-900">{item.patientName}</Text>
-          <Text className="mb-2 text-sm text-gray-600">
-            {item.consultationType.replace('_', ' ').toUpperCase()}
-          </Text>
-          <Text className="mb-1 text-sm text-gray-500">📞 {item.patientPhone}</Text>
-        </View>
-
-        <View className={`rounded-full px-3 py-1 ${getStatusColor(item.status)}`}>
-          <View className="flex-row items-center">
-            <Ionicons
-              name={getStatusIcon(item.status) as any}
-              size={14}
-              color={getStatusColor(item.status)
-                .split(' ')[0]
-                .replace('text-', '')
-                .replace('-600', '')}
-            />
-            <Text
-              className={`ml-1 text-xs font-medium ${getStatusColor(item.status).split(' ')[0]}`}
-            >
-              {formatStatus(item.status)}
-            </Text>
+          <View className={`inline-flex rounded-full px-2 py-1 ${getStatusColor(item.status)}`}>
+            <View className="flex-row items-center">
+              <Ionicons
+                name={getStatusIcon(item.status) as any}
+                size={12}
+                color={getStatusColor(item.status)
+                  .split(' ')[0]
+                  .replace('text-', '')
+                  .replace('-600', '')}
+              />
+              <Text
+                className={`ml-1 text-xs font-medium ${getStatusColor(item.status).split(' ')[0]}`}
+              >
+                {formatStatus(item.status)}
+              </Text>
+            </View>
           </View>
         </View>
       </View>
 
-      <View className="mb-3 flex-row items-center justify-between">
-        <View className="flex-row items-center">
-          <Ionicons name="calendar-outline" size={16} color="#6B7280" />
-          <Text className="ml-2 text-sm text-gray-600">
-            {new Date(item.appointmentDate).toLocaleDateString()}
-          </Text>
-        </View>
-        <View className="flex-row items-center">
-          <Ionicons name="time-outline" size={16} color="#6B7280" />
-          <Text className="ml-2 text-sm text-gray-600">
-            {item.appointmentTime} ({item.duration}min)
-          </Text>
+      {/* Contact Information */}
+      <View className="mb-4 rounded-lg bg-gray-50 p-3">
+        <Text className="mb-2 text-sm font-semibold text-gray-700">Contact Information</Text>
+        <View className="space-y-1">
+          <View className="flex-row items-center">
+            <Ionicons name="call-outline" size={14} color="#6B7280" />
+            <Text className="ml-2 text-sm text-gray-600">{item.patientPhone}</Text>
+          </View>
+          {item.patientEmail && (
+            <View className="flex-row items-center">
+              <Ionicons name="mail-outline" size={14} color="#6B7280" />
+              <Text className="ml-2 text-sm text-gray-600">{item.patientEmail}</Text>
+            </View>
+          )}
         </View>
       </View>
 
-      <View className="mb-2 flex-row items-center">
-        <Ionicons name="cash-outline" size={16} color="#6B7280" />
-        <Text className="ml-2 text-sm font-medium text-green-600">₹{item.fee}</Text>
+      {/* Appointment Details */}
+      <View className="mb-4 rounded-lg bg-blue-50 p-3">
+        <Text className="mb-2 text-sm font-semibold text-gray-700">Appointment Details</Text>
+        <View className="space-y-2">
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center">
+              <Ionicons name="calendar-outline" size={14} color="#6B7280" />
+              <Text className="ml-2 text-sm text-gray-600">Date</Text>
+            </View>
+            <Text className="text-sm font-medium text-gray-900">
+              {new Date(item.appointmentDate).toLocaleDateString('en-US', {
+                weekday: 'short',
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+              })}
+            </Text>
+          </View>
+
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center">
+              <Ionicons name="time-outline" size={14} color="#6B7280" />
+              <Text className="ml-2 text-sm text-gray-600">Time</Text>
+            </View>
+            <Text className="text-sm font-medium text-gray-900">
+              {item.appointmentTime} ({item.duration} min)
+            </Text>
+          </View>
+
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center">
+              <Ionicons name="medical-outline" size={14} color="#6B7280" />
+              <Text className="ml-2 text-sm text-gray-600">Type</Text>
+            </View>
+            <Text className="text-sm font-medium text-gray-900 capitalize">
+              {item.appointmentType.replace('_', ' ')}
+            </Text>
+          </View>
+
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center">
+              <Ionicons name="cash-outline" size={14} color="#6B7280" />
+              <Text className="ml-2 text-sm text-gray-600">Fee</Text>
+            </View>
+            <Text className="text-sm font-bold text-green-600">₹{item.fee}</Text>
+          </View>
+        </View>
       </View>
 
+      {/* Notes */}
       {item.notes && (
-        <View>
-          <Text className="text-sm font-medium text-gray-700">Notes:</Text>
-          <Text className="text-sm italic text-gray-600">&quot;{item.notes}&quot;</Text>
+        <View className="rounded-lg bg-yellow-50 p-3">
+          <View className="flex-row items-center mb-2">
+            <Ionicons name="document-text-outline" size={14} color="#6B7280" />
+            <Text className="ml-2 text-sm font-semibold text-gray-700">Notes</Text>
+          </View>
+          <Text className="text-sm text-gray-600 italic">&ldquo;{item.notes}&rdquo;</Text>
         </View>
       )}
     </View>

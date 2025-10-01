@@ -4,6 +4,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import NetInfo from '@react-native-community/netinfo';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -27,6 +28,14 @@ interface AppointmentFormData {
   fee: number;
 }
 
+interface DoctorFees {
+  consultationFee: number;
+  followUpFee: number;
+  emergencyFee: number;
+  telemedicineFee: number;
+  homeVisitFee: number;
+}
+
 interface AvailabilitySlot {
   startTime: string;
   endTime: string;
@@ -44,7 +53,7 @@ export default function ScheduleAppointmentScreen() {
     appointmentType: 'consultation',
     notes: '',
     duration: 30,
-    fee: 500,
+    fee: 0, // Will be updated from database
   });
 
   const [loading, setLoading] = useState(false);
@@ -54,9 +63,23 @@ export default function ScheduleAppointmentScreen() {
   const [availableSlots, setAvailableSlots] = useState<AvailabilitySlot[]>([]);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [checkedDates, setCheckedDates] = useState<Set<string>>(new Set());
+  const [vibrationsEnabled, setVibrationsEnabled] = useState(true);
+  const [doctorFees, setDoctorFees] = useState<DoctorFees | null>(null);
+  const [loadingFees, setLoadingFees] = useState(false);
 
-  // Haptics setting
-  const vibrationsEnabled = true;
+  useEffect(() => {
+    const loadVibrationSettings = async () => {
+      try {
+        const vib = await SecureStore.getItemAsync('VIBRATIONS');
+        setVibrationsEnabled(vib !== 'false'); // Default to true
+      } catch (error) {
+        console.error('Error loading vibration settings:', error);
+        setVibrationsEnabled(true); // Default to true on error
+      }
+    };
+
+    loadVibrationSettings();
+  }, []);
 
   // Load network status
   useEffect(() => {
@@ -72,6 +95,62 @@ export default function ScheduleAppointmentScreen() {
 
     return () => unsubscribe();
   }, []);
+
+  // Fetch doctor fees
+  useEffect(() => {
+    const fetchDoctorFees = async () => {
+      if (!networkStatus) return;
+
+      setLoadingFees(true);
+      try {
+        const token = await getToken();
+        const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/appointments/fees`, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'ngrok-skip-browser-warning': 'true',
+          },
+        });
+
+        const data = await response.json();
+        if (data.success && data.data) {
+          setDoctorFees(data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching doctor fees:', error);
+      } finally {
+        setLoadingFees(false);
+      }
+    };
+
+    fetchDoctorFees();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [networkStatus]);
+
+  const handleInputChange = useCallback(
+    (field: keyof AppointmentFormData, value: string | number | Date) => {
+      setFormData((prev) => {
+        const newData = {
+          ...prev,
+          [field]: value,
+        };
+
+        // If appointment type changed and we have doctor fees, update the fee
+        if (field === 'appointmentType' && doctorFees) {
+          const feeMap = {
+            consultation: doctorFees.consultationFee,
+            follow_up: doctorFees.followUpFee,
+            emergency: doctorFees.emergencyFee,
+            telemedicine: doctorFees.telemedicineFee,
+          };
+          newData.fee = feeMap[value as keyof typeof feeMap];
+        }
+
+        return newData;
+      });
+    },
+    [doctorFees],
+  );
 
   // Check availability for selected date
   const checkAvailability = useCallback(
@@ -122,13 +201,6 @@ export default function ScheduleAppointmentScreen() {
       checkAvailability(formData.appointmentDate);
     }
   }, [formData.appointmentDate, checkAvailability]);
-
-  const handleInputChange = (field: keyof AppointmentFormData, value: string | number | Date) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
     setShowDatePicker(false); // Always close the picker
@@ -267,7 +339,7 @@ export default function ScheduleAppointmentScreen() {
                 appointmentType: 'consultation',
                 notes: '',
                 duration: 30,
-                fee: 500,
+                fee: doctorFees ? doctorFees.consultationFee : 0,
               });
               setAvailableSlots([]);
               setCheckedDates(new Set()); // Reset checked dates for new appointment
@@ -444,13 +516,19 @@ export default function ScheduleAppointmentScreen() {
               </View>
               <View className="flex-1">
                 <Text className="mb-2 text-sm font-medium text-gray-700">Fee (₹)</Text>
-                <TextInput
-                  className="rounded-lg border border-gray-300 p-3"
-                  placeholder="500"
-                  value={formData.fee.toString()}
-                  onChangeText={(value) => handleInputChange('fee', parseInt(value) || 500)}
-                  keyboardType="numeric"
-                />
+                {loadingFees ? (
+                  <View className="rounded-lg border border-gray-300 p-3">
+                    <ActivityIndicator size="small" color="#16a34a" />
+                  </View>
+                ) : (
+                  <TextInput
+                    className="rounded-lg border border-gray-300 bg-gray-50 p-3"
+                    placeholder="Fee will be set automatically"
+                    value={formData.fee.toString()}
+                    editable={false}
+                    selectTextOnFocus={false}
+                  />
+                )}
               </View>
             </View>
           </View>

@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 
 interface FeeStructure {
   id?: string;
@@ -36,13 +37,25 @@ export default function DoctorFeesScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [networkStatus, setNetworkStatus] = useState<boolean | null>(null);
+  const [vibrationsEnabled, setVibrationsEnabled] = useState(true);
 
   // Refs to prevent infinite loading
   const dataLoadedRef = useRef(false);
   const prevNetworkStatusRef = useRef<boolean | null>(null);
 
-  // Haptics setting (you can make this configurable later)
-  const vibrationsEnabled = true;
+    useEffect(() => {
+    const loadVibrationSettings = async () => {
+      try {
+        const vib = await SecureStore.getItemAsync('VIBRATIONS');
+        setVibrationsEnabled(vib !== 'false'); // Default to true
+      } catch (error) {
+        console.error('Error loading vibration settings:', error);
+        setVibrationsEnabled(true); // Default to true on error
+      }
+    };
+
+    loadVibrationSettings();
+  }, []);
 
   const [fees, setFees] = useState<FeeStructure[]>(
     CONSULTATION_TYPES.map((type) => ({
