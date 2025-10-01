@@ -1,18 +1,17 @@
 import { useUser } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React from 'react';
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 interface AppointmentCardProps {
   title: string;
   subtitle: string;
   icon: string;
   onPress: () => void;
-  badge?: string;
 }
 
-function AppointmentCard({ title, subtitle, icon, onPress, badge }: AppointmentCardProps) {
+function AppointmentCard({ title, subtitle, icon, onPress }: AppointmentCardProps) {
   return (
     <TouchableOpacity
       className="mb-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm active:bg-gray-50"
@@ -26,11 +25,6 @@ function AppointmentCard({ title, subtitle, icon, onPress, badge }: AppointmentC
           <Text className="text-lg font-semibold text-gray-900">{title}</Text>
           <Text className="mt-1 text-sm text-gray-500">{subtitle}</Text>
         </View>
-        {badge && (
-          <View className="mr-3 rounded-full bg-red-500 px-2 py-1">
-            <Text className="text-xs font-bold text-white">{badge}</Text>
-          </View>
-        )}
         <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
       </View>
     </TouchableOpacity>
@@ -39,12 +33,86 @@ function AppointmentCard({ title, subtitle, icon, onPress, badge }: AppointmentC
 
 export default function AppointmentsScreen() {
   const { user } = useUser();
+  const [searchQuery, setSearchQuery] = useState('');
+
   if (!user) {
     throw new Error('User not found');
   }
 
   const isVerified = user.unsafeMetadata?.isVerified ?? false;
   const userRole = user.unsafeMetadata?.role ?? 'user';
+
+  const appointmentCards = [
+    {
+      title: 'Set Availability',
+      subtitle: 'Configure your working hours and days',
+      icon: 'time-outline',
+      onPress: () => router.push('/(root)/doctor-availability'),
+      keywords: ['availability', 'schedule', 'hours', 'days', 'working'],
+    },
+    {
+      title: 'Set Consultation Fees',
+      subtitle: 'Configure your fees for different appointment types',
+      icon: 'cash-outline',
+      onPress: () => router.push('/(root)/doctor-fees'),
+      keywords: ['fees', 'consultation', 'payment', 'pricing', 'cost'],
+    },
+    {
+      title: "Today's Appointments",
+      subtitle: "View and manage today's schedule",
+      icon: 'today-outline',
+      onPress: () => router.push('/(root)/doctor-appointments'),
+      keywords: ['today', 'schedule', 'current', 'appointments', 'daily'],
+    },
+    {
+      title: 'Schedule New Appointment',
+      subtitle: 'Book a new appointment for a patient',
+      icon: 'add-circle-outline',
+      onPress: () => router.push('/appointments/schedule'),
+      keywords: ['schedule', 'new', 'book', 'appointment', 'patient'],
+    },
+    {
+      title: 'Appointment History',
+      subtitle: 'View past appointments and records',
+      icon: 'time-outline',
+      onPress: () => router.push('/appointments/history'),
+      keywords: ['history', 'past', 'records', 'previous', 'archive'],
+    },
+    {
+      title: 'Calendar View',
+      subtitle: 'View appointments in calendar format',
+      icon: 'calendar-outline',
+      onPress: () => router.push('/appointments/calendar'),
+      keywords: ['calendar', 'view', 'month', 'date', 'visual'],
+    },
+    {
+      title: 'Pending Confirmations',
+      subtitle: 'Appointments waiting for confirmation',
+      icon: 'hourglass-outline',
+      onPress: () => {
+        // Navigate to pending confirmations
+        console.log('Navigate to pending confirmations');
+      },
+      keywords: ['pending', 'confirmation', 'waiting', 'approve', 'review'],
+    },
+    {
+      title: 'Patient Records',
+      subtitle: 'Access patient medical records',
+      icon: 'document-text-outline',
+      onPress: () => {
+        // Navigate to patient records
+        console.log('Navigate to patient records');
+      },
+      keywords: ['patient', 'records', 'medical', 'history', 'files'],
+    },
+  ];
+
+  const filteredCards = appointmentCards.filter(
+    (card) =>
+      card.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      card.subtitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      card.keywords.some((keyword) => keyword.toLowerCase().includes(searchQuery.toLowerCase())),
+  );
 
   if (!isVerified) {
     return (
@@ -83,70 +151,35 @@ export default function AppointmentsScreen() {
           Manage your medical appointments and patient schedules.
         </Text>
 
+        {/* Search Bar */}
+        <View className="mb-6">
+          <View className="flex-row items-center rounded-lg border border-gray-300 bg-white px-4 py-3">
+            <Ionicons name="search" size={20} color="#9CA3AF" />
+            <TextInput
+              className="ml-3 flex-1 text-gray-900"
+              placeholder="Search appointments..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholderTextColor="#9CA3AF"
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <Ionicons name="close-circle" size={20} color="#9CA3AF" />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
         <View className="space-y-2">
-          <AppointmentCard
-            title="Set Availability"
-            subtitle="Configure your working hours and days"
-            icon="time-outline"
-            onPress={() => router.push('/(root)/doctor-availability')}
-          />
-
-          <AppointmentCard
-            title="Set Consultation Fees"
-            subtitle="Configure your fees for different appointment types"
-            icon="cash-outline"
-            onPress={() => router.push('/(root)/doctor-fees')}
-          />
-
-          <AppointmentCard
-            title="Today's Appointments"
-            subtitle="View and manage today's schedule"
-            icon="today-outline"
-            badge="3"
-            onPress={() => router.push('/(root)/doctor-appointments')}
-          />
-
-          <AppointmentCard
-            title="Schedule New Appointment"
-            subtitle="Book a new appointment for a patient"
-            icon="add-circle-outline"
-            onPress={() => router.push('/appointments/schedule')}
-          />
-
-          <AppointmentCard
-            title="Appointment History"
-            subtitle="View past appointments and records"
-            icon="time-outline"
-            onPress={() => router.push('/appointments/history')}
-          />
-
-          <AppointmentCard
-            title="Calendar View"
-            subtitle="View appointments in calendar format"
-            icon="calendar-outline"
-            onPress={() => router.push('/appointments/calendar')}
-          />
-
-          <AppointmentCard
-            title="Pending Confirmations"
-            subtitle="Appointments waiting for confirmation"
-            icon="hourglass-outline"
-            badge="2"
-            onPress={() => {
-              // Navigate to pending confirmations
-              console.log('Navigate to pending confirmations');
-            }}
-          />
-
-          <AppointmentCard
-            title="Patient Records"
-            subtitle="Access patient medical records"
-            icon="document-text-outline"
-            onPress={() => {
-              // Navigate to patient records
-              console.log('Navigate to patient records');
-            }}
-          />
+          {filteredCards.map((card, index) => (
+            <AppointmentCard
+              key={index}
+              title={card.title}
+              subtitle={card.subtitle}
+              icon={card.icon}
+              onPress={card.onPress}
+            />
+          ))}
         </View>
       </View>
     </ScrollView>
