@@ -571,6 +571,12 @@ export default function ProfileSettings() {
           icon: 'bag-handle-outline',
           onPress: () => router.push('/orders'),
         },
+        {
+          title: 'My Appointments',
+          subtitle: 'View and manage your appointments',
+          icon: 'calendar-outline',
+          onPress: () => (router as any).push('/(root)/my-appointments'),
+        },
       ],
     },
     {

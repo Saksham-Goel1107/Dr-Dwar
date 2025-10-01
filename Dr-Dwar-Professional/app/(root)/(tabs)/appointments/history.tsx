@@ -1,58 +1,21 @@
+import { useAuth } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
-import { FlatList, Text, TouchableOpacity, View } from 'react-native';
+import NetInfo from '@react-native-community/netinfo';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, FlatList, Text, TouchableOpacity, View } from 'react-native';
 
 interface AppointmentHistoryItem {
   id: string;
   patientName: string;
-  appointmentType: string;
-  date: string;
-  time: string;
-  status: 'completed' | 'cancelled' | 'no_show' | 'upcoming';
+  patientPhone: string;
+  appointmentDate: string;
+  appointmentTime: string;
+  consultationType: string;
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  fee: number;
+  duration: number;
   notes?: string;
-  diagnosis?: string;
 }
-
-const mockAppointmentData: AppointmentHistoryItem[] = [
-  {
-    id: '1',
-    patientName: 'John Doe',
-    appointmentType: 'General Consultation',
-    date: '2025-09-26',
-    time: '10:00 AM',
-    status: 'completed',
-    diagnosis: 'Common cold',
-    notes: 'Prescribed rest and fluids',
-  },
-  {
-    id: '2',
-    patientName: 'Jane Smith',
-    appointmentType: 'Follow-up',
-    date: '2025-09-25',
-    time: '2:30 PM',
-    status: 'completed',
-    diagnosis: 'Hypertension check',
-    notes: 'Blood pressure stable, continue medication',
-  },
-  {
-    id: '3',
-    patientName: 'Bob Johnson',
-    appointmentType: 'Consultation',
-    date: '2025-09-24',
-    time: '11:15 AM',
-    status: 'cancelled',
-    notes: 'Patient cancelled due to emergency',
-  },
-  {
-    id: '4',
-    patientName: 'Alice Brown',
-    appointmentType: 'Check-up',
-    date: '2025-09-28',
-    time: '9:00 AM',
-    status: 'upcoming',
-    notes: 'Annual health check-up',
-  },
-];
 
 function HistoryItem({ item }: { item: AppointmentHistoryItem }) {
   const getStatusColor = (status: string) => {
@@ -61,10 +24,10 @@ function HistoryItem({ item }: { item: AppointmentHistoryItem }) {
         return 'text-green-600 bg-green-100';
       case 'cancelled':
         return 'text-red-600 bg-red-100';
-      case 'no_show':
-        return 'text-orange-600 bg-orange-100';
-      case 'upcoming':
+      case 'confirmed':
         return 'text-blue-600 bg-blue-100';
+      case 'pending':
+        return 'text-yellow-600 bg-yellow-100';
       default:
         return 'text-gray-600 bg-gray-100';
     }
@@ -76,9 +39,9 @@ function HistoryItem({ item }: { item: AppointmentHistoryItem }) {
         return 'checkmark-circle';
       case 'cancelled':
         return 'close-circle';
-      case 'no_show':
-        return 'alert-circle';
-      case 'upcoming':
+      case 'confirmed':
+        return 'checkmark-circle-outline';
+      case 'pending':
         return 'time';
       default:
         return 'ellipse';
@@ -94,7 +57,10 @@ function HistoryItem({ item }: { item: AppointmentHistoryItem }) {
       <View className="mb-3 flex-row items-start justify-between">
         <View className="flex-1">
           <Text className="mb-1 text-lg font-bold text-gray-900">{item.patientName}</Text>
-          <Text className="mb-2 text-sm text-gray-600">{item.appointmentType}</Text>
+          <Text className="mb-2 text-sm text-gray-600">
+            {item.consultationType.replace('_', ' ').toUpperCase()}
+          </Text>
+          <Text className="mb-1 text-sm text-gray-500">📞 {item.patientPhone}</Text>
         </View>
 
         <View className={`rounded-full px-3 py-1 ${getStatusColor(item.status)}`}>
@@ -120,21 +86,21 @@ function HistoryItem({ item }: { item: AppointmentHistoryItem }) {
         <View className="flex-row items-center">
           <Ionicons name="calendar-outline" size={16} color="#6B7280" />
           <Text className="ml-2 text-sm text-gray-600">
-            {new Date(item.date).toLocaleDateString()}
+            {new Date(item.appointmentDate).toLocaleDateString()}
           </Text>
         </View>
         <View className="flex-row items-center">
           <Ionicons name="time-outline" size={16} color="#6B7280" />
-          <Text className="ml-2 text-sm text-gray-600">{item.time}</Text>
+          <Text className="ml-2 text-sm text-gray-600">
+            {item.appointmentTime} ({item.duration}min)
+          </Text>
         </View>
       </View>
 
-      {item.diagnosis && (
-        <View className="mb-2">
-          <Text className="text-sm font-medium text-gray-700">Diagnosis:</Text>
-          <Text className="text-sm text-gray-600">{item.diagnosis}</Text>
-        </View>
-      )}
+      <View className="mb-2 flex-row items-center">
+        <Ionicons name="cash-outline" size={16} color="#6B7280" />
+        <Text className="ml-2 text-sm font-medium text-green-600">₹{item.fee}</Text>
+      </View>
 
       {item.notes && (
         <View>
@@ -147,14 +113,71 @@ function HistoryItem({ item }: { item: AppointmentHistoryItem }) {
 }
 
 export default function AppointmentHistoryScreen() {
-  const [filter, setFilter] = useState<'all' | 'completed' | 'cancelled' | 'no_show' | 'upcoming'>(
+  const { getToken } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+  const [networkStatus, setNetworkStatus] = useState<boolean | null>(null);
+  const [appointments, setAppointments] = useState<AppointmentHistoryItem[]>([]);
+  const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'completed' | 'cancelled'>(
     'all',
   );
+  const [dataLoaded, setDataLoaded] = useState(false);
+
+  // Load network status
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      const isConnected = state.isConnected && state.isInternetReachable;
+      setNetworkStatus(isConnected);
+    });
+
+    NetInfo.fetch().then((state) => {
+      const isConnected = state.isConnected && state.isInternetReachable;
+      setNetworkStatus(isConnected);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Fetch appointments
+  const fetchAppointments = useCallback(async () => {
+    if (dataLoaded) return; // Don't fetch if already loaded
+
+    try {
+      const token = await getToken();
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/appointments/doctor/appointments`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'ngrok-skip-browser-warning': 'true',
+          },
+        },
+      );
+
+      const data = await response.json();
+      if (data.success) {
+        setAppointments(data.data || []);
+        setDataLoaded(true); // Mark as loaded to prevent further calls
+      } else {
+        Alert.alert('Error', 'Failed to load appointment history');
+      }
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
+      Alert.alert('Error', 'Failed to load appointment history');
+    }
+  }, [getToken, dataLoaded]);
+
+  useEffect(() => {
+    // Only load if network is available and we haven't loaded data yet
+    if (networkStatus && !dataLoaded) {
+      fetchAppointments().finally(() => setIsLoading(false));
+    } else if (!networkStatus) {
+      setIsLoading(false);
+    }
+  }, [networkStatus, fetchAppointments, dataLoaded]);
 
   const filteredData =
-    filter === 'all'
-      ? mockAppointmentData
-      : mockAppointmentData.filter((item) => item.status === filter);
+    filter === 'all' ? appointments : appointments.filter((item) => item.status === filter);
 
   const FilterButton = ({ title, value }: { title: string; value: typeof filter }) => (
     <TouchableOpacity
@@ -167,6 +190,29 @@ export default function AppointmentHistoryScreen() {
     </TouchableOpacity>
   );
 
+  if (!networkStatus) {
+    return (
+      <View className="flex-1 items-center justify-center bg-gray-50">
+        <Ionicons name="wifi" size={64} color="#9CA3AF" />
+        <Text className="mt-4 text-lg font-medium text-gray-500">No Internet Connection</Text>
+        <Text className="mt-2 text-center text-sm text-gray-400">
+          Please check your internet connection and try again.
+        </Text>
+      </View>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-gray-50">
+        <ActivityIndicator size="large" color="#16a34a" />
+        <Text className="mt-4 text-lg font-medium text-gray-500">
+          Loading appointment history...
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <View className="flex-1 bg-gray-50">
       <View className="p-6">
@@ -175,8 +221,9 @@ export default function AppointmentHistoryScreen() {
         {/* Filter Buttons */}
         <View className="mb-6 flex-row">
           <FilterButton title="All" value="all" />
+          <FilterButton title="Pending" value="pending" />
+          <FilterButton title="Confirmed" value="confirmed" />
           <FilterButton title="Completed" value="completed" />
-          <FilterButton title="Upcoming" value="upcoming" />
           <FilterButton title="Cancelled" value="cancelled" />
         </View>
 

@@ -1,8 +1,8 @@
+import { useUser } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { useUser } from '@clerk/clerk-expo';
 
 interface AppointmentCardProps {
   title: string;
@@ -38,7 +38,7 @@ function AppointmentCard({ title, subtitle, icon, onPress, badge }: AppointmentC
 }
 
 export default function AppointmentsScreen() {
-   const { user } = useUser();
+  const { user } = useUser();
   if (!user) {
     throw new Error('User not found');
   }
@@ -69,7 +69,7 @@ export default function AppointmentsScreen() {
               }
             }}
           >
-            <Text className="text-white font-semibold">View Verification Guide</Text>
+            <Text className="font-semibold text-white">View Verification Guide</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -85,14 +85,25 @@ export default function AppointmentsScreen() {
 
         <View className="space-y-2">
           <AppointmentCard
+            title="Set Availability"
+            subtitle="Configure your working hours and days"
+            icon="time-outline"
+            onPress={() => router.push('/(root)/doctor-availability')}
+          />
+
+          <AppointmentCard
+            title="Set Consultation Fees"
+            subtitle="Configure your fees for different appointment types"
+            icon="cash-outline"
+            onPress={() => router.push('/(root)/doctor-fees')}
+          />
+
+          <AppointmentCard
             title="Today's Appointments"
             subtitle="View and manage today's schedule"
             icon="today-outline"
             badge="3"
-            onPress={() => {
-              // Navigate to today's appointments
-              console.log("Navigate to today's appointments");
-            }}
+            onPress={() => router.push('/(root)/doctor-appointments')}
           />
 
           <AppointmentCard

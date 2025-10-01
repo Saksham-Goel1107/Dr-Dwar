@@ -30,6 +30,7 @@ model User {
   creditsPayments   creditsPayments[]
   bankAccount       BankAccount?
   withdrawalRequests WithdrawalRequest[]
+  appointments      Appointment[]
 
   @@index([userId])
 }
@@ -185,6 +186,9 @@ model Professional {
   bankAccount         ProfessionalBankAccount?
   earnings            ProfessionalEarning[]
   withdrawals         ProfessionalWithdrawal[]
+  availability        DoctorAvailability[]
+  fees                DoctorFees?
+  appointments        Appointment[]
 
   @@index([userId])
   @@index([isVerified])
@@ -388,4 +392,88 @@ enum EarningSource {
   BONUS
   REFERRAL
   OTHER
+}
+
+model DoctorAvailability {
+  id             String   @id @default(cuid())
+  professionalId String
+  dayOfWeek      Int      // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  startTime      String   // HH:MM format (24-hour)
+  endTime        String   // HH:MM format (24-hour)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  professional   Professional @relation(fields: [professionalId], references: [id])
+
+  @@index([professionalId])
+  @@index([dayOfWeek])
+}
+
+model DoctorFees {
+  id             String   @id @default(cuid())
+  professionalId String   @unique
+  consultationFee Float   @default(500) // Base consultation fee in rupees
+  followUpFee    Float   @default(300) // Follow-up consultation fee
+  emergencyFee   Float   @default(1000) // Emergency consultation fee
+  telemedicineFee Float  @default(400) // Telemedicine consultation fee
+  homeVisitFee   Float   @default(800) // Home visit consultation fee
+  isActive       Boolean @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  professional   Professional @relation(fields: [professionalId], references: [id])
+
+  @@index([professionalId])
+}
+
+model Appointment {
+  id             String           @id @default(cuid())
+  userId         String
+  professionalId String
+  appointmentType AppointmentType @default(CONSULTATION)
+  scheduledDate  DateTime
+  startTime      String           // HH:MM format
+  endTime        String           // HH:MM format
+  status         AppointmentStatus @default(PENDING)
+  symptoms       String?          // Patient's symptoms/description
+  notes          String?          // Additional notes
+  fee            Float            // Fee for this appointment
+  paymentStatus  PaymentStatus    @default(PENDING)
+  meetingLink    String?          // For telemedicine appointments
+  prescriptionId String?          // Link to prescription if created
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  user           User             @relation(fields: [userId], references: [userId])
+  professional   Professional     @relation(fields: [professionalId], references: [id])
+
+  @@index([userId])
+  @@index([professionalId])
+  @@index([status])
+  @@index([scheduledDate])
+  @@index([appointmentType])
+}
+
+enum AppointmentType {
+  CONSULTATION
+  FOLLOW_UP
+  EMERGENCY
+  TELEMEDICINE
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REFUNDED
+  FAILED
 }
