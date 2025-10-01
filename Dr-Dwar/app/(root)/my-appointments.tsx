@@ -24,10 +24,11 @@ interface Appointment {
   symptoms: string;
   notes?: string;
   fee: number;
-  doctor: {
-    id: string;
-    name: string;
+  professional: {
+    firstName: string;
+    lastName: string;
     specialization: string;
+    hospitalAffiliation?: string;
   };
   createdAt: string;
 }
@@ -368,7 +369,7 @@ export default function MyAppointmentsScreen() {
             </Text>
             {selectedFilter === 'ALL' && (
               <TouchableOpacity
-                onPress={() => router.push('/(root)/appointments')}
+                onPress={() => router.push('/(root)/(tabs)/appointment')}
                 style={{
                   marginTop: 20,
                   backgroundColor: '#16a34a',
@@ -413,10 +414,10 @@ export default function MyAppointmentsScreen() {
                     <Text
                       style={{ fontSize: 16, fontWeight: '600', color: '#1e293b', marginBottom: 4 }}
                     >
-                      Dr. {appointment.doctor.name}
+                      Dr. {appointment.professional.firstName} {appointment.professional.lastName}
                     </Text>
                     <Text style={{ fontSize: 14, color: '#64748b', marginBottom: 4 }}>
-                      {appointment.doctor.specialization}
+                      {appointment.professional.specialization}
                     </Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                       <MaterialCommunityIcons name="calendar" size={14} color="#64748b" />

@@ -11,8 +11,14 @@ router.get('/doctors', protectRoute, AppointmentController.getAvailableDoctors);
 // Get specific doctor's availability and fees
 router.get('/doctors/:professionalId', protectRoute, AppointmentController.getDoctorDetails);
 
+// Check slot availability
+router.post('/check-availability', protectRoute, AppointmentController.checkSlotAvailability);
+
 // Book an appointment
 router.post('/book', protectRoute, AppointmentController.bookAppointment);
+
+// Alias route for frontend compatibility
+router.post('/', protectRoute, AppointmentController.bookAppointment);
 
 // Get user's appointments
 router.get('/my-appointments', protectRoute, AppointmentController.getUserAppointments);

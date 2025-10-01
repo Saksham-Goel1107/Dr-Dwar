@@ -3,6 +3,72 @@ import { prisma } from '../config/database.js';
 import { asyncHandler } from '../middleware/error.middleware.js';
 
 export class AppointmentController {
+  // Check slot availability for booking
+  static checkSlotAvailability = asyncHandler(async (req: Request, res: Response) => {
+    const auth = req.auth();
+    if (!auth || !auth.userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required',
+      });
+    }
+
+    const { professionalId, date, slots } = req.body;
+
+    if (!professionalId || !date || !slots) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields: professionalId, date, and slots are required',
+      });
+    }
+
+    const dateObj = new Date(date);
+    if (isNaN(dateObj.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid date format',
+      });
+    }
+
+    // Get existing appointments for this date
+    const existingAppointments = await prisma.appointment.findMany({
+      where: {
+        professionalId,
+        scheduledDate: dateObj,
+        status: {
+          in: ['PENDING', 'CONFIRMED'],
+        },
+      },
+      select: {
+        startTime: true,
+        endTime: true,
+      },
+    });
+
+    // Check which slots are booked
+    const bookedSlots = slots.filter((slot: string) => {
+      return existingAppointments.some((appointment) => {
+        const [slotHour, slotMinute] = slot.split(':').map(Number);
+        const slotTime = slotHour * 60 + slotMinute;
+
+        const [aptStartHour, aptStartMinute] = appointment.startTime.split(':').map(Number);
+        const [aptEndHour, aptEndMinute] = appointment.endTime.split(':').map(Number);
+        const aptStart = aptStartHour * 60 + aptStartMinute;
+        const aptEnd = aptEndHour * 60 + aptEndMinute;
+
+        return slotTime >= aptStart && slotTime < aptEnd;
+      });
+    });
+
+    res.json({
+      success: true,
+      data: {
+        bookedSlots,
+        availableSlots: slots.filter((slot: string) => !bookedSlots.includes(slot)),
+      },
+    });
+  });
+
   // Get available doctors with their fees and basic availability
   static getAvailableDoctors = asyncHandler(async (req: Request, res: Response) => {
     const auth = req.auth();
@@ -61,7 +127,7 @@ export class AppointmentController {
 
     const formattedDoctors = doctors.map((doctor) => ({
       id: doctor.id,
-      name: `${doctor.firstName} ${doctor.lastName}`,
+      name: `${doctor.firstName || ''} ${doctor.lastName || ''}`.trim() || 'Dr. Unknown',
       specialization: doctor.specialization,
       subSpecialization: doctor.subSpecialization,
       experience: doctor.yearsOfExperience,
@@ -132,7 +198,7 @@ export class AppointmentController {
       success: true,
       data: {
         id: doctor.id,
-        name: `${doctor.firstName} ${doctor.lastName}`,
+        name: `${doctor.firstName || ''} ${doctor.lastName || ''}`.trim() || 'Dr. Unknown',
         specialization: doctor.specialization,
         subSpecialization: doctor.subSpecialization,
         experience: doctor.yearsOfExperience,
@@ -177,7 +243,7 @@ export class AppointmentController {
 
     // 2. Validate appointment type
     const validAppointmentTypes = [
-      'GENERAL',
+      'CONSULTATION',
       'FOLLOW_UP',
       'EMERGENCY',
       'TELEMEDICINE',
@@ -467,41 +533,49 @@ export class AppointmentController {
     // === CREATE APPOINTMENT ===
 
     // 18. Create the appointment
-    const appointment = await prisma.appointment.create({
-      data: {
-        userId: auth.userId,
-        professionalId,
-        appointmentType,
-        scheduledDate: appointmentDate,
-        startTime,
-        endTime,
-        symptoms: symptoms || null,
-        notes: notes || null,
-        fee,
-        status: 'PENDING', // All new appointments start as pending
-      },
-    });
+    try {
+      const appointment = await prisma.appointment.create({
+        data: {
+          userId: auth.userId,
+          professionalId,
+          appointmentType,
+          scheduledDate: appointmentDate,
+          startTime,
+          endTime,
+          symptoms: symptoms || null,
+          notes: notes || null,
+          fee,
+          status: 'PENDING', // All new appointments start as pending
+        },
+      });
 
-    // 19. Deduct credits from user (consider implementing this after confirmation)
-    // For now, we'll deduct immediately, but in production you might want to hold credits
-    await prisma.user.update({
-      where: { userId: auth.userId },
-      data: { credits: { decrement: fee } },
-    });
+      // 19. Deduct credits from user (consider implementing this after confirmation)
+      // For now, we'll deduct immediately, but in production you might want to hold credits
+      await prisma.user.update({
+        where: { userId: auth.userId },
+        data: { credits: { decrement: fee } },
+      });
 
-    res.status(201).json({
-      success: true,
-      message: 'Appointment booked successfully. Please wait for doctor confirmation.',
-      data: {
-        appointmentId: appointment.id,
-        scheduledDate: appointment.scheduledDate,
-        startTime: appointment.startTime,
-        endTime: appointment.endTime,
-        fee: appointment.fee,
-        status: appointment.status,
-        doctorName: `${doctor.firstName} ${doctor.lastName}`,
-      },
-    });
+      res.status(201).json({
+        success: true,
+        message: 'Appointment booked successfully. Please wait for doctor confirmation.',
+        data: {
+          appointmentId: appointment.id,
+          scheduledDate: appointment.scheduledDate,
+          startTime: appointment.startTime,
+          endTime: appointment.endTime,
+          fee: appointment.fee,
+          status: appointment.status,
+          doctorName: `${doctor.firstName || ''} ${doctor.lastName || ''}`.trim() || 'Dr. Unknown',
+        },
+      });
+    } catch (error) {
+      console.error('Database error in bookAppointment:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Database connection error. Please try again later.',
+      });
+    }
   });
 
   // Get user's appointments
@@ -514,25 +588,33 @@ export class AppointmentController {
       });
     }
 
-    const appointments = await prisma.appointment.findMany({
-      where: { userId: auth.userId },
-      include: {
-        professional: {
-          select: {
-            firstName: true,
-            lastName: true,
-            specialization: true,
-            hospitalAffiliation: true,
+    try {
+      const appointments = await prisma.appointment.findMany({
+        where: { userId: auth.userId },
+        include: {
+          professional: {
+            select: {
+              firstName: true,
+              lastName: true,
+              specialization: true,
+              hospitalAffiliation: true,
+            },
           },
         },
-      },
-      orderBy: { scheduledDate: 'desc' },
-    });
+        orderBy: { scheduledDate: 'desc' },
+      });
 
-    res.json({
-      success: true,
-      data: appointments,
-    });
+      res.json({
+        success: true,
+        data: appointments,
+      });
+    } catch (error) {
+      console.error('Database error in getUserAppointments:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Database connection error. Please try again later.',
+      });
+    }
   });
 
   // Cancel appointment (user)

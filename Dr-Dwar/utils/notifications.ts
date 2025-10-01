@@ -1,3 +1,4 @@
+import * as Notifications from 'expo-notifications';
 import * as SecureStore from 'expo-secure-store';
 
 /**
@@ -30,7 +31,6 @@ export const sendNotificationIfEnabled = async (notification: {
 }): Promise<void> => {
   const enabled = await areNotificationsEnabled();
   if (enabled) {
-    const Notifications = (await import('expo-notifications')).default;
     await Notifications.scheduleNotificationAsync(notification);
   }
 };

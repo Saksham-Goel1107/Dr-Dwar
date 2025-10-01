@@ -2,7 +2,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import NetInfo from '@react-native-community/netinfo';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -60,7 +60,7 @@ export default function AppointmentsScreen() {
   }, []);
 
   // Fetch available doctors
-  const fetchDoctors = useCallback(async () => {
+  const fetchDoctors = async () => {
     try {
       setIsLoading(true);
       const token = await getToken();
@@ -84,24 +84,33 @@ export default function AppointmentsScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [getToken]);
+  };
 
   useEffect(() => {
-    if (networkStatus) {
+    let mounted = true;
+    if (networkStatus && mounted) {
       fetchDoctors();
     }
-  }, [networkStatus,fetchDoctors]);
+    return () => {
+      mounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [networkStatus]);
 
   const handleDoctorSelect = (doctor: Doctor) => {
-    setSelectedDoctor(doctor);
-    setShowDoctorDetails(true);
+    // Navigate directly to booking screen with doctor ID
+    router.push({
+      pathname: '/(root)/book-appointment',
+      params: { doctorId: doctor.id },
+    });
   };
 
   const handleBookAppointment = () => {
     if (!selectedDoctor) return;
-
-    // Navigate to booking screen - types will be updated when routes are regenerated
-    (router as any).push('/(root)/book-appointment');
+    router.push({
+      pathname: '/(root)/book-appointment',
+      params: { doctorId: selectedDoctor.id },
+    });
   };
 
   const getDayName = (dayOfWeek: number) => {

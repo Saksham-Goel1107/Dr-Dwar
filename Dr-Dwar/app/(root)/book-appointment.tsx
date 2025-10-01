@@ -3,7 +3,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import NetInfo from '@react-native-community/netinfo';
 import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import * as SecureStore from 'expo-secure-store';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -13,6 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { sendNotificationIfEnabled } from '../../utils/notifications';
 
 interface Doctor {
   id: string;
@@ -44,15 +46,23 @@ export default function BookAppointmentScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isBooking, setIsBooking] = useState(false);
   const [networkStatus, setNetworkStatus] = useState<boolean | null>(null);
-  const [vibrationsEnabled] = useState(true); // For now, enable vibrations
+  const [vibrationsEnabled, setVibrationsEnabled] = useState(true);
+  const isFetchingDoctorRef = useRef(false);
 
-  // If no doctorId is provided, redirect to appointments screen
+  // Load vibration settings
   useEffect(() => {
-    if (!doctorId && !isLoading) {
-      router.back();
-      return;
-    }
-  }, [doctorId, isLoading, router]);
+    const loadVibrationSettings = async () => {
+      try {
+        const vib = await SecureStore.getItemAsync('VIBRATIONS');
+        setVibrationsEnabled(vib !== 'false'); // Default to true
+      } catch (error) {
+        console.error('Error loading vibration settings:', error);
+        setVibrationsEnabled(true); // Default to true on error
+      }
+    };
+
+    loadVibrationSettings();
+  }, []);
 
   // Booking form state
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -79,43 +89,59 @@ export default function BookAppointmentScreen() {
     return () => unsubscribe();
   }, []);
 
-  // Fetch doctor details
-  const fetchDoctorDetails = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const token = await getToken();
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/appointments/doctors/${doctorId}`,
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'ngrok-skip-browser-warning': 'true',
-          },
-        },
-      );
-
-      const data = await response.json();
-      if (data.success) {
-        setDoctor(data.data);
-      } else {
-        Alert.alert('Error', data.message || 'Failed to load doctor details');
-        router.back();
-      }
-    } catch (error) {
-      console.error('Error fetching doctor details:', error);
-      Alert.alert('Error', 'Failed to load doctor details. Please try again.');
-      router.back();
-    } finally {
-      setIsLoading(false);
-    }
-  }, [doctorId, getToken, router]);
-
   useEffect(() => {
-    if (networkStatus && doctorId) {
-      fetchDoctorDetails();
+    if (networkStatus && doctorId && !doctor && !isFetchingDoctorRef.current) {
+      const fetchDoctor = async () => {
+        if (isFetchingDoctorRef.current || doctor) return; // Double check
+
+        try {
+          isFetchingDoctorRef.current = true;
+          setIsLoading(true);
+          const token = await getToken();
+
+          // Create a timeout promise
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Request timeout')), 10000); // 10 second timeout
+          });
+
+          const fetchPromise = fetch(
+            `${process.env.EXPO_PUBLIC_API_URL}/api/appointments/doctors/${doctorId}`,
+            {
+              method: 'GET',
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'ngrok-skip-browser-warning': 'true',
+                'Cache-Control': 'no-cache', // Prevent 304 responses
+              },
+            },
+          );
+
+          const response = (await Promise.race([fetchPromise, timeoutPromise])) as Response;
+          const data = await response.json();
+
+          if (data.success) {
+            setDoctor(data.data);
+          } else {
+            Alert.alert('Error', data.message || 'Failed to load doctor details');
+            router.back();
+          }
+        } catch (error) {
+          console.error('Error fetching doctor details:', error);
+          const errorMessage =
+            error instanceof Error && error.message === 'Request timeout'
+              ? 'Request timed out. Please check your connection and try again.'
+              : 'Failed to load doctor details. Please try again.';
+          Alert.alert('Error', errorMessage);
+          router.back();
+        } finally {
+          setIsLoading(false);
+          isFetchingDoctorRef.current = false;
+        }
+      };
+
+      fetchDoctor();
     }
-  }, [networkStatus, doctorId, fetchDoctorDetails]);
+  }, [networkStatus, doctorId, doctor, getToken, router]); // Include all dependencies
 
   // Generate available time slots for selected date
   const generateTimeSlots = (date: Date) => {
@@ -234,6 +260,25 @@ export default function BookAppointmentScreen() {
               const data = await response.json();
 
               if (data.success) {
+                // Send notification for successful booking
+                try {
+                  await sendNotificationIfEnabled({
+                    content: {
+                      title: 'Appointment Booked Successfully!',
+                      body: `Your appointment with Dr. ${doctor?.name} is confirmed for ${selectedDate.toDateString()} at ${selectedTime}.`,
+                      sound: 'default',
+                      data: {
+                        appointmentId: data.data?.appointmentId,
+                        type: 'appointment_booked',
+                      },
+                    },
+                    trigger: null, // Show immediately
+                  });
+                } catch (notificationError) {
+                  console.error('Error sending notification:', notificationError);
+                  // Don't show error to user for notification failure
+                }
+
                 Alert.alert('Success', 'Appointment booked successfully!', [
                   {
                     text: 'OK',
