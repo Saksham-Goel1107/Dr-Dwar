@@ -14,122 +14,124 @@ datasource db {
 }
 
 model User {
-  id                String   @id @default(cuid())
-  userId           String   @unique
-  userName          String   @unique
-  phoneNumber       String   @unique
-  email             String?  @unique
-  role              String   @default("User")
-  credits          Int      @default(5000)
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  userName             String   @unique
+  phoneNumber          String   @unique
+  email                String?  @unique
+  role                 String   @default("User")
+  credits              Int      @default(5000)
   // Encrypted user profile data
   encryptedProfileData String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
-  orders            Orders[]
-  creditsPayments   creditsPayments[]
-  bankAccount       BankAccount?
+  orders             Orders[]
+  creditsPayments    creditsPayments[]
+  bankAccount        BankAccount?
   withdrawalRequests WithdrawalRequest[]
-  appointments      Appointment[]
+  appointments       Appointment[]
+  prescriptions      Prescription[]
+  medicalNotes       MedicalNote[]
 
   @@index([userId])
 }
 
 model Professional {
-  id                String   @id @default(cuid())
-  userId           String   @unique
-  userName          String   @unique
-  phoneNumber       String   @unique
-  email             String?  @unique
-  role              String   // Doctor or PharmaCist
-  credits          Int      @default(0)
-  isVerified       Boolean  @default(false)
+  id                 String  @id @default(cuid())
+  userId             String  @unique
+  userName           String  @unique
+  phoneNumber        String  @unique
+  email              String? @unique
+  role               String // Doctor or PharmaCist
+  credits            Int     @default(0)
+  isVerified         Boolean @default(false)
   verificationStatus String  @default("pending") // pending, under_review, verified, rejected
 
   // === PERSONAL INFORMATION ===
-  firstName         String
-  lastName          String
-  dateOfBirth       DateTime
-  gender            String
-  bloodGroup        String?
-  maritalStatus     String?
-  nationality       String   @default("Indian")
-  aadharNumber      String?  // Encrypted
-  panNumber         String?  // Encrypted
+  firstName     String
+  lastName      String
+  dateOfBirth   DateTime
+  gender        String
+  bloodGroup    String?
+  maritalStatus String?
+  nationality   String   @default("Indian")
+  aadharNumber  String? // Encrypted
+  panNumber     String? // Encrypted
 
   // === ADDRESS INFORMATION ===
   permanentAddressLine1 String
   permanentAddressLine2 String?
-  permanentCity       String
-  permanentState      String
-  permanentPincode    String
-  permanentCountry    String @default("India")
+  permanentCity         String
+  permanentState        String
+  permanentPincode      String
+  permanentCountry      String  @default("India")
 
-  currentAddressLine1  String
-  currentAddressLine2  String?
+  currentAddressLine1 String
+  currentAddressLine2 String?
   currentCity         String
   currentState        String
   currentPincode      String
-  currentCountry      String @default("India")
+  currentCountry      String  @default("India")
 
   // === EMERGENCY CONTACT ===
-  emergencyName      String
-  emergencyRelation  String
-  emergencyPhone     String
-  emergencyEmail     String?
+  emergencyName     String
+  emergencyRelation String
+  emergencyPhone    String
+  emergencyEmail    String?
 
   // === FAMILY INFORMATION ===
-  fatherName         String?
-  motherName         String?
-  spouseName         String?
+  fatherName String?
+  motherName String?
+  spouseName String?
 
   // === EDUCATIONAL QUALIFICATIONS ===
   // JSON string containing array of educational qualifications
   educationalQualifications String? // Encrypted JSON
 
   // === PROFESSIONAL DETAILS - DOCTORS ===
-  medicalLicenseNumber    String?
-  licenseIssuingAuthority String?
-  licenseIssueDate       DateTime?
-  licenseExpiryDate      DateTime?
-  specialization         String?
-  subSpecialization      String?
-  yearsOfExperience      Int?
-  medicalCouncil         String?
+  medicalLicenseNumber      String?
+  licenseIssuingAuthority   String?
+  licenseIssueDate          DateTime?
+  licenseExpiryDate         DateTime?
+  specialization            String?
+  subSpecialization         String?
+  yearsOfExperience         Int?
+  medicalCouncil            String?
   councilRegistrationNumber String?
-  hospitalAffiliation    String?
-  currentPosition        String?
-  previousPositions      String? // Encrypted JSON array
+  hospitalAffiliation       String?
+  currentPosition           String?
+  previousPositions         String? // Encrypted JSON array
 
   // Medical Education Details
-  mbbsDegreeFrom        String?
-  mbbsCompletionYear    Int?
-  mdDegreeFrom          String?
-  mdCompletionYear      Int?
-  msDegreeFrom          String?
-  msCompletionYear      Int?
-  otherDegrees          String? // Encrypted JSON array
+  mbbsDegreeFrom     String?
+  mbbsCompletionYear Int?
+  mdDegreeFrom       String?
+  mdCompletionYear   Int?
+  msDegreeFrom       String?
+  msCompletionYear   Int?
+  otherDegrees       String? // Encrypted JSON array
 
   // === PROFESSIONAL DETAILS - PHARMACISTS ===
-  pharmacyLicenseNumber String?
-  pharmacyLicenseIssuingAuthority String?
-  pharmacyLicenseIssueDate      DateTime?
-  pharmacyLicenseExpiryDate     DateTime?
-  pharmacyName          String?
-  pharmacyAddress       String?
-  pharmacyOwnershipType String? // owned, managed, employed
-  yearsOfPharmacyExperience Int?
-  pharmacyCouncil       String?
+  pharmacyLicenseNumber             String?
+  pharmacyLicenseIssuingAuthority   String?
+  pharmacyLicenseIssueDate          DateTime?
+  pharmacyLicenseExpiryDate         DateTime?
+  pharmacyName                      String?
+  pharmacyAddress                   String?
+  pharmacyOwnershipType             String? // owned, managed, employed
+  yearsOfPharmacyExperience         Int?
+  pharmacyCouncil                   String?
   pharmacyCouncilRegistrationNumber String?
 
   // Pharmacy Education Details
-  bpharmDegreeFrom      String?
-  bpharmCompletionYear  Int?
-  mpharmDegreeFrom      String?
-  mpharmCompletionYear  Int?
-  pharmdDegreeFrom      String?
-  pharmdCompletionYear  Int?
-  otherPharmacyDegrees  String? // Encrypted JSON array
+  bpharmDegreeFrom     String?
+  bpharmCompletionYear Int?
+  mpharmDegreeFrom     String?
+  mpharmCompletionYear Int?
+  pharmdDegreeFrom     String?
+  pharmdCompletionYear Int?
+  otherPharmacyDegrees String? // Encrypted JSON array
 
   // === PROFESSIONAL MEMBERSHIPS ===
   professionalMemberships String? // Encrypted JSON array
@@ -138,57 +140,59 @@ model Professional {
   continuingEducationCredits String? // Encrypted JSON array
 
   // === WORK EXPERIENCE ===
-  workExperience       String? // Encrypted JSON array of work history
+  workExperience String? // Encrypted JSON array of work history
 
   // === CRIMINAL BACKGROUND ===
-  criminalRecord       Boolean @default(false)
+  criminalRecord        Boolean @default(false)
   criminalRecordDetails String? // Encrypted
 
   // === MEDICAL MALPRACTICE (Doctors only) ===
-  malpracticeHistory   Boolean @default(false)
-  malpracticeDetails   String? // Encrypted
+  malpracticeHistory Boolean @default(false)
+  malpracticeDetails String? // Encrypted
 
   // === REFERENCES ===
   professionalReferences String? // Encrypted JSON array
 
   // === VERIFICATION DOCUMENTS ===
   // Government ID Proofs
-  aadharCardProof      String? // File path/URL
-  panCardProof         String? // File path/URL
-  passportProof        String? // File path/URL
-  voterIdProof         String? // File path/URL
+  aadharCardProof String? // File path/URL
+  panCardProof    String? // File path/URL
+  passportProof   String? // File path/URL
+  voterIdProof    String? // File path/URL
 
   // Professional Documents
-  professionalLicenseProof String? // File path/URL
-  degreeCertificatesProof String? // File path/URL (multiple files)
-  councilRegistrationProof String? // File path/URL
+  professionalLicenseProof    String? // File path/URL
+  degreeCertificatesProof     String? // File path/URL (multiple files)
+  councilRegistrationProof    String? // File path/URL
   experienceCertificatesProof String? // File path/URL
 
   // Other Documents
-  passportSizePhoto    String? // File path/URL
-  signatureProof       String? // File path/URL
-  addressProof         String? // File path/URL
+  passportSizePhoto String? // File path/URL
+  signatureProof    String? // File path/URL
+  addressProof      String? // File path/URL
 
   // === VERIFICATION METADATA ===
-  submittedAt          DateTime?
-  verifiedAt           DateTime?
-  verifiedBy           String?
-  rejectionReason      String?
-  reviewNotes          String? // Encrypted
+  submittedAt     DateTime?
+  verifiedAt      DateTime?
+  verifiedBy      String?
+  rejectionReason String?
+  reviewNotes     String? // Encrypted
 
   // === SYSTEM FIELDS ===
   // Encrypted additional profile data
   encryptedProfileData String?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   // === RELATIONS ===
-  bankAccount         ProfessionalBankAccount?
-  earnings            ProfessionalEarning[]
-  withdrawals         ProfessionalWithdrawal[]
-  availability        DoctorAvailability[]
-  fees                DoctorFees?
-  appointments        Appointment[]
+  bankAccount   ProfessionalBankAccount?
+  earnings      ProfessionalEarning[]
+  withdrawals   ProfessionalWithdrawal[]
+  availability  DoctorAvailability[]
+  fees          DoctorFees?
+  appointments  Appointment[]
+  prescriptions Prescription[]
+  medicalNotes  MedicalNote[]
 
   @@index([userId])
   @@index([isVerified])
@@ -198,46 +202,46 @@ model Professional {
 }
 
 model Orders {
-  id          String   @id @default(cuid())
-  userId      String
-  amount      Float
-  status      OrderStatus @default(PENDING)
-  isApproved  Boolean  @default(false)
-  orderId     String?  @unique
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String      @id @default(cuid())
+  userId     String
+  amount     Float
+  status     OrderStatus @default(PENDING)
+  isApproved Boolean     @default(false)
+  orderId    String?     @unique
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
 
-  user        User     @relation(fields: [userId], references: [id])
-  orderItems  OrderItems[]
-  payments    Payment[]
+  user       User         @relation(fields: [userId], references: [id])
+  orderItems OrderItems[]
+  payments   Payment[]
 
   @@index([userId])
 }
 
 model OrderItems {
-  id          String   @id @default(cuid())
-  orderId     String
-  itemName    String
-  quantity    Int
-  price       Float
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  orderId   String
+  itemName  String
+  quantity  Int
+  price     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  order       Orders   @relation(fields: [orderId], references: [id])
+  order Orders @relation(fields: [orderId], references: [id])
 
   @@index([orderId])
 }
 
 model Payment {
-  id                String        @id @default(cuid())
-  orderId           String
-  amount            Float
-  currency          String        @default("INR")
-  paymentMethod     String?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  id            String   @id @default(cuid())
+  orderId       String
+  amount        Float
+  currency      String   @default("INR")
+  paymentMethod String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  order             Orders        @relation(fields: [orderId], references: [id])
+  order Orders @relation(fields: [orderId], references: [id])
 
   @@index([orderId])
 }
@@ -265,24 +269,24 @@ model News {
 }
 
 model creditsPayments {
-  id          String   @id @default(cuid())
-  userId      String
-  amount      Float
-  credits     Int
-  paymentId   String   @unique
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  userId    String
+  amount    Float
+  credits   Int
+  paymentId String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user        User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@index([userId])
 }
 
 model BankAccount {
   id                String   @id @default(cuid())
-  userId           String   @unique
+  userId            String   @unique
   accountHolderName String
-  accountNumber     String   // Encrypted
+  accountNumber     String // Encrypted
   bankName          String
   ifscCode          String
   accountType       String   @default("savings") // savings, current
@@ -290,27 +294,27 @@ model BankAccount {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  user              User                @relation(fields: [userId], references: [id])
-  withdrawals       WithdrawalRequest[]
+  user        User                @relation(fields: [userId], references: [id])
+  withdrawals WithdrawalRequest[]
 
   @@index([userId])
 }
 
 model WithdrawalRequest {
-  id                String            @id @default(cuid())
-  userId            String
-  amount            Float
-  credits           Int
-  status            WithdrawalStatus  @default(PENDING)
-  bankAccountId     String
-  adminNotes        String?
-  processedAt       DateTime?
-  processedBy       String?
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  id            String           @id @default(cuid())
+  userId        String
+  amount        Float
+  credits       Int
+  status        WithdrawalStatus @default(PENDING)
+  bankAccountId String
+  adminNotes    String?
+  processedAt   DateTime?
+  processedBy   String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 
-  user              User              @relation(fields: [userId], references: [id])
-  bankAccount       BankAccount       @relation(fields: [bankAccountId], references: [id])
+  user        User        @relation(fields: [userId], references: [id])
+  bankAccount BankAccount @relation(fields: [bankAccountId], references: [id])
 
   @@index([userId])
   @@index([status])
@@ -321,7 +325,7 @@ model ProfessionalBankAccount {
   id                String   @id @default(cuid())
   professionalId    String   @unique
   accountHolderName String
-  accountNumber     String   // Encrypted
+  accountNumber     String // Encrypted
   bankName          String
   ifscCode          String
   accountType       String   @default("savings") // savings, current
@@ -329,25 +333,25 @@ model ProfessionalBankAccount {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  professional      Professional            @relation(fields: [professionalId], references: [id])
-  withdrawals       ProfessionalWithdrawal[]
+  professional Professional             @relation(fields: [professionalId], references: [id])
+  withdrawals  ProfessionalWithdrawal[]
 
   @@index([professionalId])
 }
 
 model ProfessionalEarning {
-  id                String          @id @default(cuid())
-  professionalId    String
-  amount            Float
-  credits           Int
-  source            EarningSource
-  sourceId          String?         // ID of the order, consultation, etc.
-  description       String
-  transactionId     String?         @unique
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  id             String        @id @default(cuid())
+  professionalId String
+  amount         Float
+  credits        Int
+  source         EarningSource
+  sourceId       String? // ID of the order, consultation, etc.
+  description    String
+  transactionId  String?       @unique
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
-  professional      Professional    @relation(fields: [professionalId], references: [id])
+  professional Professional @relation(fields: [professionalId], references: [id])
 
   @@index([professionalId])
   @@index([source])
@@ -355,20 +359,20 @@ model ProfessionalEarning {
 }
 
 model ProfessionalWithdrawal {
-  id                String                    @id @default(cuid())
-  professionalId    String
-  amount            Float
-  credits           Int
-  status            WithdrawalStatus          @default(PENDING)
-  bankAccountId     String
-  adminNotes        String?
-  processedAt       DateTime?
-  processedBy       String?
-  createdAt         DateTime                  @default(now())
-  updatedAt         DateTime                  @updatedAt
+  id             String           @id @default(cuid())
+  professionalId String
+  amount         Float
+  credits        Int
+  status         WithdrawalStatus @default(PENDING)
+  bankAccountId  String
+  adminNotes     String?
+  processedAt    DateTime?
+  processedBy    String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
 
-  professional      Professional              @relation(fields: [professionalId], references: [id])
-  bankAccount       ProfessionalBankAccount   @relation(fields: [bankAccountId], references: [id])
+  professional Professional            @relation(fields: [professionalId], references: [id])
+  bankAccount  ProfessionalBankAccount @relation(fields: [bankAccountId], references: [id])
 
   @@index([professionalId])
   @@index([status])
@@ -397,56 +401,58 @@ enum EarningSource {
 model DoctorAvailability {
   id             String   @id @default(cuid())
   professionalId String
-  dayOfWeek      Int      // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-  startTime      String   // HH:MM format (24-hour)
-  endTime        String   // HH:MM format (24-hour)
+  dayOfWeek      Int // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  startTime      String // HH:MM format (24-hour)
+  endTime        String // HH:MM format (24-hour)
   isActive       Boolean  @default(true)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  professional   Professional @relation(fields: [professionalId], references: [id])
+  professional Professional @relation(fields: [professionalId], references: [id])
 
   @@index([professionalId])
   @@index([dayOfWeek])
 }
 
 model DoctorFees {
-  id             String   @id @default(cuid())
-  professionalId String   @unique
-  consultationFee Float   @default(500) // Base consultation fee in rupees
-  followUpFee    Float   @default(300) // Follow-up consultation fee
-  emergencyFee   Float   @default(1000) // Emergency consultation fee
-  telemedicineFee Float  @default(400) // Telemedicine consultation fee
-  homeVisitFee   Float   @default(800) // Home visit consultation fee
-  isActive       Boolean @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id              String   @id @default(cuid())
+  professionalId  String   @unique
+  consultationFee Float    @default(500) // Base consultation fee in rupees
+  followUpFee     Float    @default(300) // Follow-up consultation fee
+  emergencyFee    Float    @default(1000) // Emergency consultation fee
+  telemedicineFee Float    @default(400) // Telemedicine consultation fee
+  homeVisitFee    Float    @default(800) // Home visit consultation fee
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  professional   Professional @relation(fields: [professionalId], references: [id])
+  professional Professional @relation(fields: [professionalId], references: [id])
 
   @@index([professionalId])
 }
 
 model Appointment {
-  id             String           @id @default(cuid())
-  userId         String
-  professionalId String
-  appointmentType AppointmentType @default(CONSULTATION)
-  scheduledDate  DateTime
-  startTime      String           // HH:MM format
-  endTime        String           // HH:MM format
-  status         AppointmentStatus @default(PENDING)
-  symptoms       String?          // Patient's symptoms/description
-  notes          String?          // Additional notes
-  fee            Float            // Fee for this appointment
-  paymentStatus  PaymentStatus    @default(PENDING)
-  meetingLink    String?          // For telemedicine appointments
-  prescriptionId String?          // Link to prescription if created
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  id              String            @id @default(cuid())
+  userId          String
+  professionalId  String
+  appointmentType AppointmentType   @default(CONSULTATION)
+  scheduledDate   DateTime
+  startTime       String // HH:MM format
+  endTime         String // HH:MM format
+  status          AppointmentStatus @default(PENDING)
+  symptoms        String? // Patient's symptoms/description
+  notes           String? // Additional notes
+  fee             Float // Fee for this appointment
+  paymentStatus   PaymentStatus     @default(PENDING)
+  meetingLink     String? // For telemedicine appointments
+  prescriptionId  String? // Link to prescription if created
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 
-  user           User             @relation(fields: [userId], references: [userId])
-  professional   Professional     @relation(fields: [professionalId], references: [id])
+  user         User          @relation(fields: [userId], references: [userId])
+  professional Professional  @relation(fields: [professionalId], references: [id])
+  prescription Prescription?
+  medicalNotes MedicalNote[]
 
   @@index([userId])
   @@index([professionalId])
@@ -476,4 +482,91 @@ enum PaymentStatus {
   PAID
   REFUNDED
   FAILED
+}
+
+// === MEDICAL PRESCRIPTIONS ===
+model Prescription {
+  id            String             @id @default(cuid())
+  appointmentId String             @unique // Each appointment can have only one prescription
+  patientId     String // User ID of the patient
+  doctorId      String // Professional ID of the doctor
+  diagnosis     String? // Doctor's diagnosis
+  notes         String? // Additional prescription notes
+  status        PrescriptionStatus @default(ACTIVE)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  appointment Appointment            @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  medicines   PrescriptionMedicine[]
+  patient     User                   @relation(fields: [patientId], references: [userId])
+  doctor      Professional           @relation(fields: [doctorId], references: [id])
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([appointmentId])
+  @@index([status])
+}
+
+model PrescriptionMedicine {
+  id             String   @id @default(cuid())
+  prescriptionId String
+  medicineName   String
+  dosage         String // e.g., "500mg", "10ml"
+  frequency      String // e.g., "twice daily", "every 8 hours"
+  duration       String // e.g., "7 days", "2 weeks"
+  instructions   String? // e.g., "Take with food", "Avoid alcohol"
+  quantity       Int? // Number of units to dispense
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  prescription Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+
+  @@index([prescriptionId])
+}
+
+// === MEDICAL NOTES ===
+model MedicalNote {
+  id            String            @id @default(cuid())
+  patientId     String // User ID of the patient
+  doctorId      String // Professional ID of the doctor
+  appointmentId String? // Optional link to appointment
+  noteType      MedicalNoteType
+  title         String // Brief title for the note
+  content       String // The actual note content
+  isPrivate     Boolean           @default(false) // If true, only the doctor who created it can see it
+  status        MedicalNoteStatus @default(ACTIVE)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  patient     User         @relation(fields: [patientId], references: [userId])
+  doctor      Professional @relation(fields: [doctorId], references: [id])
+  appointment Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([appointmentId])
+  @@index([noteType])
+  @@index([status])
+}
+
+enum PrescriptionStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  EXPIRED
+}
+
+enum MedicalNoteType {
+  INSTRUCTION // What patient should/shouldn't do
+  OBSERVATION // Doctor's observations
+  FOLLOW_UP // Follow-up instructions
+  WARNING // Important warnings
+  PROGRESS // Progress notes
+  GENERAL // General notes
+}
+
+enum MedicalNoteStatus {
+  ACTIVE
+  ARCHIVED
+  DELETED
 }

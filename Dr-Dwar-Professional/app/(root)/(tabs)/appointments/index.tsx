@@ -89,22 +89,9 @@ export default function AppointmentsScreen() {
       title: 'Pending Confirmations',
       subtitle: 'Appointments waiting for confirmation',
       icon: 'hourglass-outline',
-      onPress: () => {
-        // Navigate to pending confirmations
-        console.log('Navigate to pending confirmations');
-      },
+      onPress: () => router.push('/(root)/(tabs)/appointments/pending-confirmations'),
       keywords: ['pending', 'confirmation', 'waiting', 'approve', 'review'],
-    },
-    {
-      title: 'Patient Records',
-      subtitle: 'Access patient medical records',
-      icon: 'document-text-outline',
-      onPress: () => {
-        // Navigate to patient records
-        console.log('Navigate to patient records');
-      },
-      keywords: ['patient', 'records', 'medical', 'history', 'files'],
-    },
+    }
   ];
 
   const filteredCards = appointmentCards.filter(

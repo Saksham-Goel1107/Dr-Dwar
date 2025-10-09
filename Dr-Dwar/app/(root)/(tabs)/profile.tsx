@@ -1,6 +1,7 @@
 import { useClerk, useUser } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
+import Constants from 'expo-constants';
 import * as Haptics from 'expo-haptics';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as Notifications from 'expo-notifications';
@@ -9,6 +10,7 @@ import * as SecureStore from 'expo-secure-store';
 import * as Speech from 'expo-speech';
 import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Image,
   Linking,
@@ -110,6 +112,7 @@ export default function ProfileSettings() {
   const [showBackupModal, setShowBackupModal] = useState(false);
   const [backupCodesSaved, setBackupCodesSaved] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [checkingUpdates, setCheckingUpdates] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -541,11 +544,75 @@ export default function ProfileSettings() {
   };
 
   const handleAbout = () => {
+    const version = Constants.expoConfig?.version;
     Alert.alert(
       'About Dr-Dwar',
-      'Dr-Dwar is your AI-powered health assistant.\n\nVersion: 1.0.0\nMADE WITH ❤️ IN INDIA By Saksham Goel\n© 2025 Dr-Dwar Team',
+      `Dr-Dwar is your AI-powered health assistant.\n\nVersion: ${version}\nMADE WITH ❤️ IN INDIA By Saksham Goel\n© ${new Date().getFullYear()} Dr-Dwar Team`,
       [{ text: 'OK' }],
     );
+  };
+
+  const handleCheckForUpdates = async () => {
+    setCheckingUpdates(true);
+    try {
+      // Get current app version
+      const currentVersion = Constants.expoConfig?.version;
+
+      // Detect platform and app type
+      const platform = Platform.OS; // 'ios' or 'android'
+      const appType = Constants.expoConfig?.name?.toLowerCase().includes('professional')
+        ? 'professional'
+        : 'regular';
+
+      // In development, use ngrok URL; in production, use your actual API URL
+      const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/version/app?platform=${platform}&appType=${appType}`,
+      );
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error('Failed to check for updates');
+      }
+
+      const latestVersion = data.version;
+
+      if (latestVersion === currentVersion) {
+        Alert.alert(
+          'Up to Date',
+          `You're running the latest version (${currentVersion}). No updates available.`,
+          [{ text: 'OK' }],
+        );
+      } else {
+        Alert.alert(
+          'Update Available',
+          `A new version (${latestVersion}) is available. Your current version is ${currentVersion}.\n\nRelease Notes:\n${data.releaseNotes || ''}`,
+          [
+            { text: 'Later', style: 'cancel' },
+            {
+              text: 'Update Now',
+              onPress: () => {
+                if (data.downloadUrl) {
+                  Linking.openURL(data.downloadUrl);
+                } else {
+                  Alert.alert('Update', `Please update from the ${data.store || 'app store'}.`);
+                }
+              },
+            },
+          ],
+        );
+      }
+    } catch (error) {
+      console.error('Error checking for updates:', error);
+      Alert.alert(
+        'Check Failed',
+        'Unable to check for updates. Please check your internet connection and try again.',
+        [{ text: 'OK' }],
+      );
+    } finally {
+      setCheckingUpdates(false);
+    }
   };
 
   // Define all sections and their items for filtering
@@ -686,6 +753,17 @@ export default function ProfileSettings() {
     {
       title: 'About',
       items: [
+        {
+          title: 'Check for Updates',
+          subtitle: 'Check if a new version is available',
+          icon: 'refresh-circle-outline',
+          rightElement: checkingUpdates ? (
+            <View className="mr-2">
+              <ActivityIndicator size="small" color="#3B82F6" />
+            </View>
+          ) : undefined,
+          onPress: handleCheckForUpdates,
+        },
         {
           title: 'Credits',
           subtitle: 'App contributors and technologies',

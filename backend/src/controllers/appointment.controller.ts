@@ -717,6 +717,7 @@ export class AppointmentController {
 
       return {
         id: appointment.id,
+        userId: appointment.userId, // Add userId for patient profile access
         patientName: appointment.user.userName,
         patientPhone: appointment.user.phoneNumber,
         patientEmail: appointment.user.email,
@@ -734,6 +735,93 @@ export class AppointmentController {
       success: true,
       data: formattedAppointments,
     });
+  });
+
+  // Get appointments for a specific patient (for doctors to view patient history)
+  static getPatientAppointments = asyncHandler(async (req: Request, res: Response) => {
+    const auth = req.auth();
+    if (!auth || !auth.userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required',
+      });
+    }
+
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Patient userId is required',
+      });
+    }
+
+    // Verify that the requester is a doctor
+    const professional = await prisma.professional.findUnique({
+      where: { userId: auth.userId },
+      select: { id: true, role: true },
+    });
+
+    if (!professional || professional.role !== 'Doctor') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only doctors can access patient appointment history',
+      });
+    }
+
+    try {
+      const appointments = await prisma.appointment.findMany({
+        where: {
+          userId: userId,
+          professionalId: professional.id, // Only show appointments with this doctor
+        },
+        include: {
+          professional: {
+            select: {
+              firstName: true,
+              lastName: true,
+              specialization: true,
+              hospitalAffiliation: true,
+            },
+          },
+        },
+        orderBy: { scheduledDate: 'desc' },
+      });
+
+      // Format appointments for frontend
+      const formattedAppointments = appointments.map((appointment) => {
+        // Calculate duration from startTime and endTime
+        const startTime = appointment.startTime.split(':');
+        const endTime = appointment.endTime.split(':');
+        const startMinutes = parseInt(startTime[0]) * 60 + parseInt(startTime[1]);
+        const endMinutes = parseInt(endTime[0]) * 60 + parseInt(endTime[1]);
+        const duration = endMinutes - startMinutes;
+
+        return {
+          id: appointment.id,
+          appointmentDate: appointment.scheduledDate.toISOString().split('T')[0], // YYYY-MM-DD format
+          appointmentTime: appointment.startTime,
+          appointmentType: appointment.appointmentType.toLowerCase(),
+          status: appointment.status.toLowerCase(),
+          fee: appointment.fee,
+          duration: duration,
+          notes: appointment.notes || appointment.symptoms,
+          doctorName: `${appointment.professional.firstName} ${appointment.professional.lastName}`,
+          specialization: appointment.professional.specialization,
+        };
+      });
+
+      res.json({
+        success: true,
+        data: formattedAppointments,
+      });
+    } catch (error) {
+      console.error('Database error in getPatientAppointments:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Database connection error. Please try again later.',
+      });
+    }
   });
 
   // Schedule appointment (doctor)

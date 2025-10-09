@@ -14,12 +14,15 @@ import appointmentsRoutes from './routes/appointments.routes.js';
 import chatbotRoutes from './routes/chatbot.routes.js';
 import creditsRoutes from './routes/credits.routes.js';
 import healthRoutes from './routes/health.routes.js';
+import medicalNoteRoutes from './routes/medical-note.routes.js';
 import newsRoutes from './routes/news.routes.js';
 import orderRoutes from './routes/order.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
+import prescriptionRoutes from './routes/prescription.routes.js';
 import professionalCreditsRoutes from './routes/professional-credits.routes.js';
 import professionalRoutes from './routes/professional.routes.js';
 import userRoutes from './routes/user.routes.js';
+import versionRoutes from './routes/version.routes.js';
 
 const app = express();
 
@@ -47,8 +50,11 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/credits', creditsRoutes);
 app.use('/api/professional-credits', professionalCreditsRoutes);
 app.use('/api/appointments', appointmentsRoutes);
+app.use('/api/prescriptions', prescriptionRoutes);
+app.use('/api/medical-notes', medicalNoteRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/news', newsRoutes);
+app.use('/api/version', versionRoutes);
 app.use('/', healthRoutes);
 app.get('/metrics', async (_, res) => {
   res.setHeader('Content-Type', client.register.contentType);

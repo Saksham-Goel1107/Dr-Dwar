@@ -1,6 +1,7 @@
 import { useAuth } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
 import NetInfo from '@react-native-community/netinfo';
+import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -23,10 +24,12 @@ interface CalendarAppointment {
   duration: number;
   fee: number;
   notes?: string;
+  userId: string;
 }
 
 export default function CalendarViewScreen() {
   const { getToken } = useAuth();
+  const router = useRouter();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedAppointment, setSelectedAppointment] = useState<CalendarAppointment | null>(null);
@@ -89,6 +92,7 @@ export default function CalendarViewScreen() {
             duration: appointment.duration,
             fee: appointment.fee,
             notes: appointment.notes,
+            userId: appointment.userId,
           });
         });
         setAppointments(appointmentsByDate);
@@ -480,12 +484,27 @@ export default function CalendarViewScreen() {
                   </View>
                 )}
 
-                <TouchableOpacity
-                  className="mt-4 rounded-lg bg-green-600 py-3"
-                  onPress={() => setModalVisible(false)}
-                >
-                  <Text className="text-center font-semibold text-white">Close</Text>
-                </TouchableOpacity>
+                <View className="mt-4 space-y-3">
+                  <TouchableOpacity
+                    className="rounded-lg bg-blue-600 py-3"
+                    onPress={() => {
+                      setModalVisible(false);
+                      router.push(
+                        `/appointments/patients-records?userId=${selectedAppointment.userId}`,
+                      );
+                    }}
+                  >
+                    <Text className="text-center font-semibold text-white">
+                      View Patient History
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className="rounded-lg bg-green-600 py-3"
+                    onPress={() => setModalVisible(false)}
+                  >
+                    <Text className="text-center font-semibold text-white">Close</Text>
+                  </TouchableOpacity>
+                </View>
               </ScrollView>
             )}
           </View>

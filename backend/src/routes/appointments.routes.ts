@@ -30,6 +30,13 @@ router.patch('/:appointmentId/cancel', protectRoute, AppointmentController.cance
 // Get doctor's appointments
 router.get('/doctor/appointments', protectRoute, AppointmentController.getDoctorAppointments);
 
+// Get patient appointments for a specific user (doctor only)
+router.get(
+  '/doctor/patient/:userId/appointments',
+  protectRoute,
+  AppointmentController.getPatientAppointments,
+);
+
 // Schedule appointment (doctor)
 router.post('/schedule', protectRoute, AppointmentController.scheduleAppointment);
 

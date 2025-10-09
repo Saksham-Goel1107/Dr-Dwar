@@ -16,6 +16,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import MedicalNoteForm from '../../components/MedicalNoteForm';
+import PrescriptionForm from '../../components/PrescriptionForm';
 
 interface Appointment {
   id: string;
@@ -29,6 +31,7 @@ interface Appointment {
   fee: number;
   duration: number;
   notes?: string;
+  userId: string;
 }
 
 const STATUS_COLORS = {
@@ -61,6 +64,10 @@ export default function DoctorAppointmentsScreen() {
   const [rescheduleLoading, setRescheduleLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [prescriptionModalVisible, setPrescriptionModalVisible] = useState(false);
+  const [medicalNoteModalVisible, setMedicalNoteModalVisible] = useState(false);
+  const [selectedAppointmentForForms, setSelectedAppointmentForForms] =
+    useState<Appointment | null>(null);
 
   // Refs to prevent infinite loading
   const dataLoadedRef = useRef(false);
@@ -307,6 +314,13 @@ export default function DoctorAppointmentsScreen() {
     const now = new Date();
     const isFutureAppointment = appointmentDateTime > now;
 
+    // Add View Patient History action for all appointments
+    actions.push({
+      text: 'View Patient History',
+      onPress: () => router.push(`/appointments/patients-records?userId=${appointment.userId}`),
+      style: 'default' as const,
+    });
+
     if (appointment.status === 'pending') {
       actions.push(
         {
@@ -357,12 +371,22 @@ export default function DoctorAppointmentsScreen() {
           onPress: () => {
             Alert.alert(
               'Complete Appointment',
-              `Mark the appointment with ${appointment.patientName} as completed?`,
+              `Would you like to add prescription or medical notes for ${appointment.patientName}?`,
               [
-                { text: 'Cancel', style: 'cancel' },
+                { text: 'Just Complete', onPress: () => updateAppointmentStatus(appointment.id, 'completed') },
                 {
-                  text: 'Complete',
-                  onPress: () => updateAppointmentStatus(appointment.id, 'completed'),
+                  text: 'Add Prescription',
+                  onPress: () => {
+                    setSelectedAppointmentForForms(appointment);
+                    setPrescriptionModalVisible(true);
+                  },
+                },
+                {
+                  text: 'Add Medical Notes',
+                  onPress: () => {
+                    setSelectedAppointmentForForms(appointment);
+                    setMedicalNoteModalVisible(true);
+                  },
                 },
               ],
             );
@@ -759,6 +783,66 @@ export default function DoctorAppointmentsScreen() {
                   </View>
                 )}
 
+                {/* Action Buttons for Completed Appointments */}
+                {appointment.status === 'completed' && (
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      marginTop: 12,
+                      gap: 8,
+                    }}
+                  >
+                    <TouchableOpacity
+                      onPress={() => {
+                        setSelectedAppointmentForForms(appointment);
+                        setPrescriptionModalVisible(true);
+                      }}
+                      style={{
+                        flex: 1,
+                        backgroundColor: '#3b82f6',
+                        paddingVertical: 8,
+                        paddingHorizontal: 12,
+                        borderRadius: 6,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <MaterialCommunityIcons name="pill" size={14} color="#ffffff" />
+                      <Text
+                        style={{ fontSize: 12, fontWeight: '600', color: '#ffffff', marginLeft: 4 }}
+                      >
+                        Prescription
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={() => {
+                        setSelectedAppointmentForForms(appointment);
+                        setMedicalNoteModalVisible(true);
+                      }}
+                      style={{
+                        flex: 1,
+                        backgroundColor: '#10b981',
+                        paddingVertical: 8,
+                        paddingHorizontal: 12,
+                        borderRadius: 6,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <MaterialCommunityIcons name="note-text-outline" size={14} color="#ffffff" />
+                      <Text
+                        style={{ fontSize: 12, fontWeight: '600', color: '#ffffff', marginLeft: 4 }}
+                      >
+                        Notes
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
                 {/* Action Indicator */}
                 <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 12 }}>
                   <MaterialCommunityIcons name="chevron-right" size={20} color="#9ca3af" />
@@ -984,6 +1068,57 @@ export default function DoctorAppointmentsScreen() {
           />
         )}
       </Modal>
+
+      {/* Prescription Modal */}
+      {selectedAppointmentForForms && (
+        <PrescriptionForm
+          visible={prescriptionModalVisible}
+          onClose={() => {
+            setPrescriptionModalVisible(false);
+            setSelectedAppointmentForForms(null);
+          }}
+          appointmentId={selectedAppointmentForForms.id}
+          patientName={selectedAppointmentForForms.patientName}
+          onSuccess={async () => {
+            setPrescriptionModalVisible(false);
+            setSelectedAppointmentForForms(null);
+            // Mark appointment as completed after adding prescription (only if not already completed)
+            const currentAppointment = selectedAppointmentForForms;
+            setSelectedAppointmentForForms(null);
+            if (currentAppointment && currentAppointment.status !== 'completed') {
+              await updateAppointmentStatus(currentAppointment.id, 'completed');
+            }
+            // Refresh appointments to show updated status
+            loadAppointments();
+          }}
+        />
+      )}
+
+      {/* Medical Note Modal */}
+      {selectedAppointmentForForms && (
+        <MedicalNoteForm
+          visible={medicalNoteModalVisible}
+          onClose={() => {
+            setMedicalNoteModalVisible(false);
+            setSelectedAppointmentForForms(null);
+          }}
+          patientId={selectedAppointmentForForms.userId}
+          patientName={selectedAppointmentForForms.patientName}
+          appointmentId={selectedAppointmentForForms.id}
+          onSuccess={async () => {
+            setMedicalNoteModalVisible(false);
+            setSelectedAppointmentForForms(null);
+            // Mark appointment as completed after adding medical notes (only if not already completed)
+            const currentAppointment = selectedAppointmentForForms;
+            setSelectedAppointmentForForms(null);
+            if (currentAppointment && currentAppointment.status !== 'completed') {
+              await updateAppointmentStatus(currentAppointment.id, 'completed');
+            }
+            // Refresh appointments to show updated status
+            loadAppointments();
+          }}
+        />
+      )}
     </View>
   );
 }
